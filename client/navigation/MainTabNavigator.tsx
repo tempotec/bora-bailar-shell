@@ -148,7 +148,6 @@ export default function MainTabNavigator() {
           }}
         />
       </Tab.Navigator>
-      <FloatingActionButton onPress={handleFabPress} />
     </View>
   );
 }

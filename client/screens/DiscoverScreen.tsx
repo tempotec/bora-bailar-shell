@@ -79,8 +79,10 @@ export default function DiscoverScreen() {
         />
 
         <Text style={styles.brandName}>
-          <Text style={styles.brandBora}>Bora</Text>
-          <Text style={styles.brandBailar}>Bailar</Text>
+          <Text style={styles.brandRed}>B</Text>
+          <Text style={styles.brandGray}>ORA</Text>
+          <Text style={styles.brandRed}>B</Text>
+          <Text style={styles.brandGray}>AILAR</Text>
         </Text>
 
         <Text style={styles.tagline}>PRA SAIR, DANÇAR E SE DIVERTIR!</Text>
@@ -127,13 +129,13 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     marginBottom: Spacing.sm,
   },
-  brandBora: {
-    color: Colors.dark.text,
-    fontWeight: "400",
-  },
-  brandBailar: {
+  brandRed: {
     color: Colors.dark.brand,
     fontWeight: "700",
+  },
+  brandGray: {
+    color: Colors.dark.textSecondary,
+    fontWeight: "400",
   },
   tagline: {
     fontSize: 15,
