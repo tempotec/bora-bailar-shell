@@ -437,7 +437,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.wizardBackground,
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
-    gap: Spacing.md,
+    paddingVertical: Spacing.xl + Spacing.lg,
+    gap: Spacing.lg,
   },
   wizardField: {
     backgroundColor: "#FFFFFF",
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
   },
   quererSection: {
     paddingHorizontal: Spacing.lg,
-    marginTop: Spacing.xl,
+    marginTop: Spacing.xl + Spacing.xl,
   },
   sectionTitle: {
     fontSize: 18,
