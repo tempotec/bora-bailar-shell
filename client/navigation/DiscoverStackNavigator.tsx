@@ -1,10 +1,11 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { Feather } from "@expo/vector-icons";
 import DiscoverScreen from "@/screens/DiscoverScreen";
 import EventDetailsScreen from "@/screens/EventDetailsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
-import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 
 export type DiscoverStackParamList = {
   Discover: undefined;
@@ -13,44 +14,25 @@ export type DiscoverStackParamList = {
 
 const Stack = createNativeStackNavigator<DiscoverStackParamList>();
 
-function HeaderAuthButtons() {
+function HeaderMenuButton() {
   return (
-    <View style={headerStyles.container}>
-      <Pressable style={headerStyles.signUpButton}>
-        <Text style={headerStyles.signUpText}>Sign up</Text>
-      </Pressable>
-      <Pressable style={headerStyles.logInButton}>
-        <Text style={headerStyles.logInText}>Log in</Text>
-      </Pressable>
-    </View>
+    <Pressable style={headerStyles.iconButton} hitSlop={8}>
+      <Feather name="menu" size={22} color={Colors.dark.text} />
+    </Pressable>
+  );
+}
+
+function HeaderBellButton() {
+  return (
+    <Pressable style={headerStyles.iconButton} hitSlop={8}>
+      <Feather name="bell" size={22} color={Colors.dark.text} />
+    </Pressable>
   );
 }
 
 const headerStyles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.sm,
-  },
-  signUpButton: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  signUpText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: Colors.dark.text,
-  },
-  logInButton: {
-    backgroundColor: Colors.dark.brand,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.xl,
-  },
-  logInText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
+  iconButton: {
+    padding: Spacing.xs,
   },
 });
 
@@ -64,7 +46,8 @@ export default function DiscoverStackNavigator() {
         component={DiscoverScreen}
         options={{
           headerTitle: "",
-          headerRight: () => <HeaderAuthButtons />,
+          headerLeft: () => <HeaderMenuButton />,
+          headerRight: () => <HeaderBellButton />,
           headerStyle: {
             backgroundColor: Colors.dark.backgroundRoot,
           },

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React from "react";
 import {
   View,
   ScrollView,
@@ -30,13 +30,30 @@ type NavigationProp = NativeStackNavigationProp<DiscoverStackParamList>;
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
+function ChevronUpDownIcon() {
+  return (
+    <View style={styles.chevronIconContainer}>
+      <Feather name="chevron-up" size={12} color={Colors.dark.textSecondary} style={{ marginBottom: -4 }} />
+      <Feather name="chevron-down" size={12} color={Colors.dark.textSecondary} style={{ marginTop: -4 }} />
+    </View>
+  );
+}
+
+function MicrophoneIcon() {
+  return (
+    <View style={styles.micIconContainer}>
+      <Feather name="mic" size={16} color="#FFFFFF" />
+    </View>
+  );
+}
+
 function WizardSearchField({
   label,
-  icon,
+  type,
   onPress,
 }: {
   label: string;
-  icon: "chevrons-down" | "mic";
+  type: "chevron" | "mic";
   onPress?: () => void;
 }) {
   return (
@@ -48,17 +65,22 @@ function WizardSearchField({
       onPress={onPress}
     >
       <Text style={styles.wizardFieldLabel}>{label}</Text>
-      <Feather
-        name={icon}
-        size={icon === "mic" ? 20 : 18}
-        color={icon === "mic" ? Colors.dark.brand : Colors.dark.textSecondary}
-      />
+      {type === "chevron" ? <ChevronUpDownIcon /> : <MicrophoneIcon />}
     </Pressable>
   );
 }
 
-function EventThumbnail({ event }: { event: Event }) {
+function EventThumbnail({ event, index }: { event: Event; index: number }) {
   const navigation = useNavigation<NavigationProp>();
+  
+  const gradients: [string, string][] = [
+    ["#8B4513", "#D2691E"],
+    ["#B22222", "#DC143C"],
+    ["#2F4F4F", "#708090"],
+    ["#800000", "#A52A2A"],
+  ];
+  
+  const gradient = gradients[index % gradients.length];
 
   return (
     <Pressable
@@ -69,13 +91,13 @@ function EventThumbnail({ event }: { event: Event }) {
       onPress={() => navigation.navigate("EventDetails", { eventId: event.id })}
     >
       <LinearGradient
-        colors={[Colors.dark.brand, "#FF6B6B"]}
+        colors={gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <View style={styles.thumbnailOverlay}>
-        <Feather name="music" size={24} color="rgba(255,255,255,0.6)" />
+      <View style={styles.thumbnailContent}>
+        <View style={styles.thumbnailOverlay} />
       </View>
     </Pressable>
   );
@@ -84,11 +106,9 @@ function EventThumbnail({ event }: { event: Event }) {
 function SectionHeader({
   title,
   highlightWords = [],
-  onSeeAll,
 }: {
   title: string;
   highlightWords?: string[];
-  onSeeAll?: () => void;
 }) {
   const renderTitle = () => {
     if (highlightWords.length === 0) {
@@ -119,11 +139,6 @@ function SectionHeader({
   return (
     <View style={styles.sectionHeader}>
       {renderTitle()}
-      {onSeeAll ? (
-        <Pressable onPress={onSeeAll} hitSlop={8}>
-          <ThemedText style={styles.seeAll}>Ver todos</ThemedText>
-        </Pressable>
-      ) : null}
     </View>
   );
 }
@@ -150,7 +165,7 @@ export default function DiscoverScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       contentContainerStyle={{
-        paddingTop: Spacing.lg,
+        paddingTop: Spacing.md,
         paddingBottom: tabBarHeight + Spacing.xl,
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}
@@ -164,48 +179,53 @@ export default function DiscoverScreen() {
         />
 
         <Text style={styles.brandName}>
-          <Text style={styles.brandBora}>BORA</Text>
-          <Text style={styles.brandBailar}>BAILAR</Text>
+          <Text style={styles.brandBora}>Bora</Text>
+          <Text style={styles.brandBailar}>Bailar</Text>
         </Text>
 
-        <Text style={styles.tagline}>PRA SAIR, DANCAR E SE DIVERTIR!</Text>
+        <Text style={styles.tagline}>PRA SAIR, DANÇAR E SE DIVERTIR!</Text>
       </View>
 
       <View style={styles.wizardSection}>
         <View style={styles.wizardContainer}>
-          <WizardSearchField label="Onde" icon="chevrons-down" />
-          <WizardSearchField label="Quando" icon="chevrons-down" />
-          <WizardSearchField label="Com quem" icon="mic" />
-        </View>
-
-        <View style={styles.helperTextContainer}>
-          <Text style={styles.helperText}>
-            E so{" "}
-            <Text style={styles.helperHighlight}>falar</Text>
-            {" "}que a gente te{" "}
-            <Text style={styles.helperHighlight}>entende</Text>!
-          </Text>
+          <WizardSearchField label="Onde" type="chevron" />
+          <WizardSearchField label="Quando" type="chevron" />
+          <WizardSearchField label="Com quem" type="mic" />
+          
+          <View style={styles.helperTextContainer}>
+            <Text style={styles.helperText}>
+              É só{" "}
+              <Text style={styles.helperHighlight}>falar</Text>
+              {" "}que a gente te{" "}
+              <Text style={styles.helperHighlight}>entende</Text>!
+            </Text>
+          </View>
         </View>
       </View>
 
       <View style={styles.contentSection}>
         <SectionHeader
-          title="O seu querer e que faz acontecer"
+          title="O seu querer é que faz acontecer"
           highlightWords={["querer", "acontecer"]}
         />
 
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={events.slice(0, 6)}
+          data={events.slice(0, 4)}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.thumbnailList}
-          renderItem={({ item }) => <EventThumbnail event={item} />}
+          renderItem={({ item, index }) => <EventThumbnail event={item} index={index} />}
         />
       </View>
 
       <View style={styles.eventsSection}>
-        <SectionHeader title="Eventos em Destaque" onSeeAll={() => {}} />
+        <View style={styles.eventsSectionHeader}>
+          <ThemedText style={styles.eventsSectionTitle}>Eventos em Destaque</ThemedText>
+          <Pressable hitSlop={8}>
+            <ThemedText style={styles.seeAll}>Ver todos</ThemedText>
+          </Pressable>
+        </View>
 
         {events.slice(0, 5).map((event) => (
           <Pressable
@@ -250,20 +270,20 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: "center",
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing["2xl"],
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.lg,
     paddingHorizontal: Spacing.lg,
   },
   logo: {
-    width: 120,
-    height: 80,
-    marginBottom: Spacing.md,
+    width: 100,
+    height: 70,
+    marginBottom: Spacing.xs,
   },
   brandName: {
-    fontSize: 28,
+    fontSize: 26,
     fontFamily: Fonts?.serif,
-    letterSpacing: 2,
-    marginBottom: Spacing.sm,
+    letterSpacing: 1,
+    marginBottom: Spacing.xs,
   },
   brandBora: {
     color: Colors.dark.text,
@@ -274,44 +294,55 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   tagline: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "700",
     color: Colors.dark.brand,
     textAlign: "center",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   wizardSection: {
-    paddingHorizontal: Spacing.xl,
-    marginBottom: Spacing["3xl"],
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing["2xl"],
   },
   wizardContainer: {
     backgroundColor: Colors.dark.wizardBackground,
     borderRadius: BorderRadius.lg,
     padding: Spacing.lg,
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   wizardField: {
     backgroundColor: "#FFFFFF",
     borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
   wizardFieldPressed: {
     backgroundColor: "#F9FAFB",
   },
   wizardFieldLabel: {
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.dark.textSecondary,
     fontWeight: "400",
   },
+  chevronIconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  micIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.dark.brand,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   helperTextContainer: {
     alignItems: "center",
-    marginTop: Spacing.lg,
+    marginTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
   },
   helperText: {
     fontSize: 14,
@@ -323,17 +354,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   contentSection: {
-    marginBottom: Spacing["2xl"],
+    marginBottom: Spacing.xl,
   },
   sectionHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "center",
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: Colors.dark.text,
     fontWeight: "400",
   },
@@ -355,16 +386,18 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   eventThumbnail: {
-    width: 80,
-    height: 80,
+    width: 75,
+    height: 75,
     borderRadius: BorderRadius.md,
     overflow: "hidden",
     marginRight: Spacing.sm,
   },
+  thumbnailContent: {
+    flex: 1,
+  },
   thumbnailOverlay: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.1)",
   },
   pressed: {
     opacity: 0.8,
@@ -372,6 +405,18 @@ const styles = StyleSheet.create({
   },
   eventsSection: {
     marginBottom: Spacing.xl,
+  },
+  eventsSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  eventsSectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.dark.text,
   },
   eventListItem: {
     flexDirection: "row",
