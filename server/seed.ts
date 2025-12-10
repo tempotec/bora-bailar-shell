@@ -4,6 +4,16 @@ import { users, venues, events } from "@shared/schema";
 async function seed() {
   console.log("Seeding database...");
 
+  const [demoUser] = await db.insert(users).values({
+    id: "demo-user",
+    name: "Usuario Demo",
+    email: "demo@borabailar.com",
+    bio: "Conta de demonstracao do BoraBailar",
+    avatarInitials: "UD",
+  }).returning();
+
+  console.log("Created demo user:", demoUser.name);
+
   const [user1] = await db.insert(users).values({
     name: "Ana Costa",
     email: "ana@borabailar.com",

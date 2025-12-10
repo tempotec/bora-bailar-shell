@@ -4,49 +4,30 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { Button } from "@/components/Button";
+import { apiRequest } from "@/lib/query-client";
+import { MyEventsStackParamList } from "@/navigation/MyEventsStackNavigator";
+import type { Event } from "@shared/schema";
 
-type TabType = "upcoming" | "past";
+type NavigationProp = NativeStackNavigationProp<MyEventsStackParamList>;
 
-const UPCOMING_EVENTS = [
-  {
-    id: "1",
-    title: "Noite Latina",
-    venue: "Club Havana",
-    date: "Sab, 14 Dez",
-    time: "22:00",
-    status: "confirmed",
-  },
-  {
-    id: "2",
-    title: "Forrozada",
-    venue: "Espaco Nordeste",
-    date: "Dom, 15 Dez",
-    time: "18:00",
-    status: "pending",
-  },
-];
+type TabType = "favorites" | "attending";
 
-const PAST_EVENTS = [
-  {
-    id: "3",
-    title: "Samba de Raiz",
-    venue: "Bar do Ze",
-    date: "Sab, 7 Dez",
-    time: "20:00",
-    status: "attended",
-  },
-];
+const DEMO_USER_ID = "demo-user";
 
 function SegmentedControl({
   value,
@@ -62,71 +43,58 @@ function SegmentedControl({
       <Pressable
         style={[
           styles.segment,
-          value === "upcoming" && {
+          value === "favorites" && {
             backgroundColor: Colors.dark.primary,
           },
         ]}
-        onPress={() => onChange("upcoming")}
+        onPress={() => onChange("favorites")}
       >
+        <Feather
+          name="heart"
+          size={16}
+          color={value === "favorites" ? "#FFF" : Colors.dark.textSecondary}
+          style={{ marginRight: 6 }}
+        />
         <ThemedText
           style={[
             styles.segmentText,
-            value === "upcoming" && styles.segmentTextActive,
+            value === "favorites" && styles.segmentTextActive,
           ]}
         >
-          Proximos
+          Favoritos
         </ThemedText>
       </Pressable>
       <Pressable
         style={[
           styles.segment,
-          value === "past" && {
+          value === "attending" && {
             backgroundColor: Colors.dark.primary,
           },
         ]}
-        onPress={() => onChange("past")}
+        onPress={() => onChange("attending")}
       >
+        <Feather
+          name="calendar"
+          size={16}
+          color={value === "attending" ? "#FFF" : Colors.dark.textSecondary}
+          style={{ marginRight: 6 }}
+        />
         <ThemedText
           style={[
             styles.segmentText,
-            value === "past" && styles.segmentTextActive,
+            value === "attending" && styles.segmentTextActive,
           ]}
         >
-          Anteriores
+          Confirmados
         </ThemedText>
       </Pressable>
     </View>
   );
 }
 
-function EventListItem({ event }: { event: (typeof UPCOMING_EVENTS)[0] }) {
+function EventListItem({ event, onRemoveFavorite }: { event: Event; onRemoveFavorite?: () => void }) {
   const { theme } = useTheme();
-
-  const getStatusColor = () => {
-    switch (event.status) {
-      case "confirmed":
-        return Colors.dark.success;
-      case "pending":
-        return Colors.dark.tertiary;
-      case "attended":
-        return Colors.dark.textSecondary;
-      default:
-        return Colors.dark.textSecondary;
-    }
-  };
-
-  const getStatusText = () => {
-    switch (event.status) {
-      case "confirmed":
-        return "Confirmado";
-      case "pending":
-        return "Pendente";
-      case "attended":
-        return "Participou";
-      default:
-        return "";
-    }
-  };
+  const navigation = useNavigation<NavigationProp>();
 
   return (
     <Pressable
@@ -135,6 +103,7 @@ function EventListItem({ event }: { event: (typeof UPCOMING_EVENTS)[0] }) {
         { backgroundColor: theme.backgroundDefault },
         pressed && styles.pressed,
       ]}
+      onPress={() => navigation.navigate("EventDetails", { eventId: event.id })}
     >
       <View style={styles.eventImage}>
         <LinearGradient
@@ -149,7 +118,7 @@ function EventListItem({ event }: { event: (typeof UPCOMING_EVENTS)[0] }) {
         </ThemedText>
         <View style={styles.eventMeta}>
           <Feather name="map-pin" size={12} color={theme.textSecondary} />
-          <ThemedText style={styles.metaText}>{event.venue}</ThemedText>
+          <ThemedText style={styles.metaText}>{event.venueName}</ThemedText>
         </View>
         <View style={styles.eventMeta}>
           <Feather name="calendar" size={12} color={theme.textSecondary} />
@@ -158,28 +127,42 @@ function EventListItem({ event }: { event: (typeof UPCOMING_EVENTS)[0] }) {
           </ThemedText>
         </View>
       </View>
-      <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + "20" }]}>
-        <ThemedText style={[styles.statusText, { color: getStatusColor() }]}>
-          {getStatusText()}
-        </ThemedText>
-      </View>
+      {onRemoveFavorite ? (
+        <Pressable
+          onPress={onRemoveFavorite}
+          style={({ pressed }) => [styles.removeButton, pressed && { opacity: 0.7 }]}
+          hitSlop={8}
+        >
+          <Feather name="heart" size={20} color={Colors.dark.secondary} />
+        </Pressable>
+      ) : (
+        <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+      )}
     </Pressable>
   );
 }
 
-function EmptyState() {
+function EmptyState({ type }: { type: TabType }) {
+  const navigation = useNavigation<any>();
+
   return (
     <View style={styles.emptyState}>
       <View style={styles.emptyIcon}>
-        <Feather name="calendar" size={48} color={Colors.dark.textSecondary} />
+        <Feather
+          name={type === "favorites" ? "heart" : "calendar"}
+          size={48}
+          color={Colors.dark.textSecondary}
+        />
       </View>
       <ThemedText type="h4" style={styles.emptyTitle}>
-        Nenhum evento ainda
+        {type === "favorites" ? "Nenhum favorito" : "Nenhum evento confirmado"}
       </ThemedText>
       <ThemedText style={styles.emptyText}>
-        Explore e descubra eventos incriveis para participar!
+        {type === "favorites"
+          ? "Salve eventos que voce gosta para encontra-los rapidamente aqui!"
+          : "Confirme presenca em eventos para ve-los aqui!"}
       </ThemedText>
-      <Button style={styles.emptyButton} onPress={() => {}}>
+      <Button style={styles.emptyButton} onPress={() => navigation.navigate("Discover")}>
         Descobrir Eventos
       </Button>
     </View>
@@ -191,10 +174,28 @@ export default function MyEventsScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState<TabType>("upcoming");
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<TabType>("favorites");
 
-  const events = activeTab === "upcoming" ? UPCOMING_EVENTS : PAST_EVENTS;
-  const hasEvents = events.length > 0;
+  const { data: favorites = [], isLoading: favoritesLoading } = useQuery<Event[]>({
+    queryKey: ["/api/users", DEMO_USER_ID, "favorites"],
+  });
+
+  const removeFavoriteMutation = useMutation({
+    mutationFn: async (eventId: string) => {
+      await apiRequest("DELETE", `/api/users/${DEMO_USER_ID}/favorites/${eventId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users", DEMO_USER_ID, "favorites"] });
+    },
+  });
+
+  const handleRemoveFavorite = (eventId: string) => {
+    removeFavoriteMutation.mutate(eventId);
+  };
+
+  const events = activeTab === "favorites" ? favorites : [];
+  const isLoading = favoritesLoading;
 
   return (
     <ScrollView
@@ -211,14 +212,22 @@ export default function MyEventsScreen() {
         <SegmentedControl value={activeTab} onChange={setActiveTab} />
       </View>
 
-      {hasEvents ? (
+      {isLoading ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator size="large" color={Colors.dark.primary} />
+        </View>
+      ) : events.length > 0 ? (
         <View style={styles.eventList}>
           {events.map((event) => (
-            <EventListItem key={event.id} event={event} />
+            <EventListItem
+              key={event.id}
+              event={event}
+              onRemoveFavorite={activeTab === "favorites" ? () => handleRemoveFavorite(event.id) : undefined}
+            />
           ))}
         </View>
       ) : (
-        <EmptyState />
+        <EmptyState type={activeTab} />
       )}
     </ScrollView>
   );
@@ -239,9 +248,11 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
+    flexDirection: "row",
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.sm,
     alignItems: "center",
+    justifyContent: "center",
   },
   segmentText: {
     fontSize: 14,
@@ -283,18 +294,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.dark.textSecondary,
   },
-  statusBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.xs,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: "600",
+  removeButton: {
+    padding: Spacing.sm,
   },
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.98 }],
+  },
+  loadingState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyState: {
     flex: 1,
