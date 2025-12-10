@@ -3,121 +3,120 @@
 ## App Purpose
 BoraBailar is a social mobile application for discovering and attending dance events, parties, and nightlife experiences. The app connects party-goers with local events and creates a vibrant community around dance culture.
 
+## Brand Identity
+
+### Logo
+- Red dancing couple silhouette (BB symbol)
+- Located at: attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png
+
+### Typography
+- **Brand Name Font**: Didot/Bodoni (serif font)
+  - "BORA" in dark gray/black
+  - "BAILAR" in brand red, bold
+- **Body Text**: System font
+- **Tagline**: Bold, all caps, brand red
+
+### Tagline
+"PRA SAIR, DANCAR E SE DIVERTIR!"
+
 ## Architecture Decisions
 
 ### Authentication
-**Auth Required** - Social/event discovery platform
-- Implement SSO (Apple Sign-In for iOS, Google Sign-In)
-- Include social profile features (avatar, display name, bio)
-- Account screen with:
-  - Profile customization
-  - Notification preferences
-  - Privacy settings
-  - Log out and delete account options
+- Header displays "Sign up" and "Log in" buttons (not hamburger/bell icons)
+- Log in button has red/brand background color
+- Sign up is text-only button
 
 ### Navigation Architecture
 **Tab Navigation** (4 tabs + FAB for core action)
-- **Discover** (Home): Browse upcoming events and featured parties
-- **My Events**: User's saved/attending events
-- **Floating Action Button**: Quick event creation/share
-- **Messages**: Chat with attendees or event organizers
-- **Profile**: User account and settings
+- **Descobrir** (Discover): Home with wizard search
+- **Eventos** (My Events): User's saved/attending events
+- **Floating Action Button**: Quick actions
+- **Mensagens** (Messages): Chat with attendees or event organizers
+- **Perfil** (Profile): User account and settings
 
 ### Screen Specifications
 
 #### 1. Splash Screen
-- Full-screen branded experience
+- White background
 - BoraBailar logo centered
-- Animated entrance (fade + scale)
-- Gradient background (vibrant nightlife aesthetic)
+- Clean, minimal design
 
-#### 2. Onboarding (Stack-Only, 3 screens)
-- Swipeable carousel explaining key features
-- Skip button (top-right)
-- Progress indicators (dots)
-- "Get Started" CTA on final screen
+#### 2. Home Screen (Discover)
+Layout from top to bottom:
+1. **Header**: Sign up + Log in buttons (right side)
+2. **Hero Section**:
+   - Logo image (centered)
+   - Brand name "BORABAILAR" (Didot/Bodoni font)
+   - Tagline in red
+3. **Wizard Search Section**:
+   - Grayish container background (#EDEDED)
+   - 3 white search fields with considerable spacing:
+     - "Onde" (Where) - with chevrons icon
+     - "Quando" (When) - with chevrons icon  
+     - "Com quem" (With whom) - with microphone icon (red)
+   - Rounded corners on fields
+4. **Helper Text**: "E so falar que a gente te entende!"
+   - "falar" and "entende" highlighted in red
+5. **Content Section**: "O seu querer e que faz acontecer"
+   - "querer" and "acontecer" highlighted in red
+   - Horizontal scroll of event thumbnails
+6. **Events List**: Standard event list items
 
-#### 3. Discover Screen (Home Tab)
-- **Header**: Transparent with location selector (left) and filter icon (right)
-- **Layout**: ScrollView with multiple sections
-  - Hero banner: Featured event card
-  - "This Weekend" horizontal scroll list
-  - "Popular Venues" grid (2 columns)
-  - "All Events" vertical list
-- **Safe Area**: Top inset = headerHeight + Spacing.xl, Bottom inset = tabBarHeight + Spacing.xl
-- Search bar appears on scroll
+#### 3. Event Details Screen (Modal Stack)
+- Full-width event image with gradient overlay
+- Event title, date, time, location
+- Ticket/RSVP section
+- Description and attendees
 
-#### 4. Event Details Screen (Modal Stack)
-- **Header**: Custom with back button (left), share & bookmark icons (right)
-- **Layout**: ScrollView
-  - Full-width event image with gradient overlay
-  - Event title, date, time, location
-  - Ticket/RSVP section (floating card)
-  - Description
-  - Attendees list (horizontal scroll of avatars)
-  - Map location
-  - Similar events section
-- **Floating CTA**: "Get Tickets" button with subtle shadow
-- **Safe Area**: Bottom inset = insets.bottom + Spacing.xl
+#### 4. My Events Screen (Tab)
+- Segmented control (Upcoming / Past)
+- Event list
 
-#### 5. My Events Screen (Tab)
-- **Header**: Default with "My Events" title, filter icon (right)
-- **Layout**: Segmented control (Upcoming / Past) + List
-- Empty state with illustration and "Discover Events" CTA
-- **Safe Area**: Top inset = Spacing.xl, Bottom inset = tabBarHeight + Spacing.xl
-
-#### 6. Profile Screen (Tab)
-- **Header**: Settings icon (right)
-- **Layout**: ScrollView
-  - Avatar with edit button overlay
-  - Display name, bio
-  - Stats (Events Attended, Following, Followers)
-  - Sections: Saved Events, Favorite Venues, Activity
-- **Safe Area**: Top inset = insets.top + Spacing.xl, Bottom inset = tabBarHeight + Spacing.xl
+#### 5. Profile Screen (Tab)
+- Avatar, display name
+- Settings and preferences
 
 ## Design System
 
 ### Color Palette
-- **Primary**: Electric Purple (#8B5CF6) - CTA buttons, active states
-- **Secondary**: Hot Pink (#EC4899) - Accents, highlights
-- **Tertiary**: Vibrant Orange (#F97316) - Energy, notifications
-- **Background**: Deep Dark (#0F172A) - Main background
-- **Surface**: Dark Gray (#1E293B) - Cards, elevated surfaces
-- **Text Primary**: White (#FFFFFF)
-- **Text Secondary**: Light Gray (#94A3B8)
+- **Brand/Primary**: Red (#C41E3A) - Logo, CTAs, highlights
+- **Secondary**: Hot Pink (#EC4899) - Accents
+- **Tertiary**: Vibrant Orange (#F97316) - Energy
+- **Background Root**: White (#FFFFFF)
+- **Background Default**: Light Gray (#F9FAFB)
+- **Background Secondary**: Gray (#F3F4F6)
+- **Wizard Background**: Light Gray (#EDEDED)
+- **Text Primary**: Dark Gray (#1F2937)
+- **Text Secondary**: Medium Gray (#6B7280)
 - **Success**: Green (#10B981)
 - **Error**: Red (#EF4444)
 
 ### Typography
+- **Brand Name**: Didot/Bodoni serif, 28pt, letter-spacing 2
 - **Headings**: System bold, 24-32pt
 - **Subheadings**: System semibold, 18-20pt
 - **Body**: System regular, 16pt
 - **Caption**: System regular, 14pt
-- **Button Text**: System semibold, 16pt
+- **Button Text**: System semibold, 14-16pt
 
 ### Visual Design
 - **Icons**: Feather icons from @expo/vector-icons
-- **Card Style**: Rounded corners (12px), dark surface with subtle borders
-- **Event Cards**: Full-width image with gradient overlay, text positioned over gradient
-- **Floating Buttons**: 
-  - FAB: 56x56, circular, gradient (primary to secondary)
-  - Shadow: offset (0, 2), opacity 0.10, radius 2
-- **Interactive Feedback**: Scale animation (0.95) + opacity (0.8) on press
-- **Spacing Scale**: xs=4, sm=8, md=12, lg=16, xl=24, xxl=32
+- **Card Style**: Rounded corners (12-16px), subtle background
+- **Wizard Fields**: White background, rounded (24px), subtle border
+- **Buttons**: 
+  - Primary: Red background, white text, rounded
+  - Text: No background, dark or red text
+- **Interactive Feedback**: Scale animation (0.98) + opacity (0.8) on press
+- **Spacing Scale**: xs=4, sm=8, md=12, lg=16, xl=24, 2xl=32, 3xl=40
 
-### Required Assets
-1. **Logo**: BoraBailar wordmark and icon (vibrant, dance-themed)
-2. **Onboarding Illustrations**: 3 custom illustrations showing:
-   - Event discovery
-   - Social connections
-   - Ticket purchasing
-3. **User Avatars**: 8 preset avatars with vibrant, party-themed aesthetics (DJ headphones, neon sunglasses, colorful wigs)
-4. **Empty States**: Illustrations for no events, no messages
-5. **Event Placeholder**: Gradient placeholder for loading/missing event images
+### Layout Principles
+- Light/white theme throughout
+- Generous spacing - nothing cramped
+- Wizard search section should be prominent and spacious
+- Clean, modern aesthetic
 
 ### Accessibility
 - Minimum touch target: 44x44pt
 - Color contrast ratio: 4.5:1 for text
 - Support for Dynamic Type
 - VoiceOver labels on all interactive elements
-- Haptic feedback on important actions (save event, purchase ticket)

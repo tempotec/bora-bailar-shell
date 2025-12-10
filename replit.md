@@ -50,11 +50,12 @@ server/
 ```
 
 ## Design System
-- **Primary**: Electric Purple (#8B5CF6)
+- **Brand/Primary**: Red (#C41E3A)
 - **Secondary**: Hot Pink (#EC4899)
 - **Tertiary**: Vibrant Orange (#F97316)
-- **Background**: Deep Dark (#0F172A)
-- **Surface**: Dark Gray (#1E293B)
+- **Background**: White (#FFFFFF)
+- **Wizard Background**: Light Gray (#EDEDED)
+- **Brand Font**: Didot/Bodoni (serif)
 
 ## Navigation Structure
 1. **Descobrir** (Discover) - Browse upcoming events
@@ -85,6 +86,11 @@ server/
 - **Demo User**: Uses "demo-user" ID for favorites functionality
 
 ## Recent Changes
+- December 2024: Complete home screen redesign with wizard-style search
+  - Light/white theme with red branding
+  - Logo and BORABAILAR brand name with Didot/Bodoni font
+  - Wizard search with 3 fields: Onde, Quando, Com quem
+  - Sign up / Log in buttons in header
 - December 2024: Added geolocation for nearby events with distance display
 - December 2024: Implemented favorites system with PostgreSQL persistence
 - December 2024: Added search and venue filtering functionality

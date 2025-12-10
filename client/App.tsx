@@ -22,7 +22,7 @@ export default function App() {
               <NavigationContainer>
                 <RootStackNavigator />
               </NavigationContainer>
-              <StatusBar style="light" />
+              <StatusBar style="dark" />
             </KeyboardProvider>
           </GestureHandlerRootView>
         </SafeAreaProvider>
