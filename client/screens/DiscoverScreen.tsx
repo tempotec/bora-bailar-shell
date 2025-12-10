@@ -34,44 +34,50 @@ const QUERER_DATA = [
   {
     id: "1",
     title: "SAIR PARA\nDANÇAR",
-    description: "Com alguém que tenha a ver comigo",
-    subtitle: "Sem compromisso",
+    description: "sair pra dançar e me divertir com alguém que tenha a ver comigo, mas sem compromissos.",
     image: "https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=400&h=300&fit=crop",
   },
   {
     id: "2",
     title: "SAIR EM\nGRUPO",
-    description: "Conhecer gente legal para dançar",
-    subtitle: "Ou com grupo legal",
+    description: "sair em grupo para dançar e conhecer gente educada e simpática que gosta do que eu gosto.",
     image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop",
   },
   {
     id: "3",
     title: "MELHORES\nBALADAS",
-    description: "Lugares interessantes por perto",
-    subtitle: "Com ou sem companhia",
+    description: "sair em grupo para dançar e conhecer gente educada e simpática que gosta do que eu gosto.",
     image: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=400&h=300&fit=crop",
   },
   {
     id: "4",
     title: "GENTE\nPROFISSA",
-    description: "Professores não só em sala de aula",
-    subtitle: "Levam para sair e ensinam",
+    description: "conhecer profissionais que sejam boa companhia e me levem para dançar.",
     image: "https://images.unsplash.com/photo-1545959570-a94084071b5d?w=400&h=300&fit=crop",
   },
   {
     id: "5",
     title: "ESCOLAS\nDE DANÇA",
-    description: "Ver boas escolas próximas a mim",
-    subtitle: "De acordo com meu perfil",
+    description: "conhecer profissionais que sejam boa companhia e me levem para dançar.",
     image: "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=400&h=300&fit=crop",
   },
   {
     id: "6",
     title: "ESCOLHA\nSUA TRIBO",
-    description: "Gente que gosta da mesma dança",
-    subtitle: "Ou da mesma música",
+    description: "participar de comunidades de gente que ama dançar e se divertir de forma sadia e feliz.",
     image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=300&fit=crop",
+  },
+  {
+    id: "7",
+    title: "BORABAILAR\nTOP 10",
+    description: "poder receber e mandar conteúdo para votar e ser votado no BB TOP 10 AWARD",
+    image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop",
+  },
+  {
+    id: "8",
+    title: "FULL\nEXPERIENCE",
+    description: "participar de eventos integrados de DANÇA, GASTRONOMIA e CONFRATERNIZAÇÃO.",
+    image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&h=300&fit=crop",
   },
 ];
 
@@ -133,14 +139,12 @@ function CollapsedSearchBar({ onPress }: { onPress?: () => void }) {
 function QuererCard({
   title,
   description,
-  subtitle,
   image,
   onPress,
   onFavorite,
 }: {
   title: string;
   description: string;
-  subtitle: string;
   image: string;
   onPress?: () => void;
   onFavorite?: () => void;
@@ -158,8 +162,10 @@ function QuererCard({
         </Pressable>
       </View>
       <View style={styles.quererContent}>
-        <Text style={styles.quererDescription}>{description}</Text>
-        <Text style={styles.quererSubtitle}>{subtitle}</Text>
+        <Text style={styles.quererDescription}>
+          <Text style={styles.queroPrefix}>QUERO </Text>
+          {description}
+        </Text>
       </View>
     </Pressable>
   );
@@ -323,11 +329,17 @@ export default function DiscoverScreen() {
                 key={item.id}
                 title={item.title}
                 description={item.description}
-                subtitle={item.subtitle}
                 image={item.image}
               />
             ))}
           </View>
+
+          <Text style={styles.momentoTitle}>
+            Momento{" "}
+            <Text style={styles.sectionTitleHighlight}>dança</Text>
+            {" "}é momento{" "}
+            <Text style={styles.sectionTitleHighlight}>feliz</Text>
+          </Text>
         </View>
       </Animated.ScrollView>
     </View>
@@ -539,10 +551,16 @@ const styles = StyleSheet.create({
   quererDescription: {
     fontSize: 13,
     color: Colors.dark.text,
-    marginBottom: 2,
+    lineHeight: 18,
   },
-  quererSubtitle: {
-    fontSize: 12,
-    color: Colors.dark.textSecondary,
+  queroPrefix: {
+    color: Colors.dark.brand,
+    fontWeight: "700",
+  },
+  momentoTitle: {
+    fontSize: 18,
+    color: Colors.dark.text,
+    marginTop: Spacing.xl,
+    textAlign: "center",
   },
 });
