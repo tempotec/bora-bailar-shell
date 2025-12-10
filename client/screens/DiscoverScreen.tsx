@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   ScrollView,
   StyleSheet,
   Pressable,
-  ImageBackground,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -14,67 +14,29 @@ import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
+import { useQuery } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
-
-const MOCK_EVENTS = [
-  {
-    id: "1",
-    title: "Noite Latina",
-    venue: "Club Havana",
-    date: "Sab, 14 Dez",
-    time: "22:00",
-    image: null,
-    attendees: 234,
-  },
-  {
-    id: "2",
-    title: "Forrozada",
-    venue: "Espaco Nordeste",
-    date: "Dom, 15 Dez",
-    time: "18:00",
-    image: null,
-    attendees: 156,
-  },
-  {
-    id: "3",
-    title: "Samba Rock",
-    venue: "Bar do Samba",
-    date: "Sex, 20 Dez",
-    time: "21:00",
-    image: null,
-    attendees: 89,
-  },
-  {
-    id: "4",
-    title: "Zouk Night",
-    venue: "Dance Studio",
-    date: "Sab, 21 Dez",
-    time: "20:00",
-    image: null,
-    attendees: 178,
-  },
-];
-
-const VENUES = [
-  { id: "1", name: "Club Havana", events: 12 },
-  { id: "2", name: "Espaco Nordeste", events: 8 },
-  { id: "3", name: "Bar do Samba", events: 15 },
-  { id: "4", name: "Dance Studio", events: 6 },
-];
+import type { Event, Venue } from "@shared/schema";
 
 type NavigationProp = NativeStackNavigationProp<DiscoverStackParamList>;
 
-function EventCard({
-  event,
-  size = "large",
-}: {
-  event: (typeof MOCK_EVENTS)[0];
+interface EventCardProps {
+  event: {
+    id: string;
+    title: string;
+    venueName: string | null;
+    date: string;
+    time: string;
+    attendeesCount: number | null;
+  };
   size?: "large" | "medium";
-}) {
+}
+
+function EventCard({ event, size = "large" }: EventCardProps) {
   const navigation = useNavigation<NavigationProp>();
 
   const handlePress = () => {
@@ -109,13 +71,13 @@ function EventCard({
           </ThemedText>
           <View style={styles.eventMeta}>
             <Feather name="map-pin" size={14} color={Colors.dark.textSecondary} />
-            <ThemedText style={styles.eventVenue}>{event.venue}</ThemedText>
+            <ThemedText style={styles.eventVenue}>{event.venueName}</ThemedText>
             <ThemedText style={styles.eventTime}>{event.time}</ThemedText>
           </View>
           <View style={styles.attendeesRow}>
             <Feather name="users" size={14} color={Colors.dark.textSecondary} />
             <ThemedText style={styles.attendeesText}>
-              {event.attendees} confirmados
+              {event.attendeesCount || 0} confirmados
             </ThemedText>
           </View>
         </View>
@@ -124,7 +86,7 @@ function EventCard({
   );
 }
 
-function VenueCard({ venue }: { venue: (typeof VENUES)[0] }) {
+function VenueCard({ venue }: { venue: { id: string; name: string; eventsCount: number | null } }) {
   return (
     <Pressable
       style={({ pressed }) => [styles.venueCard, pressed && styles.pressed]}
@@ -135,7 +97,7 @@ function VenueCard({ venue }: { venue: (typeof VENUES)[0] }) {
       />
       <Feather name="home" size={24} color={Colors.dark.primary} />
       <ThemedText style={styles.venueName}>{venue.name}</ThemedText>
-      <ThemedText style={styles.venueEvents}>{venue.events} eventos</ThemedText>
+      <ThemedText style={styles.venueEvents}>{venue.eventsCount || 0} eventos</ThemedText>
     </Pressable>
   );
 }
@@ -164,9 +126,26 @@ export default function DiscoverScreen() {
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
+  const navigation = useNavigation<NavigationProp>();
 
-  const featuredEvent = MOCK_EVENTS[0];
-  const weekendEvents = MOCK_EVENTS.slice(1, 4);
+  const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
+    queryKey: ["/api/events"],
+  });
+
+  const { data: venues = [], isLoading: venuesLoading } = useQuery<Venue[]>({
+    queryKey: ["/api/venues"],
+  });
+
+  const featuredEvent = events.find(e => e.isFeatured) || events[0];
+  const weekendEvents = events.filter(e => e.id !== featuredEvent?.id).slice(0, 3);
+
+  if (eventsLoading || venuesLoading) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={Colors.dark.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -178,34 +157,62 @@ export default function DiscoverScreen() {
       scrollIndicatorInsets={{ bottom: insets.bottom }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.heroSection}>
-        <EventCard event={featuredEvent} size="large" />
-      </View>
-
-      <View style={styles.section}>
-        <SectionHeader title="Este Final de Semana" onSeeAll={() => {}} />
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={weekendEvents}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.horizontalList}
-          renderItem={({ item }) => <EventCard event={item} size="medium" />}
-        />
-      </View>
-
-      <View style={styles.section}>
-        <SectionHeader title="Locais Populares" onSeeAll={() => {}} />
-        <View style={styles.venuesGrid}>
-          {VENUES.map((venue) => (
-            <VenueCard key={venue.id} venue={venue} />
-          ))}
+      {featuredEvent ? (
+        <View style={styles.heroSection}>
+          <EventCard
+            event={{
+              id: featuredEvent.id,
+              title: featuredEvent.title,
+              venueName: featuredEvent.venueName,
+              date: featuredEvent.date,
+              time: featuredEvent.time,
+              attendeesCount: featuredEvent.attendeesCount,
+            }}
+            size="large"
+          />
         </View>
-      </View>
+      ) : null}
+
+      {weekendEvents.length > 0 ? (
+        <View style={styles.section}>
+          <SectionHeader title="Este Final de Semana" onSeeAll={() => {}} />
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={weekendEvents}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.horizontalList}
+            renderItem={({ item }) => (
+              <EventCard
+                event={{
+                  id: item.id,
+                  title: item.title,
+                  venueName: item.venueName,
+                  date: item.date,
+                  time: item.time,
+                  attendeesCount: item.attendeesCount,
+                }}
+                size="medium"
+              />
+            )}
+          />
+        </View>
+      ) : null}
+
+      {venues.length > 0 ? (
+        <View style={styles.section}>
+          <SectionHeader title="Locais Populares" onSeeAll={() => {}} />
+          <View style={styles.venuesGrid}>
+            {venues.map((venue) => (
+              <VenueCard key={venue.id} venue={venue} />
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.section}>
         <SectionHeader title="Todos os Eventos" />
-        {MOCK_EVENTS.map((event) => (
+        {events.map((event) => (
           <Pressable
             key={event.id}
             style={({ pressed }) => [
@@ -213,7 +220,7 @@ export default function DiscoverScreen() {
               { backgroundColor: theme.backgroundDefault },
               pressed && styles.pressed,
             ]}
-            onPress={() => {}}
+            onPress={() => navigation.navigate("EventDetails", { eventId: event.id })}
           >
             <View style={styles.eventListImage}>
               <LinearGradient
@@ -227,7 +234,7 @@ export default function DiscoverScreen() {
                 {event.title}
               </ThemedText>
               <ThemedText style={styles.eventListMeta}>
-                {event.venue} - {event.date}
+                {event.venueName} - {event.date}
               </ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
@@ -241,6 +248,11 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   heroSection: {
     paddingHorizontal: Spacing.lg,

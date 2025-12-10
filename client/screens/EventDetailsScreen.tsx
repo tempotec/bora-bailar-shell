@@ -4,39 +4,25 @@ import {
   ScrollView,
   StyleSheet,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRoute, RouteProp } from "@react-navigation/native";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { Button } from "@/components/Button";
 import { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
+import { apiRequest } from "@/lib/query-client";
+import type { Event } from "@shared/schema";
 
 type EventDetailsRouteProp = RouteProp<DiscoverStackParamList, "EventDetails">;
 
-const EVENT_DATA = {
-  id: "1",
-  title: "Noite Latina",
-  venue: "Club Havana",
-  address: "Rua das Flores, 123 - Centro",
-  date: "Sabado, 14 de Dezembro",
-  time: "22:00 - 04:00",
-  price: "R$ 40,00",
-  description:
-    "Uma noite inesquecivel de ritmos latinos! Venha dancar salsa, bachata, merengue e muito mais. DJ internacional e aula de danca incluida. Dress code: casual elegante.",
-  attendees: [
-    { id: "1", name: "Maria" },
-    { id: "2", name: "Pedro" },
-    { id: "3", name: "Ana" },
-    { id: "4", name: "Carlos" },
-    { id: "5", name: "Julia" },
-  ],
-  totalAttendees: 234,
-};
+const DEMO_USER_ID = "demo-user";
 
 function InfoRow({
   icon,
@@ -47,8 +33,6 @@ function InfoRow({
   title: string;
   subtitle?: string;
 }) {
-  const { theme } = useTheme();
-
   return (
     <View style={styles.infoRow}>
       <View style={styles.infoIcon}>
@@ -82,13 +66,48 @@ export default function EventDetailsScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const route = useRoute<EventDetailsRouteProp>();
+  const queryClient = useQueryClient();
+  const { eventId } = route.params;
+
+  const { data: event, isLoading } = useQuery<Event>({
+    queryKey: ["/api/events", eventId],
+  });
+
+  const { data: favoriteStatus } = useQuery<{ isFavorite: boolean }>({
+    queryKey: ["/api/users", DEMO_USER_ID, "favorites", eventId, "check"],
+    enabled: false,
+  });
+
   const [isSaved, setIsSaved] = useState(false);
 
-  const event = EVENT_DATA;
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: async () => {
+      if (isSaved) {
+        await apiRequest("DELETE", `/api/users/${DEMO_USER_ID}/favorites/${eventId}`);
+      } else {
+        await apiRequest("POST", `/api/users/${DEMO_USER_ID}/favorites`, { eventId });
+      }
+    },
+    onSuccess: () => {
+      setIsSaved(!isSaved);
+      queryClient.invalidateQueries({ queryKey: ["/api/users", DEMO_USER_ID, "favorites"] });
+    },
+  });
 
   const handleSave = () => {
-    setIsSaved(!isSaved);
+    toggleFavoriteMutation.mutate();
   };
+
+  if (isLoading || !event) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={Colors.dark.primary} />
+      </View>
+    );
+  }
+
+  const attendeeNames = ["Maria", "Pedro", "Ana", "Carlos", "Julia"];
+  const totalAttendees = event.attendeesCount || 0;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
@@ -120,7 +139,7 @@ export default function EventDetailsScreen() {
                 onPress={handleSave}
               >
                 <Feather
-                  name={isSaved ? "bookmark" : "bookmark"}
+                  name="bookmark"
                   size={24}
                   color={isSaved ? Colors.dark.primary : "#FFF"}
                 />
@@ -150,7 +169,7 @@ export default function EventDetailsScreen() {
             <View style={styles.ticketInfo}>
               <ThemedText style={styles.ticketLabel}>Ingresso</ThemedText>
               <ThemedText type="h3" style={styles.ticketPrice}>
-                {event.price}
+                {event.price || "Gratis"}
               </ThemedText>
             </View>
             <Button style={styles.ticketButton} onPress={() => {}}>
@@ -162,23 +181,25 @@ export default function EventDetailsScreen() {
             <InfoRow
               icon="calendar"
               title={event.date}
-              subtitle={event.time}
+              subtitle={`${event.time}${event.endTime ? ` - ${event.endTime}` : ""}`}
             />
             <InfoRow
               icon="map-pin"
-              title={event.venue}
-              subtitle={event.address}
+              title={event.venueName || "Local a definir"}
+              subtitle={event.address || undefined}
             />
           </View>
 
-          <View style={styles.section}>
-            <ThemedText type="h4" style={styles.sectionTitle}>
-              Sobre o Evento
-            </ThemedText>
-            <ThemedText style={styles.description}>
-              {event.description}
-            </ThemedText>
-          </View>
+          {event.description ? (
+            <View style={styles.section}>
+              <ThemedText type="h4" style={styles.sectionTitle}>
+                Sobre o Evento
+              </ThemedText>
+              <ThemedText style={styles.description}>
+                {event.description}
+              </ThemedText>
+            </View>
+          ) : null}
 
           <View style={styles.section}>
             <ThemedText type="h4" style={styles.sectionTitle}>
@@ -186,16 +207,16 @@ export default function EventDetailsScreen() {
             </ThemedText>
             <View style={styles.attendeesRow}>
               <View style={styles.attendeesList}>
-                {event.attendees.slice(0, 5).map((attendee, index) => (
+                {attendeeNames.slice(0, 5).map((name, index) => (
                   <AttendeeAvatar
-                    key={attendee.id}
-                    name={attendee.name}
+                    key={name}
+                    name={name}
                     index={index}
                   />
                 ))}
               </View>
               <ThemedText style={styles.attendeesCount}>
-                +{event.totalAttendees - 5} confirmados
+                {totalAttendees > 5 ? `+${totalAttendees - 5} confirmados` : `${totalAttendees} confirmados`}
               </ThemedText>
             </View>
           </View>
@@ -212,7 +233,7 @@ export default function EventDetailsScreen() {
             >
               <Feather name="map" size={32} color={Colors.dark.textSecondary} />
               <ThemedText style={styles.mapText}>
-                {event.venue}
+                {event.venueName || "Local a definir"}
               </ThemedText>
               <ThemedText style={styles.mapAddress}>{event.address}</ThemedText>
             </View>
@@ -244,6 +265,11 @@ export default function EventDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollView: {
     flex: 1,
