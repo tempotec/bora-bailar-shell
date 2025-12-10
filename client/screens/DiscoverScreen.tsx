@@ -216,16 +216,8 @@ export default function DiscoverScreen() {
       [1, 0],
       Extrapolation.CLAMP
     );
-    const height = interpolate(
-      scrollY.value,
-      [0, SCROLL_THRESHOLD * 0.5],
-      [280, 0],
-      Extrapolation.CLAMP
-    );
     return {
       opacity,
-      height,
-      overflow: "hidden" as const,
     };
   });
 
