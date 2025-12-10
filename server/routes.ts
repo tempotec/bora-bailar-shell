@@ -32,6 +32,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/events/nearby", async (req, res) => {
+    try {
+      const { lat, lng, radius } = req.query;
+      if (!lat || !lng) {
+        return res.status(400).json({ error: "lat and lng are required" });
+      }
+      const latitude = parseFloat(lat as string);
+      const longitude = parseFloat(lng as string);
+      const radiusKm = radius ? parseFloat(radius as string) : 10;
+      
+      if (isNaN(latitude) || isNaN(longitude)) {
+        return res.status(400).json({ error: "Invalid coordinates" });
+      }
+      
+      const nearbyEvents = await storage.getNearbyEvents(latitude, longitude, radiusKm);
+      res.json(nearbyEvents);
+    } catch (error) {
+      console.error("Error fetching nearby events:", error);
+      res.status(500).json({ error: "Failed to fetch nearby events" });
+    }
+  });
+
   app.get("/api/events/:id", async (req, res) => {
     try {
       const event = await storage.getEvent(req.params.id);

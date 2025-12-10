@@ -40,6 +40,7 @@ export interface IStorage {
   
   getUserEvents(userId: string): Promise<Event[]>;
   attendEvent(userId: string, eventId: string): Promise<void>;
+  getNearbyEvents(lat: number, lng: number, radiusKm: number): Promise<(Event & { distance: number })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -155,6 +156,39 @@ export class DatabaseStorage implements IStorage {
 
   async attendEvent(userId: string, eventId: string): Promise<void> {
     await db.insert(eventAttendees).values({ userId, eventId, status: "confirmed" });
+  }
+
+  async getNearbyEvents(lat: number, lng: number, radiusKm: number): Promise<(Event & { distance: number })[]> {
+    const allEvents = await this.getEvents();
+    
+    const eventsWithDistance = allEvents
+      .filter(event => event.latitude && event.longitude)
+      .map(event => {
+        const eventLat = parseFloat(event.latitude as string);
+        const eventLng = parseFloat(event.longitude as string);
+        const distance = this.calculateDistance(lat, lng, eventLat, eventLng);
+        return { ...event, distance };
+      })
+      .filter(event => event.distance <= radiusKm)
+      .sort((a, b) => a.distance - b.distance);
+    
+    return eventsWithDistance;
+  }
+
+  private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371;
+    const dLat = this.toRad(lat2 - lat1);
+    const dLng = this.toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  private toRad(deg: number): number {
+    return deg * (Math.PI / 180);
   }
 }
 

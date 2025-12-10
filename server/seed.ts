@@ -45,6 +45,8 @@ async function seed() {
       price: "R$ 40,00",
       attendeesCount: 234,
       isFeatured: true,
+      latitude: "-23.5505",
+      longitude: "-46.6333",
     },
     {
       title: "Forrozada",
@@ -57,6 +59,8 @@ async function seed() {
       price: "R$ 30,00",
       attendeesCount: 156,
       isFeatured: false,
+      latitude: "-23.5629",
+      longitude: "-46.6880",
     },
     {
       title: "Samba Rock",
@@ -69,6 +73,8 @@ async function seed() {
       price: "R$ 25,00",
       attendeesCount: 89,
       isFeatured: false,
+      latitude: "-23.5538",
+      longitude: "-46.6539",
     },
     {
       title: "Zouk Night",
@@ -81,6 +87,8 @@ async function seed() {
       price: "R$ 35,00",
       attendeesCount: 178,
       isFeatured: false,
+      latitude: "-23.5618",
+      longitude: "-46.6693",
     },
     {
       title: "Baile Funk",
@@ -93,6 +101,8 @@ async function seed() {
       price: "R$ 50,00",
       attendeesCount: 312,
       isFeatured: true,
+      latitude: "-23.5505",
+      longitude: "-46.6333",
     },
     {
       title: "Tango Milonga",
@@ -105,6 +115,8 @@ async function seed() {
       price: "R$ 45,00",
       attendeesCount: 67,
       isFeatured: false,
+      latitude: "-23.5618",
+      longitude: "-46.6693",
     },
   ];
 

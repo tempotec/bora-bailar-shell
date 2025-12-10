@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -7,6 +7,8 @@ import {
   FlatList,
   ActivityIndicator,
   TextInput,
+  Platform,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -16,12 +18,16 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "@tanstack/react-query";
+import * as Location from "expo-location";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
 import type { Event, Venue } from "@shared/schema";
+import { getApiUrl } from "@/lib/query-client";
+
+type NearbyEvent = Event & { distance: number };
 
 type NavigationProp = NativeStackNavigationProp<DiscoverStackParamList>;
 
@@ -149,6 +155,10 @@ export default function DiscoverScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVenue, setSelectedVenue] = useState<string | null>(null);
+  const [locationPermission, requestPermission] = Location.useForegroundPermissions();
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [nearbyEvents, setNearbyEvents] = useState<NearbyEvent[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
     queryKey: ["/api/events"],
@@ -157,6 +167,50 @@ export default function DiscoverScreen() {
   const { data: venues = [], isLoading: venuesLoading } = useQuery<Venue[]>({
     queryKey: ["/api/venues"],
   });
+
+  useEffect(() => {
+    const getLocation = async () => {
+      if (locationPermission?.granted) {
+        try {
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          setUserLocation({
+            lat: location.coords.latitude,
+            lng: location.coords.longitude,
+          });
+        } catch (error) {
+          console.error("Error getting location:", error);
+        }
+      }
+    };
+    getLocation();
+  }, [locationPermission?.granted]);
+
+  useEffect(() => {
+    const fetchNearbyEvents = async () => {
+      if (!userLocation) return;
+      
+      setLoadingNearby(true);
+      try {
+        const url = new URL("/api/events/nearby", getApiUrl());
+        url.searchParams.set("lat", userLocation.lat.toString());
+        url.searchParams.set("lng", userLocation.lng.toString());
+        url.searchParams.set("radius", "20");
+        
+        const response = await fetch(url.toString());
+        if (response.ok) {
+          const data = await response.json();
+          setNearbyEvents(data);
+        }
+      } catch (error) {
+        console.error("Error fetching nearby events:", error);
+      } finally {
+        setLoadingNearby(false);
+      }
+    };
+    fetchNearbyEvents();
+  }, [userLocation]);
 
   const filteredEvents = useMemo(() => {
     let result = events;
@@ -267,6 +321,93 @@ export default function DiscoverScreen() {
               attendeesCount: featuredEvent.attendeesCount,
             }}
             size="large"
+          />
+        </View>
+      ) : null}
+
+      {!isFiltering && !locationPermission?.granted ? (
+        <View style={styles.section}>
+          <Pressable
+            style={[styles.locationBanner, { backgroundColor: theme.backgroundDefault }]}
+            onPress={async () => {
+              if (locationPermission?.status === "denied" && !locationPermission?.canAskAgain) {
+                if (Platform.OS !== "web") {
+                  try {
+                    await Linking.openSettings();
+                  } catch (error) {}
+                }
+              } else {
+                requestPermission();
+              }
+            }}
+          >
+            <View style={styles.locationIcon}>
+              <Feather name="map-pin" size={24} color={Colors.dark.primary} />
+            </View>
+            <View style={styles.locationBannerText}>
+              <ThemedText style={styles.locationTitle}>Encontre eventos perto de voce</ThemedText>
+              <ThemedText style={styles.locationSubtitle}>
+                Ative a localizacao para ver eventos proximos
+              </ThemedText>
+            </View>
+            <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+          </Pressable>
+        </View>
+      ) : null}
+
+      {loadingNearby && userLocation && !isFiltering ? (
+        <View style={styles.section}>
+          <SectionHeader title="Perto de Voce" />
+          <View style={styles.loadingNearby}>
+            <ActivityIndicator size="small" color={Colors.dark.primary} />
+            <ThemedText style={styles.loadingNearbyText}>Buscando eventos...</ThemedText>
+          </View>
+        </View>
+      ) : null}
+
+      {nearbyEvents.length > 0 && !loadingNearby && !isFiltering ? (
+        <View style={styles.section}>
+          <SectionHeader title="Perto de Voce" onSeeAll={() => {}} />
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={nearbyEvents.slice(0, 5)}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.horizontalList}
+            renderItem={({ item }) => (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nearbyCard,
+                  { backgroundColor: theme.backgroundDefault },
+                  pressed && styles.pressed,
+                ]}
+                onPress={() => navigation.navigate("EventDetails", { eventId: item.id })}
+              >
+                <LinearGradient
+                  colors={[Colors.dark.primary + "30", Colors.dark.secondary + "30"]}
+                  style={styles.nearbyCardGradient}
+                />
+                <View style={styles.nearbyCardContent}>
+                  <View style={styles.distanceBadge}>
+                    <Feather name="map-pin" size={12} color={Colors.dark.primary} />
+                    <ThemedText style={styles.distanceText}>
+                      {item.distance < 1 
+                        ? `${Math.round(item.distance * 1000)}m` 
+                        : `${item.distance.toFixed(1)}km`}
+                    </ThemedText>
+                  </View>
+                  <ThemedText style={styles.nearbyTitle} numberOfLines={2}>
+                    {item.title}
+                  </ThemedText>
+                  <ThemedText style={styles.nearbyVenue} numberOfLines={1}>
+                    {item.venueName}
+                  </ThemedText>
+                  <ThemedText style={styles.nearbyDate}>
+                    {item.date} - {item.time}
+                  </ThemedText>
+                </View>
+              </Pressable>
+            )}
           />
         </View>
       ) : null}
@@ -574,5 +715,91 @@ const styles = StyleSheet.create({
     color: Colors.dark.textSecondary,
     textAlign: "center",
     marginTop: Spacing.sm,
+  },
+  locationBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: Spacing.lg,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.md,
+  },
+  locationIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.dark.primary + "20",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  locationBannerText: {
+    flex: 1,
+  },
+  locationTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  locationSubtitle: {
+    fontSize: 13,
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
+  },
+  nearbyCard: {
+    width: 180,
+    height: 140,
+    borderRadius: BorderRadius.md,
+    overflow: "hidden",
+    marginRight: Spacing.md,
+  },
+  nearbyCardGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+  },
+  nearbyCardContent: {
+    flex: 1,
+    padding: Spacing.md,
+    justifyContent: "space-between",
+  },
+  distanceBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    alignSelf: "flex-start",
+    backgroundColor: Colors.dark.primary + "20",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  distanceText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.dark.primary,
+  },
+  nearbyTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: Spacing.xs,
+  },
+  nearbyVenue: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+  },
+  nearbyDate: {
+    fontSize: 11,
+    color: Colors.dark.textSecondary,
+  },
+  loadingNearby: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  loadingNearbyText: {
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
   },
 });

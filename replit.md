@@ -68,5 +68,24 @@ server/
 - Use Expo Go to scan QR code for mobile testing
 - Web version available at the deployment URL
 
+## API Endpoints
+- `GET /api/events` - List all events (supports ?search= query)
+- `GET /api/events/featured` - Featured events
+- `GET /api/events/nearby?lat=&lng=&radius=` - Nearby events sorted by distance
+- `GET /api/events/:id` - Event details
+- `GET /api/venues` - List all venues
+- `GET /api/users/:id/favorites` - User's favorite events
+- `POST /api/users/:id/favorites` - Add event to favorites
+- `DELETE /api/users/:id/favorites/:eventId` - Remove from favorites
+
+## Features
+- **Event Discovery**: Browse, search, and filter dance events
+- **Favorites System**: Save events to "My Events" with backend persistence
+- **Geolocation**: Request location permission to see nearby events sorted by distance
+- **Demo User**: Uses "demo-user" ID for favorites functionality
+
 ## Recent Changes
+- December 2024: Added geolocation for nearby events with distance display
+- December 2024: Implemented favorites system with PostgreSQL persistence
+- December 2024: Added search and venue filtering functionality
 - December 2024: Initial MVP implementation with all core screens
