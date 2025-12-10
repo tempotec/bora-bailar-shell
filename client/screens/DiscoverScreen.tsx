@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   ScrollView,
@@ -6,120 +6,119 @@ import {
   Pressable,
   FlatList,
   ActivityIndicator,
-  TextInput,
-  Platform,
-  Linking,
+  Image,
+  Text,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "@tanstack/react-query";
-import * as Location from "expo-location";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Colors } from "@/constants/theme";
+import { Spacing, BorderRadius, Colors, Fonts } from "@/constants/theme";
 import { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
-import type { Event, Venue } from "@shared/schema";
-import { getApiUrl } from "@/lib/query-client";
+import type { Event } from "@shared/schema";
 
-type NearbyEvent = Event & { distance: number };
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type NavigationProp = NativeStackNavigationProp<DiscoverStackParamList>;
 
-interface EventCardProps {
-  event: {
-    id: string;
-    title: string;
-    venueName: string | null;
-    date: string;
-    time: string;
-    attendeesCount: number | null;
-  };
-  size?: "large" | "medium";
-}
+const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
-function EventCard({ event, size = "large" }: EventCardProps) {
-  const navigation = useNavigation<NavigationProp>();
-
-  const handlePress = () => {
-    navigation.navigate("EventDetails", { eventId: event.id });
-  };
-
+function WizardSearchField({
+  label,
+  icon,
+  onPress,
+}: {
+  label: string;
+  icon: "chevrons-down" | "mic";
+  onPress?: () => void;
+}) {
   return (
     <Pressable
-      onPress={handlePress}
       style={({ pressed }) => [
-        size === "large" ? styles.heroCard : styles.eventCard,
-        pressed && styles.pressed,
+        styles.wizardField,
+        pressed && styles.wizardFieldPressed,
       ]}
+      onPress={onPress}
     >
-      <LinearGradient
-        colors={[Colors.dark.primary, Colors.dark.secondary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
+      <Text style={styles.wizardFieldLabel}>{label}</Text>
+      <Feather
+        name={icon}
+        size={icon === "mic" ? 20 : 18}
+        color={icon === "mic" ? Colors.dark.brand : Colors.dark.textSecondary}
       />
-      <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.8)"]}
-        style={[StyleSheet.absoluteFill, { top: "50%" }]}
-      />
-      <View style={styles.eventCardContent}>
-        <View style={styles.eventDate}>
-          <ThemedText style={styles.eventDateText}>{event.date}</ThemedText>
-        </View>
-        <View style={styles.eventInfo}>
-          <ThemedText type="h4" style={styles.eventTitle}>
-            {event.title}
-          </ThemedText>
-          <View style={styles.eventMeta}>
-            <Feather name="map-pin" size={14} color={Colors.dark.textSecondary} />
-            <ThemedText style={styles.eventVenue}>{event.venueName}</ThemedText>
-            <ThemedText style={styles.eventTime}>{event.time}</ThemedText>
-          </View>
-          <View style={styles.attendeesRow}>
-            <Feather name="users" size={14} color={Colors.dark.textSecondary} />
-            <ThemedText style={styles.attendeesText}>
-              {event.attendeesCount || 0} confirmados
-            </ThemedText>
-          </View>
-        </View>
-      </View>
     </Pressable>
   );
 }
 
-function VenueCard({ venue, onPress }: { venue: { id: string; name: string; eventsCount: number | null }; onPress?: () => void }) {
+function EventThumbnail({ event }: { event: Event }) {
+  const navigation = useNavigation<NavigationProp>();
+
   return (
     <Pressable
-      style={({ pressed }) => [styles.venueCard, pressed && styles.pressed]}
-      onPress={onPress}
+      style={({ pressed }) => [
+        styles.eventThumbnail,
+        pressed && styles.pressed,
+      ]}
+      onPress={() => navigation.navigate("EventDetails", { eventId: event.id })}
     >
       <LinearGradient
-        colors={[Colors.dark.backgroundSecondary, Colors.dark.backgroundDefault]}
+        colors={[Colors.dark.brand, "#FF6B6B"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Feather name="home" size={24} color={Colors.dark.primary} />
-      <ThemedText style={styles.venueName}>{venue.name}</ThemedText>
-      <ThemedText style={styles.venueEvents}>{venue.eventsCount || 0} eventos</ThemedText>
+      <View style={styles.thumbnailOverlay}>
+        <Feather name="music" size={24} color="rgba(255,255,255,0.6)" />
+      </View>
     </Pressable>
   );
 }
 
 function SectionHeader({
   title,
+  highlightWords = [],
   onSeeAll,
 }: {
   title: string;
+  highlightWords?: string[];
   onSeeAll?: () => void;
 }) {
+  const renderTitle = () => {
+    if (highlightWords.length === 0) {
+      return <ThemedText style={styles.sectionTitle}>{title}</ThemedText>;
+    }
+
+    const words = title.split(" ");
+    return (
+      <Text style={styles.sectionTitle}>
+        {words.map((word, index) => {
+          const isHighlight = highlightWords.some(
+            (hw) => word.toLowerCase().includes(hw.toLowerCase())
+          );
+          return (
+            <Text
+              key={index}
+              style={isHighlight ? styles.highlightWord : styles.normalWord}
+            >
+              {word}
+              {index < words.length - 1 ? " " : ""}
+            </Text>
+          );
+        })}
+      </Text>
+    );
+  };
+
   return (
     <View style={styles.sectionHeader}>
-      <ThemedText type="h4">{title}</ThemedText>
+      {renderTitle()}
       {onSeeAll ? (
         <Pressable onPress={onSeeAll} hitSlop={8}>
           <ThemedText style={styles.seeAll}>Ver todos</ThemedText>
@@ -129,370 +128,112 @@ function SectionHeader({
   );
 }
 
-function FilterChip({ label, isActive, onPress }: { label: string; isActive?: boolean; onPress: () => void }) {
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.filterChip,
-        isActive && styles.filterChipActive,
-        pressed && styles.pressed,
-      ]}
-      onPress={onPress}
-    >
-      <ThemedText style={[styles.filterChipText, isActive && styles.filterChipTextActive]}>
-        {label}
-      </ThemedText>
-    </Pressable>
-  );
-}
-
 export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NavigationProp>();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedVenue, setSelectedVenue] = useState<string | null>(null);
-  const [locationPermission, requestPermission] = Location.useForegroundPermissions();
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [nearbyEvents, setNearbyEvents] = useState<NearbyEvent[]>([]);
-  const [loadingNearby, setLoadingNearby] = useState(false);
-
-  const { data: events = [], isLoading: eventsLoading } = useQuery<Event[]>({
+  const { data: events = [], isLoading } = useQuery<Event[]>({
     queryKey: ["/api/events"],
   });
 
-  const { data: venues = [], isLoading: venuesLoading } = useQuery<Venue[]>({
-    queryKey: ["/api/venues"],
-  });
-
-  useEffect(() => {
-    const getLocation = async () => {
-      if (locationPermission?.granted) {
-        try {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          setUserLocation({
-            lat: location.coords.latitude,
-            lng: location.coords.longitude,
-          });
-        } catch (error) {
-          console.error("Error getting location:", error);
-        }
-      }
-    };
-    getLocation();
-  }, [locationPermission?.granted]);
-
-  useEffect(() => {
-    const fetchNearbyEvents = async () => {
-      if (!userLocation) return;
-      
-      setLoadingNearby(true);
-      try {
-        const url = new URL("/api/events/nearby", getApiUrl());
-        url.searchParams.set("lat", userLocation.lat.toString());
-        url.searchParams.set("lng", userLocation.lng.toString());
-        url.searchParams.set("radius", "20");
-        
-        const response = await fetch(url.toString());
-        if (response.ok) {
-          const data = await response.json();
-          setNearbyEvents(data);
-        }
-      } catch (error) {
-        console.error("Error fetching nearby events:", error);
-      } finally {
-        setLoadingNearby(false);
-      }
-    };
-    fetchNearbyEvents();
-  }, [userLocation]);
-
-  const filteredEvents = useMemo(() => {
-    let result = events;
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (event) =>
-          event.title.toLowerCase().includes(query) ||
-          (event.venueName && event.venueName.toLowerCase().includes(query)) ||
-          (event.description && event.description.toLowerCase().includes(query))
-      );
-    }
-
-    if (selectedVenue) {
-      result = result.filter((event) => event.venueName === selectedVenue);
-    }
-
-    return result;
-  }, [events, searchQuery, selectedVenue]);
-
-  const featuredEvent = filteredEvents.find(e => e.isFeatured) || filteredEvents[0];
-  const weekendEvents = filteredEvents.filter(e => e.id !== featuredEvent?.id).slice(0, 3);
-
-  const handleVenuePress = (venueName: string) => {
-    if (selectedVenue === venueName) {
-      setSelectedVenue(null);
-    } else {
-      setSelectedVenue(venueName);
-    }
-  };
-
-  const clearFilters = () => {
-    setSearchQuery("");
-    setSelectedVenue(null);
-  };
-
-  if (eventsLoading || venuesLoading) {
+  if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
-        <ActivityIndicator size="large" color={Colors.dark.primary} />
+        <ActivityIndicator size="large" color={Colors.dark.brand} />
       </View>
     );
   }
-
-  const isFiltering = searchQuery.trim() !== "" || selectedVenue !== null;
 
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
       contentContainerStyle={{
-        paddingTop: headerHeight + Spacing.lg,
+        paddingTop: Spacing.lg,
         paddingBottom: tabBarHeight + Spacing.xl,
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}
       showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.searchSection}>
-        <View style={[styles.searchBar, { backgroundColor: theme.backgroundDefault }]}>
-          <Feather name="search" size={20} color={theme.textSecondary} />
-          <TextInput
-            style={[styles.searchInput, { color: theme.text }]}
-            placeholder="Buscar eventos, locais..."
-            placeholderTextColor={theme.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 ? (
-            <Pressable onPress={() => setSearchQuery("")} hitSlop={8}>
-              <Feather name="x" size={20} color={theme.textSecondary} />
-            </Pressable>
-          ) : null}
-        </View>
+      <View style={styles.heroSection}>
+        <Image
+          source={logoImage}
+          style={styles.logo}
+          resizeMode="contain"
+        />
 
-        {isFiltering ? (
-          <View style={styles.activeFilters}>
-            <ThemedText style={styles.filterLabel}>
-              {filteredEvents.length} {filteredEvents.length === 1 ? "evento encontrado" : "eventos encontrados"}
-            </ThemedText>
-            <Pressable onPress={clearFilters} hitSlop={8}>
-              <ThemedText style={styles.clearFilters}>Limpar</ThemedText>
-            </Pressable>
-          </View>
-        ) : null}
+        <Text style={styles.brandName}>
+          <Text style={styles.brandBora}>BORA</Text>
+          <Text style={styles.brandBailar}>BAILAR</Text>
+        </Text>
 
-        {selectedVenue ? (
-          <View style={styles.filterTags}>
-            <FilterChip
-              label={selectedVenue}
-              isActive
-              onPress={() => setSelectedVenue(null)}
-            />
-          </View>
-        ) : null}
+        <Text style={styles.tagline}>PRA SAIR, DANCAR E SE DIVERTIR!</Text>
       </View>
 
-      {featuredEvent && !isFiltering ? (
-        <View style={styles.heroSection}>
-          <EventCard
-            event={{
-              id: featuredEvent.id,
-              title: featuredEvent.title,
-              venueName: featuredEvent.venueName,
-              date: featuredEvent.date,
-              time: featuredEvent.time,
-              attendeesCount: featuredEvent.attendeesCount,
-            }}
-            size="large"
-          />
+      <View style={styles.wizardSection}>
+        <View style={styles.wizardContainer}>
+          <WizardSearchField label="Onde" icon="chevrons-down" />
+          <WizardSearchField label="Quando" icon="chevrons-down" />
+          <WizardSearchField label="Com quem" icon="mic" />
         </View>
-      ) : null}
 
-      {!isFiltering && !locationPermission?.granted ? (
-        <View style={styles.section}>
+        <View style={styles.helperTextContainer}>
+          <Text style={styles.helperText}>
+            E so{" "}
+            <Text style={styles.helperHighlight}>falar</Text>
+            {" "}que a gente te{" "}
+            <Text style={styles.helperHighlight}>entende</Text>!
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.contentSection}>
+        <SectionHeader
+          title="O seu querer e que faz acontecer"
+          highlightWords={["querer", "acontecer"]}
+        />
+
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={events.slice(0, 6)}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.thumbnailList}
+          renderItem={({ item }) => <EventThumbnail event={item} />}
+        />
+      </View>
+
+      <View style={styles.eventsSection}>
+        <SectionHeader title="Eventos em Destaque" onSeeAll={() => {}} />
+
+        {events.slice(0, 5).map((event) => (
           <Pressable
-            style={[styles.locationBanner, { backgroundColor: theme.backgroundDefault }]}
-            onPress={async () => {
-              if (locationPermission?.status === "denied" && !locationPermission?.canAskAgain) {
-                if (Platform.OS !== "web") {
-                  try {
-                    await Linking.openSettings();
-                  } catch (error) {}
-                }
-              } else {
-                requestPermission();
-              }
-            }}
+            key={event.id}
+            style={({ pressed }) => [
+              styles.eventListItem,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => navigation.navigate("EventDetails", { eventId: event.id })}
           >
-            <View style={styles.locationIcon}>
-              <Feather name="map-pin" size={24} color={Colors.dark.primary} />
+            <View style={styles.eventListImage}>
+              <LinearGradient
+                colors={[Colors.dark.brand, "#FF6B6B"]}
+                style={StyleSheet.absoluteFill}
+              />
+              <Feather name="music" size={18} color="rgba(255,255,255,0.8)" />
             </View>
-            <View style={styles.locationBannerText}>
-              <ThemedText style={styles.locationTitle}>Encontre eventos perto de voce</ThemedText>
-              <ThemedText style={styles.locationSubtitle}>
-                Ative a localizacao para ver eventos proximos
+            <View style={styles.eventListInfo}>
+              <ThemedText style={styles.eventListTitle}>
+                {event.title}
+              </ThemedText>
+              <ThemedText style={styles.eventListMeta}>
+                {event.venueName} - {event.date}
               </ThemedText>
             </View>
             <Feather name="chevron-right" size={20} color={theme.textSecondary} />
           </Pressable>
-        </View>
-      ) : null}
-
-      {loadingNearby && userLocation && !isFiltering ? (
-        <View style={styles.section}>
-          <SectionHeader title="Perto de Voce" />
-          <View style={styles.loadingNearby}>
-            <ActivityIndicator size="small" color={Colors.dark.primary} />
-            <ThemedText style={styles.loadingNearbyText}>Buscando eventos...</ThemedText>
-          </View>
-        </View>
-      ) : null}
-
-      {nearbyEvents.length > 0 && !loadingNearby && !isFiltering ? (
-        <View style={styles.section}>
-          <SectionHeader title="Perto de Voce" onSeeAll={() => {}} />
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={nearbyEvents.slice(0, 5)}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.horizontalList}
-            renderItem={({ item }) => (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.nearbyCard,
-                  { backgroundColor: theme.backgroundDefault },
-                  pressed && styles.pressed,
-                ]}
-                onPress={() => navigation.navigate("EventDetails", { eventId: item.id })}
-              >
-                <LinearGradient
-                  colors={[Colors.dark.primary + "30", Colors.dark.secondary + "30"]}
-                  style={styles.nearbyCardGradient}
-                />
-                <View style={styles.nearbyCardContent}>
-                  <View style={styles.distanceBadge}>
-                    <Feather name="map-pin" size={12} color={Colors.dark.primary} />
-                    <ThemedText style={styles.distanceText}>
-                      {item.distance < 1 
-                        ? `${Math.round(item.distance * 1000)}m` 
-                        : `${item.distance.toFixed(1)}km`}
-                    </ThemedText>
-                  </View>
-                  <ThemedText style={styles.nearbyTitle} numberOfLines={2}>
-                    {item.title}
-                  </ThemedText>
-                  <ThemedText style={styles.nearbyVenue} numberOfLines={1}>
-                    {item.venueName}
-                  </ThemedText>
-                  <ThemedText style={styles.nearbyDate}>
-                    {item.date} - {item.time}
-                  </ThemedText>
-                </View>
-              </Pressable>
-            )}
-          />
-        </View>
-      ) : null}
-
-      {weekendEvents.length > 0 && !isFiltering ? (
-        <View style={styles.section}>
-          <SectionHeader title="Este Final de Semana" onSeeAll={() => {}} />
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={weekendEvents}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.horizontalList}
-            renderItem={({ item }) => (
-              <EventCard
-                event={{
-                  id: item.id,
-                  title: item.title,
-                  venueName: item.venueName,
-                  date: item.date,
-                  time: item.time,
-                  attendeesCount: item.attendeesCount,
-                }}
-                size="medium"
-              />
-            )}
-          />
-        </View>
-      ) : null}
-
-      {venues.length > 0 && !isFiltering ? (
-        <View style={styles.section}>
-          <SectionHeader title="Filtrar por Local" />
-          <View style={styles.venuesGrid}>
-            {venues.map((venue) => (
-              <VenueCard
-                key={venue.id}
-                venue={venue}
-                onPress={() => handleVenuePress(venue.name)}
-              />
-            ))}
-          </View>
-        </View>
-      ) : null}
-
-      <View style={styles.section}>
-        <SectionHeader title={isFiltering ? "Resultados" : "Todos os Eventos"} />
-        {filteredEvents.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Feather name="search" size={48} color={theme.textSecondary} />
-            <ThemedText style={styles.emptyText}>Nenhum evento encontrado</ThemedText>
-            <ThemedText style={styles.emptySubtext}>
-              Tente buscar por outro termo ou limpe os filtros
-            </ThemedText>
-          </View>
-        ) : (
-          filteredEvents.map((event) => (
-            <Pressable
-              key={event.id}
-              style={({ pressed }) => [
-                styles.eventListItem,
-                { backgroundColor: theme.backgroundDefault },
-                pressed && styles.pressed,
-              ]}
-              onPress={() => navigation.navigate("EventDetails", { eventId: event.id })}
-            >
-              <View style={styles.eventListImage}>
-                <LinearGradient
-                  colors={[Colors.dark.secondary, Colors.dark.tertiary]}
-                  style={StyleSheet.absoluteFill}
-                />
-                <Feather name="music" size={20} color="#FFF" />
-              </View>
-              <View style={styles.eventListInfo}>
-                <ThemedText type="body" style={{ fontWeight: "600" }}>
-                  {event.title}
-                </ThemedText>
-                <ThemedText style={styles.eventListMeta}>
-                  {event.venueName} - {event.date}
-                </ThemedText>
-              </View>
-              <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-            </Pressable>
-          ))
-        )}
+        ))}
       </View>
     </ScrollView>
   );
@@ -507,131 +248,82 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  searchSection: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: Spacing.xs,
-  },
-  activeFilters: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: Spacing.sm,
-  },
-  filterLabel: {
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
-  },
-  clearFilters: {
-    fontSize: 14,
-    color: Colors.dark.primary,
-    fontWeight: "500",
-  },
-  filterTags: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: Spacing.sm,
-    gap: Spacing.xs,
-  },
-  filterChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.dark.backgroundSecondary,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.xs,
-  },
-  filterChipActive: {
-    backgroundColor: Colors.dark.primary,
-  },
-  filterChipText: {
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
-  },
-  filterChipTextActive: {
-    color: "#FFF",
-    fontWeight: "500",
-  },
   heroSection: {
+    alignItems: "center",
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing["2xl"],
     paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.xl,
   },
-  heroCard: {
-    height: 220,
+  logo: {
+    width: 120,
+    height: 80,
+    marginBottom: Spacing.md,
+  },
+  brandName: {
+    fontSize: 28,
+    fontFamily: Fonts?.serif,
+    letterSpacing: 2,
+    marginBottom: Spacing.sm,
+  },
+  brandBora: {
+    color: Colors.dark.text,
+    fontWeight: "400",
+  },
+  brandBailar: {
+    color: Colors.dark.brand,
+    fontWeight: "700",
+  },
+  tagline: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: Colors.dark.brand,
+    textAlign: "center",
+    letterSpacing: 1,
+  },
+  wizardSection: {
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing["3xl"],
+  },
+  wizardContainer: {
+    backgroundColor: Colors.dark.wizardBackground,
     borderRadius: BorderRadius.lg,
-    overflow: "hidden",
-  },
-  eventCard: {
-    width: 200,
-    height: 160,
-    borderRadius: BorderRadius.md,
-    overflow: "hidden",
-    marginRight: Spacing.md,
-  },
-  eventCardContent: {
-    flex: 1,
-    justifyContent: "space-between",
     padding: Spacing.lg,
+    gap: Spacing.md,
   },
-  eventDate: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.xs,
-    alignSelf: "flex-start",
-  },
-  eventDateText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  eventInfo: {
-    gap: Spacing.xs,
-  },
-  eventTitle: {
-    color: "#FFF",
-  },
-  eventMeta: {
+  wizardField: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs,
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
-  eventVenue: {
-    fontSize: 14,
+  wizardFieldPressed: {
+    backgroundColor: "#F9FAFB",
+  },
+  wizardFieldLabel: {
+    fontSize: 16,
     color: Colors.dark.textSecondary,
+    fontWeight: "400",
   },
-  eventTime: {
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
-    marginLeft: Spacing.sm,
-  },
-  attendeesRow: {
-    flexDirection: "row",
+  helperTextContainer: {
     alignItems: "center",
-    gap: Spacing.xs,
+    marginTop: Spacing.lg,
   },
-  attendeesText: {
-    fontSize: 12,
-    color: Colors.dark.textSecondary,
+  helperText: {
+    fontSize: 14,
+    color: Colors.dark.text,
+    textAlign: "center",
   },
-  pressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
+  helperHighlight: {
+    color: Colors.dark.brand,
+    fontWeight: "700",
   },
-  section: {
-    marginBottom: Spacing.xl,
+  contentSection: {
+    marginBottom: Spacing["2xl"],
   },
   sectionHeader: {
     flexDirection: "row",
@@ -640,39 +332,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
   },
+  sectionTitle: {
+    fontSize: 16,
+    color: Colors.dark.text,
+    fontWeight: "400",
+  },
+  normalWord: {
+    color: Colors.dark.text,
+    fontWeight: "400",
+  },
+  highlightWord: {
+    color: Colors.dark.brand,
+    fontWeight: "700",
+  },
   seeAll: {
-    color: Colors.dark.primary,
+    color: Colors.dark.brand,
     fontSize: 14,
     fontWeight: "500",
   },
-  horizontalList: {
+  thumbnailList: {
     paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
   },
-  venuesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.md,
-  },
-  venueCard: {
-    width: "47%",
-    height: 100,
+  eventThumbnail: {
+    width: 80,
+    height: 80,
     borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    overflow: "hidden",
+    marginRight: Spacing.sm,
+  },
+  thumbnailOverlay: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    overflow: "hidden",
   },
-  venueName: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: Spacing.sm,
-    textAlign: "center",
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
-  venueEvents: {
-    fontSize: 12,
-    color: Colors.dark.textSecondary,
-    marginTop: Spacing.xs,
+  eventsSection: {
+    marginBottom: Spacing.xl,
   },
   eventListItem: {
     flexDirection: "row",
@@ -680,12 +379,13 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
     padding: Spacing.md,
+    backgroundColor: Colors.dark.backgroundSecondary,
     borderRadius: BorderRadius.md,
     gap: Spacing.md,
   },
   eventListImage: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     borderRadius: BorderRadius.sm,
     overflow: "hidden",
     justifyContent: "center",
@@ -694,112 +394,14 @@ const styles = StyleSheet.create({
   eventListInfo: {
     flex: 1,
   },
+  eventListTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.dark.text,
+  },
   eventListMeta: {
     fontSize: 13,
     color: Colors.dark.textSecondary,
     marginTop: 2,
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.xl * 2,
-    paddingHorizontal: Spacing.lg,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: Spacing.lg,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
-    textAlign: "center",
-    marginTop: Spacing.sm,
-  },
-  locationBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: Spacing.lg,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.md,
-  },
-  locationIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.dark.primary + "20",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  locationBannerText: {
-    flex: 1,
-  },
-  locationTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  locationSubtitle: {
-    fontSize: 13,
-    color: Colors.dark.textSecondary,
-    marginTop: 2,
-  },
-  nearbyCard: {
-    width: 180,
-    height: 140,
-    borderRadius: BorderRadius.md,
-    overflow: "hidden",
-    marginRight: Spacing.md,
-  },
-  nearbyCardGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 60,
-  },
-  nearbyCardContent: {
-    flex: 1,
-    padding: Spacing.md,
-    justifyContent: "space-between",
-  },
-  distanceBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    alignSelf: "flex-start",
-    backgroundColor: Colors.dark.primary + "20",
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.full,
-  },
-  distanceText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: Colors.dark.primary,
-  },
-  nearbyTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: Spacing.xs,
-  },
-  nearbyVenue: {
-    fontSize: 12,
-    color: Colors.dark.textSecondary,
-  },
-  nearbyDate: {
-    fontSize: 11,
-    color: Colors.dark.textSecondary,
-  },
-  loadingNearby: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  loadingNearbyText: {
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
   },
 });
