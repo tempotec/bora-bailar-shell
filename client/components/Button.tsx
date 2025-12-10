@@ -1,21 +1,22 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
+import { StyleSheet, Pressable, ViewStyle, StyleProp, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
   WithSpringConfig,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Spacing, Colors } from "@/constants/theme";
 
 interface ButtonProps {
   onPress?: () => void;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  variant?: "primary" | "secondary" | "outline";
 }
 
 const springConfig: WithSpringConfig = {
@@ -33,8 +34,8 @@ export function Button({
   children,
   style,
   disabled = false,
+  variant = "primary",
 }: ButtonProps) {
-  const { theme } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -43,13 +44,39 @@ export function Button({
 
   const handlePressIn = () => {
     if (!disabled) {
-      scale.value = withSpring(0.98, springConfig);
+      scale.value = withSpring(0.96, springConfig);
     }
   };
 
   const handlePressOut = () => {
     if (!disabled) {
       scale.value = withSpring(1, springConfig);
+    }
+  };
+
+  const getButtonStyle = () => {
+    switch (variant) {
+      case "outline":
+        return {
+          backgroundColor: "transparent",
+          borderWidth: 1,
+          borderColor: Colors.dark.primary,
+        };
+      case "secondary":
+        return {
+          backgroundColor: Colors.dark.backgroundSecondary,
+        };
+      default:
+        return {};
+    }
+  };
+
+  const getTextColor = () => {
+    switch (variant) {
+      case "outline":
+        return Colors.dark.primary;
+      default:
+        return Colors.dark.buttonText;
     }
   };
 
@@ -61,17 +88,23 @@ export function Button({
       disabled={disabled}
       style={[
         styles.button,
-        {
-          backgroundColor: theme.link,
-          opacity: disabled ? 0.5 : 1,
-        },
+        getButtonStyle(),
+        { opacity: disabled ? 0.5 : 1 },
         style,
         animatedStyle,
       ]}
     >
+      {variant === "primary" ? (
+        <LinearGradient
+          colors={[Colors.dark.primary, Colors.dark.secondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
       <ThemedText
         type="body"
-        style={[styles.buttonText, { color: theme.buttonText }]}
+        style={[styles.buttonText, { color: getTextColor() }]}
       >
         {children}
       </ThemedText>
@@ -85,6 +118,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   buttonText: {
     fontWeight: "600",
