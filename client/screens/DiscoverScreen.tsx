@@ -19,8 +19,8 @@ const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11
 function ChevronUpDownIcon() {
   return (
     <View style={styles.chevronIconContainer}>
-      <Feather name="chevron-up" size={12} color={Colors.dark.textSecondary} style={{ marginBottom: -4 }} />
-      <Feather name="chevron-down" size={12} color={Colors.dark.textSecondary} style={{ marginTop: -4 }} />
+      <Feather name="chevron-up" size={14} color={Colors.dark.textSecondary} style={{ marginBottom: -5 }} />
+      <Feather name="chevron-down" size={14} color={Colors.dark.textSecondary} style={{ marginTop: -5 }} />
     </View>
   );
 }
@@ -28,7 +28,7 @@ function ChevronUpDownIcon() {
 function MicrophoneIcon() {
   return (
     <View style={styles.micIconContainer}>
-      <Feather name="mic" size={16} color="#FFFFFF" />
+      <Feather name="mic" size={18} color="#FFFFFF" />
     </View>
   );
 }
@@ -112,20 +112,20 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: "center",
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
     paddingHorizontal: Spacing.lg,
   },
   logo: {
-    width: 100,
-    height: 70,
-    marginBottom: Spacing.xs,
+    width: 140,
+    height: 100,
+    marginBottom: Spacing.sm,
   },
   brandName: {
-    fontSize: 26,
+    fontSize: 32,
     fontFamily: Fonts?.serif,
-    letterSpacing: 1,
-    marginBottom: Spacing.xs,
+    letterSpacing: 2,
+    marginBottom: Spacing.sm,
   },
   brandBora: {
     color: Colors.dark.text,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   tagline: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "700",
     color: Colors.dark.brand,
     textAlign: "center",
@@ -147,15 +147,15 @@ const styles = StyleSheet.create({
   },
   wizardContainer: {
     backgroundColor: Colors.dark.wizardBackground,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    gap: Spacing.sm,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    gap: Spacing.md,
   },
   wizardField: {
     backgroundColor: "#FFFFFF",
-    borderRadius: BorderRadius.xl,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    borderRadius: 30,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
   },
   wizardFieldLabel: {
-    fontSize: 15,
+    fontSize: 16,
     color: Colors.dark.textSecondary,
     fontWeight: "400",
   },
@@ -173,20 +173,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   micIconContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: Colors.dark.brand,
     alignItems: "center",
     justifyContent: "center",
   },
   helperTextContainer: {
     alignItems: "center",
-    marginTop: Spacing.sm,
-    paddingBottom: Spacing.xs,
+    marginTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   helperText: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.dark.text,
     textAlign: "center",
   },
