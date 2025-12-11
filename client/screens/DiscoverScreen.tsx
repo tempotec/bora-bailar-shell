@@ -188,6 +188,96 @@ const QUERER_DATA = [
   },
 ];
 
+const RECOMENDACOES_ESPECIAIS_DATA = [
+  {
+    id: "1",
+    title: "Festa de Halloween",
+    price: "R$50",
+    discount: "40% OFF",
+    image: "https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=300&h=200&fit=crop",
+  },
+  {
+    id: "2",
+    title: "Festival de dança RJ",
+    price: "R$100",
+    discount: "20% OFF",
+    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&h=200&fit=crop",
+  },
+  {
+    id: "3",
+    title: "Noite de Salsa",
+    price: "R$35",
+    discount: "30% OFF",
+    image: "https://images.unsplash.com/photo-1545959570-a94084071b5d?w=300&h=200&fit=crop",
+  },
+  {
+    id: "4",
+    title: "Baile Tropical",
+    price: "R$60",
+    discount: "25% OFF",
+    image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=300&h=200&fit=crop",
+  },
+  {
+    id: "5",
+    title: "Workshop Forró",
+    price: "R$80",
+    discount: "15% OFF",
+    image: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=300&h=200&fit=crop",
+  },
+  {
+    id: "6",
+    title: "Pagode da Cidade",
+    price: "R$45",
+    discount: "50% OFF",
+    image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=300&h=200&fit=crop",
+  },
+];
+
+const OFERTA_CARD_WIDTH = 150;
+const OFERTA_CARD_HEIGHT = 120;
+
+function OfertaEspecialCard({
+  title,
+  price,
+  discount,
+  image,
+  onPress,
+  onFavorite,
+}: {
+  title: string;
+  price: string;
+  discount: string;
+  image: string;
+  onPress?: () => void;
+  onFavorite?: () => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.ofertaCard,
+        pressed && { opacity: 0.9 },
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.ofertaImageContainer}>
+        <Image source={{ uri: image }} style={styles.ofertaImage} resizeMode="cover" />
+        <View style={styles.ofertaDiscountBadge}>
+          <Text style={styles.ofertaDiscountText}>{discount}</Text>
+        </View>
+        <Pressable 
+          style={styles.ofertaHeartButton} 
+          onPress={onFavorite}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Feather name="heart" size={14} color="#FFFFFF" />
+        </Pressable>
+      </View>
+      <Text style={styles.ofertaTitle} numberOfLines={1}>{title}</Text>
+      <Text style={styles.ofertaPrice}>A partir de {price}</Text>
+    </Pressable>
+  );
+}
+
 const VIDEO_STORY_WIDTH = 100;
 const VIDEO_STORY_HEIGHT = 140;
 
@@ -657,6 +747,25 @@ export default function DiscoverScreen() {
             ))}
           </View>
 
+          <View style={styles.recomendacoesSection}>
+            <Text style={styles.recomendacoesTitle}>Recomendações especiais</Text>
+            <Animated.ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.recomendacoesContainer}
+            >
+              {RECOMENDACOES_ESPECIAIS_DATA.map((item) => (
+                <OfertaEspecialCard
+                  key={item.id}
+                  title={item.title}
+                  price={item.price}
+                  discount={item.discount}
+                  image={item.image}
+                />
+              ))}
+            </Animated.ScrollView>
+          </View>
+
           <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
             <Text style={styles.momentoTitle}>
               Momento{" "}
@@ -1095,5 +1204,68 @@ const styles = StyleSheet.create({
     width: 70,
     height: 50,
     borderRadius: BorderRadius.md,
+  },
+  recomendacoesSection: {
+    marginTop: Spacing.xl + Spacing.lg,
+  },
+  recomendacoesTitle: {
+    fontSize: 18,
+    color: Colors.dark.text,
+    fontWeight: "600",
+    marginBottom: Spacing.lg,
+  },
+  recomendacoesContainer: {
+    paddingRight: Spacing.lg,
+    gap: Spacing.md,
+  },
+  ofertaCard: {
+    width: OFERTA_CARD_WIDTH,
+  },
+  ofertaImageContainer: {
+    width: OFERTA_CARD_WIDTH,
+    height: OFERTA_CARD_HEIGHT,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    position: "relative",
+  },
+  ofertaImage: {
+    width: "100%",
+    height: "100%",
+  },
+  ofertaDiscountBadge: {
+    position: "absolute",
+    top: Spacing.sm,
+    left: Spacing.sm,
+    backgroundColor: Colors.dark.brand,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+  },
+  ofertaDiscountText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  ofertaHeartButton: {
+    position: "absolute",
+    top: Spacing.sm,
+    right: Spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ofertaTitle: {
+    fontSize: 13,
+    color: Colors.dark.text,
+    fontWeight: "500",
+    marginTop: Spacing.sm,
+  },
+  ofertaPrice: {
+    fontSize: 11,
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
   },
 });
