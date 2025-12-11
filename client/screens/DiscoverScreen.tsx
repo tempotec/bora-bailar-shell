@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -521,8 +521,12 @@ function QuererCard({
 
 const SECTIONS = {
   querer: { title: "O seu querer é que faz acontecer", highlightWords: ["querer", "acontecer"] },
+  recomendacoes: { title: "Recomendações especiais", highlightWords: [] },
   momento: { title: "Momento dança é momento feliz", highlightWords: ["dança", "feliz"] },
+  awards: { title: "BORABAILAR TOP DANCE AWARDS", highlightWords: ["BORABAILAR"] },
 } as const;
+
+type SectionKey = keyof typeof SECTIONS;
 
 export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
@@ -530,33 +534,45 @@ export default function DiscoverScreen() {
   const { theme } = useTheme();
   
   const scrollY = useSharedValue(0);
-  const [currentSectionKey, setCurrentSectionKey] = useState<keyof typeof SECTIONS | null>(null);
-  const currentSectionRef = useRef<keyof typeof SECTIONS | null>(null);
+  const [currentSectionKey, setCurrentSectionKey] = useState<SectionKey | null>(null);
+  const currentSectionRef = useRef<SectionKey | null>(null);
   const stickyHeaderHeightRef = useRef(0);
-  const layoutDataRef = useRef({ quererY: 0, momentoLocalY: 0 });
-
-  const getMomentoAbsoluteY = useCallback(() => {
-    return layoutDataRef.current.quererY + layoutDataRef.current.momentoLocalY;
-  }, []);
+  const sectionOffsetsRef = useRef<Record<SectionKey, number>>({
+    querer: 0,
+    recomendacoes: 0,
+    momento: 0,
+    awards: 0,
+  });
 
   const updateCurrentSection = useCallback((scrollPosition: number) => {
     const headerOffset = stickyHeaderHeightRef.current || 150;
-    const momentoAbsoluteY = getMomentoAbsoluteY();
-    let newSection: keyof typeof SECTIONS | null = null;
+    let newSection: SectionKey | null = null;
     
     if (scrollPosition < SCROLL_THRESHOLD) {
       newSection = null;
-    } else if (momentoAbsoluteY > 0 && scrollPosition >= momentoAbsoluteY - headerOffset) {
-      newSection = "momento";
     } else {
-      newSection = "querer";
+      const offsets = sectionOffsetsRef.current;
+      const orderedSections: SectionKey[] = ["querer", "recomendacoes", "momento", "awards"];
+      
+      for (let i = orderedSections.length - 1; i >= 0; i--) {
+        const sectionKey = orderedSections[i];
+        const sectionY = offsets[sectionKey];
+        if (sectionY > 0 && scrollPosition >= sectionY - headerOffset) {
+          newSection = sectionKey;
+          break;
+        }
+      }
+      
+      if (!newSection && scrollPosition >= SCROLL_THRESHOLD) {
+        newSection = "querer";
+      }
     }
     
     if (newSection !== currentSectionRef.current) {
       currentSectionRef.current = newSection;
       setCurrentSectionKey(newSection);
     }
-  }, [getMomentoAbsoluteY]);
+  }, []);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -570,15 +586,17 @@ export default function DiscoverScreen() {
     stickyHeaderHeightRef.current = height;
   }, []);
 
-  const handleQuererLayout = useCallback((event: LayoutChangeEvent) => {
-    const { y } = event.nativeEvent.layout;
-    layoutDataRef.current.quererY = y;
+  const createSectionLayoutHandler = useCallback((sectionKey: SectionKey) => {
+    return (event: LayoutChangeEvent) => {
+      const { y } = event.nativeEvent.layout;
+      sectionOffsetsRef.current[sectionKey] = y;
+    };
   }, []);
 
-  const handleMomentoLayout = useCallback((event: LayoutChangeEvent) => {
-    const { y } = event.nativeEvent.layout;
-    layoutDataRef.current.momentoLocalY = y;
-  }, []);
+  const handleQuererLayout = useMemo(() => createSectionLayoutHandler("querer"), [createSectionLayoutHandler]);
+  const handleRecomendacoesLayout = useMemo(() => createSectionLayoutHandler("recomendacoes"), [createSectionLayoutHandler]);
+  const handleMomentoLayout = useMemo(() => createSectionLayoutHandler("momento"), [createSectionLayoutHandler]);
+  const handleAwardsLayout = useMemo(() => createSectionLayoutHandler("awards"), [createSectionLayoutHandler]);
 
   const currentSection = currentSectionKey ? SECTIONS[currentSectionKey] : null;
 
@@ -746,74 +764,74 @@ export default function DiscoverScreen() {
               />
             ))}
           </View>
+        </View>
 
-          <View style={styles.recomendacoesSection}>
-            <Text style={styles.recomendacoesTitle}>Recomendações especiais</Text>
-            <Animated.ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.recomendacoesContainer}
-            >
-              {RECOMENDACOES_ESPECIAIS_DATA.map((item) => (
-                <OfertaEspecialCard
-                  key={item.id}
-                  title={item.title}
-                  price={item.price}
-                  discount={item.discount}
-                  image={item.image}
-                />
-              ))}
-            </Animated.ScrollView>
-          </View>
+        <View style={styles.recomendacoesSection} onLayout={handleRecomendacoesLayout}>
+          <Text style={styles.recomendacoesTitle}>Recomendações especiais</Text>
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recomendacoesContainer}
+          >
+            {RECOMENDACOES_ESPECIAIS_DATA.map((item) => (
+              <OfertaEspecialCard
+                key={item.id}
+                title={item.title}
+                price={item.price}
+                discount={item.discount}
+                image={item.image}
+              />
+            ))}
+          </Animated.ScrollView>
+        </View>
 
-          <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
-            <Text style={styles.momentoTitle}>
-              Momento{" "}
-              <Text style={styles.sectionTitleHighlight}>dança</Text>
-              {" "}é momento{" "}
-              <Text style={styles.sectionTitleHighlight}>feliz</Text>
-            </Text>
-            
-            <Animated.ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.videoStoriesContainer}
-            >
-              {VIDEO_STORIES_DATA.map((story) => (
-                <VideoStoryCard
-                  key={story.id}
-                  title={story.title}
-                  username={story.username}
-                  thumbnail={story.thumbnail}
-                />
-              ))}
-            </Animated.ScrollView>
-            
-            <UploadButton />
-            
-            <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
-            <DestaqueDoMes thumbnail={DESTAQUE_MES_DATA.thumbnail} />
-          </View>
+        <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
+          <Text style={styles.momentoTitle}>
+            Momento{" "}
+            <Text style={styles.sectionTitleHighlight}>dança</Text>
+            {" "}é momento{" "}
+            <Text style={styles.sectionTitleHighlight}>feliz</Text>
+          </Text>
           
-          <View style={styles.topDanceAwardsSection}>
-            <Text style={styles.topDanceAwardsTitle}>
-              <Text style={styles.topDanceAwardsBrand}>BORABAILAR</Text>
-              {"\n"}TOP DANCE AWARDS
-            </Text>
-            
-            <QueroParticiparButton />
-            
-            <View style={styles.awardCategoriesList}>
-              {TOP_DANCE_AWARDS_DATA.map((item) => (
-                <AwardCategoryCard
-                  key={item.id}
-                  category={item.category}
-                  title={item.title}
-                  thumbnail={item.thumbnail}
-                  highlightWord={(item as any).highlightWord}
-                />
-              ))}
-            </View>
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.videoStoriesContainer}
+          >
+            {VIDEO_STORIES_DATA.map((story) => (
+              <VideoStoryCard
+                key={story.id}
+                title={story.title}
+                username={story.username}
+                thumbnail={story.thumbnail}
+              />
+            ))}
+          </Animated.ScrollView>
+          
+          <UploadButton />
+          
+          <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
+          <DestaqueDoMes thumbnail={DESTAQUE_MES_DATA.thumbnail} />
+        </View>
+        
+        <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
+          <Text style={styles.topDanceAwardsTitle}>
+            <Text style={styles.topDanceAwardsBrand}>BORABAILAR</Text>
+            {"\n"}TOP DANCE AWARDS
+          </Text>
+          
+          <QueroParticiparButton />
+          
+          <View style={styles.awardCategoriesList}>
+            {TOP_DANCE_AWARDS_DATA.map((item) => (
+              <AwardCategoryCard
+                key={item.id}
+                category={item.category}
+                title={item.title}
+                thumbnail={item.thumbnail}
+                highlightWord={(item as any).highlightWord}
+              />
+            ))}
           </View>
         </View>
         
@@ -1046,7 +1064,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   momentoSection: {
-    marginTop: Spacing.xl + Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.xl + Spacing.lg,
   },
   momentoTitle: {
     fontSize: 18,
@@ -1142,7 +1161,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   topDanceAwardsSection: {
-    marginTop: Spacing.xl + Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.xl + Spacing.lg,
   },
   topDanceAwardsTitle: {
     fontSize: 18,
@@ -1206,6 +1226,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
   },
   recomendacoesSection: {
+    paddingHorizontal: Spacing.lg,
     marginTop: Spacing.xl + Spacing.lg,
   },
   recomendacoesTitle: {
@@ -1217,6 +1238,8 @@ const styles = StyleSheet.create({
   recomendacoesContainer: {
     paddingRight: Spacing.lg,
     gap: Spacing.md,
+    marginLeft: -Spacing.lg,
+    paddingLeft: Spacing.lg,
   },
   ofertaCard: {
     width: OFERTA_CARD_WIDTH,
