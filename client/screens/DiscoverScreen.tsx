@@ -555,7 +555,7 @@ function ChevronUpDownIcon() {
 function MicrophoneIcon() {
   return (
     <View style={styles.micIconContainer}>
-      <Feather name="mic" size={18} color="#FFFFFF" />
+      <Feather name="mic" size={22} color="#FFFFFF" />
     </View>
   );
 }
@@ -726,7 +726,7 @@ export default function DiscoverScreen() {
       setIsTranscribing(true);
       
       const base64Audio = await FileSystem.readAsStringAsync(audioUri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: "base64" as const,
       });
       
       const apiUrl = getApiUrl();
@@ -824,7 +824,7 @@ export default function DiscoverScreen() {
     
     navigation.navigate("SearchResults", {
       city: selectedCity?.name,
-      date: selectedDate?.value,
+      date: selectedDate?.id,
       query: searchQuery,
     });
   }, [navigation, selectedCity, selectedDate, selectedCompanion, transcript]);
@@ -1051,18 +1051,6 @@ export default function DiscoverScreen() {
               onPress={() => setComQuemModalVisible(true)}
               hasValue={!!selectedCompanion}
             />
-            
-            <Pressable 
-              style={({ pressed }) => [
-                styles.searchButton,
-                pressed && styles.searchButtonPressed,
-                (selectedCity || selectedDate || selectedCompanion || transcript) && styles.searchButtonActive
-              ]}
-              onPress={handleSearch}
-            >
-              <Feather name="search" size={20} color="#FFFFFF" />
-              <Text style={styles.searchButtonText}>Buscar eventos</Text>
-            </Pressable>
             
             <View style={styles.helperTextContainer}>
               <Text style={styles.helperText}>
@@ -1347,9 +1335,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   micIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: Colors.dark.brand,
     alignItems: "center",
     justifyContent: "center",
