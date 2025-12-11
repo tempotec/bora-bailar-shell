@@ -1,21 +1,31 @@
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import DiscoverScreen from "@/screens/DiscoverScreen";
 import EventDetailsScreen from "@/screens/EventDetailsScreen";
+import SignUpScreen from "@/screens/SignUpScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { Colors, Spacing } from "@/constants/theme";
 
 export type DiscoverStackParamList = {
   Discover: undefined;
   EventDetails: { eventId: string };
+  SignUp: undefined;
 };
 
 const Stack = createNativeStackNavigator<DiscoverStackParamList>();
 
 function SignUpButton() {
+  const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
+  
+  const handlePress = () => {
+    navigation.navigate("SignUp");
+  };
+
   return (
-    <Pressable style={headerStyles.authButton} hitSlop={8}>
+    <Pressable style={headerStyles.authButton} hitSlop={8} onPress={handlePress}>
       <Text style={headerStyles.authButtonText}>Sign Up</Text>
     </Pressable>
   );
@@ -67,6 +77,14 @@ export default function DiscoverStackNavigator() {
         options={{
           headerTitle: "",
           headerTransparent: true,
+        }}
+      />
+      <Stack.Screen
+        name="SignUp"
+        component={SignUpScreen}
+        options={{
+          headerShown: false,
+          presentation: "modal",
         }}
       />
     </Stack.Navigator>
