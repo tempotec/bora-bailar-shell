@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -6,8 +6,7 @@ import {
   Image,
   Text,
   Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
+  LayoutChangeEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -18,7 +17,7 @@ import Animated, {
   useAnimatedScrollHandler,
   interpolate,
   Extrapolation,
-  withTiming,
+  runOnJS,
 } from "react-native-reanimated";
 
 import { useTheme } from "@/hooks/useTheme";
@@ -136,6 +135,32 @@ function CollapsedSearchBar({ onPress }: { onPress?: () => void }) {
   );
 }
 
+function StickyTitle({ title, highlightWords }: { title: string; highlightWords: readonly string[] }) {
+  const words = title.split(" ");
+  
+  return (
+    <View style={styles.stickySectionTitleContainer}>
+      <Text style={styles.stickySectionTitle}>
+        {words.map((word, index) => {
+          const isHighlight = highlightWords.some(hw => 
+            word.toLowerCase().includes(hw.toLowerCase())
+          );
+          return (
+            <Text key={index}>
+              {isHighlight ? (
+                <Text style={styles.sectionTitleHighlight}>{word}</Text>
+              ) : (
+                word
+              )}
+              {index < words.length - 1 ? " " : ""}
+            </Text>
+          );
+        })}
+      </Text>
+    </View>
+  );
+}
+
 function QuererCard({
   title,
   description,
@@ -171,18 +196,68 @@ function QuererCard({
   );
 }
 
+const SECTIONS = {
+  querer: { title: "O seu querer é que faz acontecer", highlightWords: ["querer", "acontecer"] },
+  momento: { title: "Momento dança é momento feliz", highlightWords: ["dança", "feliz"] },
+} as const;
+
 export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   
   const scrollY = useSharedValue(0);
-  
+  const [currentSectionKey, setCurrentSectionKey] = useState<keyof typeof SECTIONS | null>(null);
+  const currentSectionRef = useRef<keyof typeof SECTIONS | null>(null);
+  const stickyHeaderHeightRef = useRef(0);
+  const layoutDataRef = useRef({ quererY: 0, momentoLocalY: 0 });
+
+  const getMomentoAbsoluteY = useCallback(() => {
+    return layoutDataRef.current.quererY + layoutDataRef.current.momentoLocalY;
+  }, []);
+
+  const updateCurrentSection = useCallback((scrollPosition: number) => {
+    const headerOffset = stickyHeaderHeightRef.current || 150;
+    const momentoAbsoluteY = getMomentoAbsoluteY();
+    let newSection: keyof typeof SECTIONS | null = null;
+    
+    if (scrollPosition < SCROLL_THRESHOLD) {
+      newSection = null;
+    } else if (momentoAbsoluteY > 0 && scrollPosition >= momentoAbsoluteY - headerOffset) {
+      newSection = "momento";
+    } else {
+      newSection = "querer";
+    }
+    
+    if (newSection !== currentSectionRef.current) {
+      currentSectionRef.current = newSection;
+      setCurrentSectionKey(newSection);
+    }
+  }, [getMomentoAbsoluteY]);
+
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollY.value = event.contentOffset.y;
+      runOnJS(updateCurrentSection)(event.contentOffset.y);
     },
   });
+
+  const handleStickyHeaderLayout = useCallback((event: LayoutChangeEvent) => {
+    const { height } = event.nativeEvent.layout;
+    stickyHeaderHeightRef.current = height;
+  }, []);
+
+  const handleQuererLayout = useCallback((event: LayoutChangeEvent) => {
+    const { y } = event.nativeEvent.layout;
+    layoutDataRef.current.quererY = y;
+  }, []);
+
+  const handleMomentoLayout = useCallback((event: LayoutChangeEvent) => {
+    const { y } = event.nativeEvent.layout;
+    layoutDataRef.current.momentoLocalY = y;
+  }, []);
+
+  const currentSection = currentSectionKey ? SECTIONS[currentSectionKey] : null;
 
   const heroAnimatedStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
@@ -245,9 +320,24 @@ export default function DiscoverScreen() {
     };
   });
 
+  const stickyTitleStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [SCROLL_THRESHOLD * 0.8, SCROLL_THRESHOLD],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+    };
+  });
+
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <Animated.View style={[styles.stickyHeader, stickyHeaderStyle, { paddingTop: insets.top }]}>
+      <Animated.View 
+        style={[styles.stickyHeader, stickyHeaderStyle, { paddingTop: insets.top }]}
+        onLayout={handleStickyHeaderLayout}
+      >
         <View style={styles.stickyHeaderContent}>
           <Image source={logoImage} style={styles.stickyLogo} resizeMode="contain" />
           <Text style={styles.stickyBrandName}>
@@ -260,6 +350,14 @@ export default function DiscoverScreen() {
         <Animated.View style={[styles.collapsedWizardContainer, collapsedWizardStyle]}>
           <CollapsedSearchBar />
         </Animated.View>
+        {currentSection ? (
+          <Animated.View style={[styles.stickyTitleWrapper, stickyTitleStyle]}>
+            <StickyTitle 
+              title={currentSection.title} 
+              highlightWords={currentSection.highlightWords} 
+            />
+          </Animated.View>
+        ) : null}
       </Animated.View>
 
       <Animated.ScrollView
@@ -307,7 +405,7 @@ export default function DiscoverScreen() {
           </View>
         </Animated.View>
 
-        <View style={styles.quererSection}>
+        <View style={styles.quererSection} onLayout={handleQuererLayout}>
           <Text style={styles.sectionTitle}>
             O seu{" "}
             <Text style={styles.sectionTitleHighlight}>querer</Text>
@@ -326,12 +424,14 @@ export default function DiscoverScreen() {
             ))}
           </View>
 
-          <Text style={styles.momentoTitle}>
-            Momento{" "}
-            <Text style={styles.sectionTitleHighlight}>dança</Text>
-            {" "}é momento{" "}
-            <Text style={styles.sectionTitleHighlight}>feliz</Text>
-          </Text>
+          <View onLayout={handleMomentoLayout}>
+            <Text style={styles.momentoTitle}>
+              Momento{" "}
+              <Text style={styles.sectionTitleHighlight}>dança</Text>
+              {" "}é momento{" "}
+              <Text style={styles.sectionTitleHighlight}>feliz</Text>
+            </Text>
+          </View>
         </View>
       </Animated.ScrollView>
     </View>
@@ -389,6 +489,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Colors.dark.textSecondary,
     fontWeight: "400",
+  },
+  stickyTitleWrapper: {
+    marginTop: Spacing.sm,
+  },
+  stickySectionTitleContainer: {
+    paddingVertical: Spacing.xs,
+  },
+  stickySectionTitle: {
+    fontSize: 16,
+    color: Colors.dark.text,
   },
   heroSection: {
     alignItems: "center",
