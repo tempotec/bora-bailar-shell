@@ -39,6 +39,7 @@ import {
   COMPANION_OPTIONS,
 } from "@/components/SearchModals";
 import type { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
+import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
@@ -680,6 +681,7 @@ export default function DiscoverScreen() {
   const { theme } = useTheme();
   const { isTabBarVisible } = useTabBar();
   const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
   const scrollY = useSharedValue(0);
   const previousScrollY = useSharedValue(0);
@@ -1005,6 +1007,10 @@ export default function DiscoverScreen() {
     navigation.navigate("SignUp");
   }, [navigation]);
 
+  const handleQuererCardPress = useCallback((title: string, description: string) => {
+    rootNavigation.navigate("AIChat", { cardTitle: title, cardDescription: description });
+  }, [rootNavigation]);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       <Animated.View style={[styles.topHeader, { paddingTop: insets.top }, authButtonsStyle]}>
@@ -1125,6 +1131,7 @@ export default function DiscoverScreen() {
                 title={item.title}
                 description={item.description}
                 image={item.image}
+                onPress={() => handleQuererCardPress(item.title, item.description)}
               />
             ))}
           </View>
