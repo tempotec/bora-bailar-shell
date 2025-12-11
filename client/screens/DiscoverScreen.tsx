@@ -1007,25 +1007,17 @@ export default function DiscoverScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <View style={[styles.topHeader, { paddingTop: insets.top }]}>
-        <Animated.View style={[styles.authButtonsContainer, authButtonsStyle]}>
-          <Pressable style={styles.authButton} onPress={handleSignUp}>
-            <Text style={styles.authButtonText}>SIGN UP</Text>
-          </Pressable>
-        </Animated.View>
+      <Animated.View style={[styles.topHeader, { paddingTop: insets.top }, authButtonsStyle]}>
+        <Pressable style={styles.authButton} onPress={handleSignUp}>
+          <Text style={styles.authButtonText}>SIGN UP</Text>
+        </Pressable>
         
-        <Animated.View style={[styles.bellButtonContainer, bellButtonStyle]}>
-          <Pressable style={styles.bellButton}>
-            <Feather name="bell" size={22} color={Colors.dark.textSecondary} />
-          </Pressable>
-        </Animated.View>
+        <View style={styles.topHeaderSpacer} />
         
-        <Animated.View style={[styles.authButtonsContainer, authButtonsStyle]}>
-          <Pressable style={styles.authButton}>
-            <Text style={styles.authButtonText}>LOG IN</Text>
-          </Pressable>
-        </Animated.View>
-      </View>
+        <Pressable style={styles.authButton}>
+          <Text style={styles.authButtonText}>LOG IN</Text>
+        </Pressable>
+      </Animated.View>
 
       <Animated.View 
         style={[styles.stickyHeader, stickyHeaderStyle, { paddingTop: insets.top }]}
@@ -1036,9 +1028,9 @@ export default function DiscoverScreen() {
             <Image source={logoImage} style={styles.stickyLogo} resizeMode="contain" />
             <Text style={styles.stickyBrandName}>
               <Text style={styles.brandRed}>B</Text>
-              <Text style={styles.brandGray}>ora</Text>
+              <Text style={styles.brandGray}>ORA</Text>
               <Text style={styles.brandRed}>B</Text>
-              <Text style={styles.brandGray}>ailar</Text>
+              <Text style={styles.brandGray}>AILAR</Text>
             </Text>
           </View>
           <Pressable style={styles.stickyBellButton}>
@@ -1288,16 +1280,8 @@ const styles = StyleSheet.create({
     color: Colors.dark.brand,
     letterSpacing: 0.5,
   },
-  bellButtonContainer: {
-    position: "absolute",
-    right: Spacing.lg,
-    top: 0,
-    bottom: 0,
-    justifyContent: "center",
-    paddingTop: Spacing.sm,
-  },
-  bellButton: {
-    padding: Spacing.xs,
+  topHeaderSpacer: {
+    flex: 1,
   },
   stickyHeader: {
     position: "absolute",
@@ -1330,13 +1314,13 @@ const styles = StyleSheet.create({
     right: 0,
   },
   stickyLogo: {
-    width: 36,
-    height: 26,
+    width: 48,
+    height: 36,
   },
   stickyBrandName: {
-    fontSize: 20,
+    fontSize: 24,
     fontFamily: Fonts?.serif,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   collapsedWizardContainer: {
     marginTop: Spacing.xs,
