@@ -1,23 +1,23 @@
 import React from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import { View, StyleSheet, Pressable, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
-  useSharedValue,
   withSpring,
+  interpolate,
+  Extrapolation,
 } from "react-native-reanimated";
 
 import DiscoverStackNavigator from "@/navigation/DiscoverStackNavigator";
 import MyEventsStackNavigator from "@/navigation/MyEventsStackNavigator";
 import MessagesStackNavigator from "@/navigation/MessagesStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
-import { useTheme } from "@/hooks/useTheme";
-import { Colors, Spacing } from "@/constants/theme";
+import { useTabBar } from "@/contexts/TabBarContext";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 
 export type MainTabParamList = {
   DiscoverTab: undefined;
@@ -28,82 +28,122 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const TAB_BAR_HEIGHT = 60;
 
-function FloatingActionButton({ onPress }: { onPress: () => void }) {
+function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const scale = useSharedValue(1);
+  const { isTabBarVisible } = useTabBar();
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+  const animatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      isTabBarVisible.value ? 1 : 0,
+      [0, 1],
+      [TAB_BAR_HEIGHT + insets.bottom + 20, 0],
+      Extrapolation.CLAMP
+    );
 
-  const handlePressIn = () => {
-    scale.value = withSpring(0.9);
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1);
-  };
-
-  const tabBarHeight = Platform.select({
-    ios: 49 + insets.bottom,
-    android: 56,
-    default: 56,
+    return {
+      transform: [
+        {
+          translateY: withSpring(translateY, {
+            damping: 20,
+            stiffness: 150,
+            mass: 0.5,
+          }),
+        },
+      ],
+    };
   });
 
+  const tabBarStyle = {
+    paddingBottom: insets.bottom,
+    height: TAB_BAR_HEIGHT + insets.bottom,
+  };
+
   return (
-    <AnimatedPressable
-      style={[
-        styles.fab,
-        { bottom: tabBarHeight + Spacing.xl },
-        animatedStyle,
-      ]}
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
-      <LinearGradient
-        colors={[Colors.dark.primary, Colors.dark.secondary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <Feather name="plus" size={28} color="#FFF" />
-    </AnimatedPressable>
+    <Animated.View style={[styles.tabBarContainer, tabBarStyle, animatedStyle]}>
+      {Platform.OS === "ios" ? (
+        <BlurView
+          intensity={80}
+          tint="light"
+          style={StyleSheet.absoluteFill}
+        />
+      ) : (
+        <View style={[StyleSheet.absoluteFill, styles.androidBackground]} />
+      )}
+      <View style={styles.tabBarContent}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          const onLongPress = () => {
+            navigation.emit({
+              type: "tabLongPress",
+              target: route.key,
+            });
+          };
+
+          let iconName: keyof typeof Feather.glyphMap = "home";
+          switch (route.name) {
+            case "DiscoverTab":
+              iconName = "home";
+              break;
+            case "MyEventsTab":
+              iconName = "compass";
+              break;
+            case "MessagesTab":
+              iconName = "heart";
+              break;
+            case "ProfileTab":
+              iconName = "user";
+              break;
+          }
+
+          const color = isFocused
+            ? Colors.dark.primary
+            : Colors.dark.textSecondary;
+
+          return (
+            <Pressable
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              onPress={onPress}
+              onLongPress={onLongPress}
+              style={styles.tabButton}
+              hitSlop={8}
+            >
+              <View style={styles.iconContainer}>
+                <Feather name={iconName} size={24} color={color} />
+              </View>
+            </Pressable>
+          );
+        })}
+      </View>
+    </Animated.View>
   );
 }
 
 export default function MainTabNavigator() {
-  const { theme, isDark } = useTheme();
-
-  const handleFabPress = () => {
-  };
-
   return (
     <View style={styles.container}>
       <Tab.Navigator
         initialRouteName="DiscoverTab"
+        tabBar={(props) => <AnimatedTabBar {...props} />}
         screenOptions={{
-          tabBarActiveTintColor: Colors.dark.primary,
-          tabBarInactiveTintColor: Colors.dark.textSecondary,
-          tabBarStyle: {
-            position: "absolute",
-            backgroundColor: Platform.select({
-              ios: "transparent",
-              android: Colors.dark.backgroundRoot,
-            }),
-            borderTopWidth: 0,
-            elevation: 0,
-          },
-          tabBarBackground: () =>
-            Platform.OS === "ios" ? (
-              <BlurView
-                intensity={100}
-                tint="dark"
-                style={StyleSheet.absoluteFill}
-              />
-            ) : null,
           headerShown: false,
         }}
       >
@@ -112,9 +152,6 @@ export default function MainTabNavigator() {
           component={DiscoverStackNavigator}
           options={{
             title: "Descobrir",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="compass" size={size} color={color} />
-            ),
           }}
         />
         <Tab.Screen
@@ -122,9 +159,6 @@ export default function MainTabNavigator() {
           component={MyEventsStackNavigator}
           options={{
             title: "Eventos",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="calendar" size={size} color={color} />
-            ),
           }}
         />
         <Tab.Screen
@@ -132,9 +166,6 @@ export default function MainTabNavigator() {
           component={MessagesStackNavigator}
           options={{
             title: "Mensagens",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="message-circle" size={size} color={color} />
-            ),
           }}
         />
         <Tab.Screen
@@ -142,9 +173,6 @@ export default function MainTabNavigator() {
           component={ProfileStackNavigator}
           options={{
             title: "Perfil",
-            tabBarIcon: ({ color, size }) => (
-              <Feather name="user" size={size} color={color} />
-            ),
           }}
         />
       </Tab.Navigator>
@@ -156,19 +184,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  fab: {
+  tabBarContainer: {
     position: "absolute",
-    right: Spacing.lg,
-    width: Spacing.fabSize,
-    height: Spacing.fabSize,
-    borderRadius: Spacing.fabSize / 2,
-    justifyContent: "center",
-    alignItems: "center",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(0,0,0,0.1)",
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  },
+  androidBackground: {
+    backgroundColor: Colors.dark.backgroundRoot,
+  },
+  tabBarContent: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+    paddingHorizontal: Spacing.lg,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.sm,
+  },
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

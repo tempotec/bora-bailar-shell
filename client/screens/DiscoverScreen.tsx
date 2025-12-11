@@ -22,6 +22,7 @@ import Animated, {
 
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors, Fonts } from "@/constants/theme";
+import { useTabBar } from "@/contexts/TabBarContext";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
@@ -656,8 +657,11 @@ export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
+  const { isTabBarVisible } = useTabBar();
   
   const scrollY = useSharedValue(0);
+  const previousScrollY = useSharedValue(0);
+  const scrollDirection = useSharedValue<"up" | "down" | "idle">("idle");
   const [currentSectionKey, setCurrentSectionKey] = useState<SectionKey | null>(null);
   const currentSectionRef = useRef<SectionKey | null>(null);
   const stickyHeaderHeightRef = useRef(0);
@@ -701,8 +705,24 @@ export default function DiscoverScreen() {
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-      runOnJS(updateCurrentSection)(event.contentOffset.y);
+      const currentY = event.contentOffset.y;
+      scrollY.value = currentY;
+      runOnJS(updateCurrentSection)(currentY);
+      
+      const diff = currentY - previousScrollY.value;
+      const threshold = 10;
+      
+      if (currentY <= 0) {
+        isTabBarVisible.value = true;
+      } else if (diff > threshold) {
+        isTabBarVisible.value = false;
+        scrollDirection.value = "down";
+      } else if (diff < -threshold) {
+        isTabBarVisible.value = true;
+        scrollDirection.value = "up";
+      }
+      
+      previousScrollY.value = currentY;
     },
   });
 
