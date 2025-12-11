@@ -84,6 +84,8 @@ server/
 - **Favorites System**: Save events to "My Events" with backend persistence
 - **Geolocation**: Request location permission to see nearby events sorted by distance
 - **Demo User**: Uses "demo-user" ID for favorites functionality
+- **Recomendações Especiais**: Horizontal carousel with 6 special offers (admin-managed, currently mocked)
+- **BoraBailar Top Dance Awards**: 10 dance award categories with participation button
 
 ## Recent Changes
 - December 2024: Complete home screen redesign with wizard-style search
