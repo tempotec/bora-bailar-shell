@@ -37,7 +37,7 @@ const headerStyles = StyleSheet.create({
   authButtonText: {
     fontSize: 12,
     fontWeight: "600",
-    color: Colors.dark.buttonText,
+    color: Colors.dark.brand,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -56,7 +56,7 @@ export default function DiscoverStackNavigator() {
           headerLeft: () => <SignUpButton />,
           headerRight: () => <LogInButton />,
           headerStyle: {
-            backgroundColor: Colors.dark.brand,
+            backgroundColor: Colors.dark.backgroundRoot,
           },
           headerShadowVisible: false,
         }}
