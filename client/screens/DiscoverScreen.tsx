@@ -29,6 +29,50 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
 const SCROLL_THRESHOLD = 100;
 
+const VIDEO_STORIES_DATA = [
+  {
+    id: "1",
+    title: "Dançando com Julia",
+    username: "@Alanzinho",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+  },
+  {
+    id: "2",
+    title: "Leve como uma folha",
+    username: "@Ivete22",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
+  },
+  {
+    id: "3",
+    title: "Na rua é mais legal",
+    username: "@LuizaLulu",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
+  },
+  {
+    id: "4",
+    title: "Ritmo do coração",
+    username: "@MarceloDance",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
+  },
+  {
+    id: "5",
+    title: "Noite de salsa",
+    username: "@AnaForró",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
+  },
+  {
+    id: "6",
+    title: "Alegria pura",
+    username: "@PedroSamba",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_dbae0db5.jpg"),
+  },
+];
+
+const DESTAQUE_MES_DATA = {
+  title: "Destaque do mês",
+  thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+};
+
 const QUERER_DATA = [
   {
     id: "1",
@@ -79,6 +123,73 @@ const QUERER_DATA = [
     image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=400&h=300&fit=crop",
   },
 ];
+
+const VIDEO_STORY_WIDTH = 100;
+const VIDEO_STORY_HEIGHT = 140;
+
+function VideoStoryCard({
+  title,
+  username,
+  thumbnail,
+  onPress,
+}: {
+  title: string;
+  username: string;
+  thumbnail: any;
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.videoStoryCard,
+        pressed && { opacity: 0.8 },
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.videoStoryImageContainer}>
+        <Image source={thumbnail} style={styles.videoStoryImage} resizeMode="cover" />
+        <View style={styles.videoStoryPlayIcon}>
+          <Feather name="play" size={16} color="#FFFFFF" />
+        </View>
+      </View>
+      <Text style={styles.videoStoryTitle} numberOfLines={2}>{title}</Text>
+      <Text style={styles.videoStoryUsername}>{username}</Text>
+    </Pressable>
+  );
+}
+
+function UploadButton({ onPress }: { onPress?: () => void }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.uploadButton,
+        pressed && { opacity: 0.9 },
+      ]}
+      onPress={onPress}
+    >
+      <Text style={styles.uploadButtonText}>Faça upload do seu vídeo</Text>
+    </Pressable>
+  );
+}
+
+function DestaqueDoMes({ thumbnail, onPress }: { thumbnail: any; onPress?: () => void }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.destaqueMesCard,
+        pressed && { opacity: 0.9 },
+      ]}
+      onPress={onPress}
+    >
+      <Image source={thumbnail} style={styles.destaqueMesImage} resizeMode="cover" />
+      <View style={styles.destaqueMesPlayOverlay}>
+        <View style={styles.destaqueMesPlayButton}>
+          <Feather name="play" size={32} color="#FFFFFF" />
+        </View>
+      </View>
+    </Pressable>
+  );
+}
 
 function ChevronUpDownIcon() {
   return (
@@ -424,15 +535,37 @@ export default function DiscoverScreen() {
             ))}
           </View>
 
-          <View onLayout={handleMomentoLayout}>
+          <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
             <Text style={styles.momentoTitle}>
               Momento{" "}
               <Text style={styles.sectionTitleHighlight}>dança</Text>
               {" "}é momento{" "}
               <Text style={styles.sectionTitleHighlight}>feliz</Text>
             </Text>
+            
+            <Animated.ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.videoStoriesContainer}
+            >
+              {VIDEO_STORIES_DATA.map((story) => (
+                <VideoStoryCard
+                  key={story.id}
+                  title={story.title}
+                  username={story.username}
+                  thumbnail={story.thumbnail}
+                />
+              ))}
+            </Animated.ScrollView>
+            
+            <UploadButton />
+            
+            <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
+            <DestaqueDoMes thumbnail={DESTAQUE_MES_DATA.thumbnail} />
           </View>
         </View>
+        
+        <View style={{ height: tabBarHeight + Spacing.xl }} />
       </Animated.ScrollView>
     </View>
   );
@@ -660,10 +793,100 @@ const styles = StyleSheet.create({
     color: Colors.dark.brand,
     fontWeight: "700",
   },
+  momentoSection: {
+    marginTop: Spacing.xl + Spacing.xl,
+  },
   momentoTitle: {
     fontSize: 18,
     color: Colors.dark.text,
+    marginBottom: Spacing.lg,
+  },
+  videoStoriesContainer: {
+    paddingRight: Spacing.lg,
+    gap: Spacing.md,
+  },
+  videoStoryCard: {
+    width: VIDEO_STORY_WIDTH,
+    marginRight: Spacing.xs,
+  },
+  videoStoryImageContainer: {
+    width: VIDEO_STORY_WIDTH,
+    height: VIDEO_STORY_HEIGHT,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    position: "relative",
+  },
+  videoStoryImage: {
+    width: "100%",
+    height: "100%",
+  },
+  videoStoryPlayIcon: {
+    position: "absolute",
+    bottom: Spacing.sm,
+    left: Spacing.sm,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  videoStoryTitle: {
+    fontSize: 12,
+    color: Colors.dark.text,
+    fontWeight: "500",
+    marginTop: Spacing.xs,
+    lineHeight: 16,
+  },
+  videoStoryUsername: {
+    fontSize: 11,
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
+  },
+  uploadButton: {
+    backgroundColor: Colors.dark.wizardBackground,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     marginTop: Spacing.xl,
-    textAlign: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.dark.brand,
+  },
+  uploadButtonText: {
+    fontSize: 14,
+    color: Colors.dark.brand,
+    fontWeight: "600",
+  },
+  destaqueMesTitle: {
+    fontSize: 18,
+    color: Colors.dark.text,
+    marginTop: Spacing.xl + Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+  destaqueMesCard: {
+    width: "100%",
+    height: 200,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    position: "relative",
+  },
+  destaqueMesImage: {
+    width: "100%",
+    height: "100%",
+  },
+  destaqueMesPlayOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  destaqueMesPlayButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
