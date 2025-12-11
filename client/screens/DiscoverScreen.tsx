@@ -975,8 +975,58 @@ export default function DiscoverScreen() {
     };
   });
 
+  const authButtonsStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_THRESHOLD * 0.5],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+      pointerEvents: scrollY.value > SCROLL_THRESHOLD * 0.3 ? "none" : "auto",
+    } as any;
+  });
+
+  const bellButtonStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [SCROLL_THRESHOLD * 0.3, SCROLL_THRESHOLD * 0.7],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+      pointerEvents: scrollY.value < SCROLL_THRESHOLD * 0.5 ? "none" : "auto",
+    } as any;
+  });
+
+  const handleSignUp = useCallback(() => {
+    navigation.navigate("SignUp");
+  }, [navigation]);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
+      <View style={[styles.topHeader, { paddingTop: insets.top }]}>
+        <Animated.View style={[styles.authButtonsContainer, authButtonsStyle]}>
+          <Pressable style={styles.authButton} onPress={handleSignUp}>
+            <Text style={styles.authButtonText}>SIGN UP</Text>
+          </Pressable>
+        </Animated.View>
+        
+        <Animated.View style={[styles.bellButtonContainer, bellButtonStyle]}>
+          <Pressable style={styles.bellButton}>
+            <Feather name="bell" size={22} color={Colors.dark.textSecondary} />
+          </Pressable>
+        </Animated.View>
+        
+        <Animated.View style={[styles.authButtonsContainer, authButtonsStyle]}>
+          <Pressable style={styles.authButton}>
+            <Text style={styles.authButtonText}>LOG IN</Text>
+          </Pressable>
+        </Animated.View>
+      </View>
+
       <Animated.View 
         style={[styles.stickyHeader, stickyHeaderStyle, { paddingTop: insets.top }]}
         onLayout={handleStickyHeaderLayout}
@@ -1006,7 +1056,7 @@ export default function DiscoverScreen() {
       <Animated.ScrollView
         style={styles.scrollView}
         contentContainerStyle={{
-          paddingTop: insets.top + Spacing.md,
+          paddingTop: insets.top + 40,
           paddingBottom: tabBarHeight + Spacing.xl,
         }}
         scrollIndicatorInsets={{ bottom: insets.bottom }}
@@ -1206,6 +1256,43 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  topHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 200,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    backgroundColor: "transparent",
+  },
+  authButtonsContainer: {
+    minWidth: 60,
+  },
+  authButton: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+  },
+  authButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.dark.brand,
+    letterSpacing: 0.5,
+  },
+  bellButtonContainer: {
+    position: "absolute",
+    right: Spacing.lg,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    paddingTop: Spacing.sm,
+  },
+  bellButton: {
+    padding: Spacing.xs,
   },
   stickyHeader: {
     position: "absolute",

@@ -64,13 +64,7 @@ export default function DiscoverStackNavigator() {
         name="Discover"
         component={DiscoverScreen}
         options={{
-          headerTitle: "",
-          headerLeft: () => <SignUpButton />,
-          headerRight: () => <LogInButton />,
-          headerStyle: {
-            backgroundColor: Colors.dark.backgroundRoot,
-          },
-          headerShadowVisible: false,
+          headerShown: false,
         }}
       />
       <Stack.Screen
