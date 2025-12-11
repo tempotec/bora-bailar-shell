@@ -1031,14 +1031,19 @@ export default function DiscoverScreen() {
         style={[styles.stickyHeader, stickyHeaderStyle, { paddingTop: insets.top }]}
         onLayout={handleStickyHeaderLayout}
       >
-        <View style={styles.stickyHeaderContent}>
-          <Image source={logoImage} style={styles.stickyLogo} resizeMode="contain" />
-          <Text style={styles.stickyBrandName}>
-            <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>ora</Text>
-            <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>ailar</Text>
-          </Text>
+        <View style={styles.stickyHeaderRow}>
+          <View style={styles.stickyHeaderContent}>
+            <Image source={logoImage} style={styles.stickyLogo} resizeMode="contain" />
+            <Text style={styles.stickyBrandName}>
+              <Text style={styles.brandRed}>B</Text>
+              <Text style={styles.brandGray}>ora</Text>
+              <Text style={styles.brandRed}>B</Text>
+              <Text style={styles.brandGray}>ailar</Text>
+            </Text>
+          </View>
+          <Pressable style={styles.stickyBellButton}>
+            <Feather name="bell" size={22} color={Colors.dark.textSecondary} />
+          </Pressable>
         </View>
         <Animated.View style={[styles.collapsedWizardContainer, collapsedWizardStyle]}>
           <CollapsedSearchBar />
@@ -1306,12 +1311,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
   },
+  stickyHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: Spacing.sm,
+  },
   stickyHeaderContent: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
     justifyContent: "center",
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+  },
+  stickyBellButton: {
+    padding: Spacing.xs,
+    position: "absolute",
+    right: 0,
   },
   stickyLogo: {
     width: 36,
