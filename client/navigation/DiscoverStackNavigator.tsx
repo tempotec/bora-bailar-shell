@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import DiscoverScreen from "@/screens/DiscoverScreen";
 import EventDetailsScreen from "@/screens/EventDetailsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
-import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import { Colors, Spacing } from "@/constants/theme";
 
 export type DiscoverStackParamList = {
   Discover: undefined;
@@ -15,40 +15,31 @@ const Stack = createNativeStackNavigator<DiscoverStackParamList>();
 
 function SignUpButton() {
   return (
-    <Pressable style={headerStyles.signUpButton} hitSlop={8}>
-      <Text style={headerStyles.signUpText}>Sign Up</Text>
+    <Pressable style={headerStyles.authButton} hitSlop={8}>
+      <Text style={headerStyles.authButtonText}>Sign Up</Text>
     </Pressable>
   );
 }
 
 function LogInButton() {
   return (
-    <Pressable style={headerStyles.logInButton} hitSlop={8}>
-      <Text style={headerStyles.logInText}>Log In</Text>
+    <Pressable style={headerStyles.authButton} hitSlop={8}>
+      <Text style={headerStyles.authButtonText}>Log In</Text>
     </Pressable>
   );
 }
 
 const headerStyles = StyleSheet.create({
-  signUpButton: {
-    paddingHorizontal: Spacing.md,
+  authButton: {
+    paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
   },
-  signUpText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.dark.brand,
-  },
-  logInButton: {
-    backgroundColor: Colors.dark.brand,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
-  },
-  logInText: {
-    fontSize: 14,
+  authButtonText: {
+    fontSize: 12,
     fontWeight: "600",
     color: Colors.dark.buttonText,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
 
@@ -65,7 +56,7 @@ export default function DiscoverStackNavigator() {
           headerLeft: () => <SignUpButton />,
           headerRight: () => <LogInButton />,
           headerStyle: {
-            backgroundColor: Colors.dark.backgroundRoot,
+            backgroundColor: Colors.dark.brand,
           },
           headerShadowVisible: false,
         }}
