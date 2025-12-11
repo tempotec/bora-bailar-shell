@@ -25,6 +25,8 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors, Fonts } from "@/constants/theme";
 import { useTabBar } from "@/contexts/TabBarContext";
@@ -36,6 +38,7 @@ import {
   DATE_OPTIONS,
   COMPANION_OPTIONS,
 } from "@/components/SearchModals";
+import type { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
@@ -676,6 +679,7 @@ export default function DiscoverScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const { isTabBarVisible } = useTabBar();
+  const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
   
   const scrollY = useSharedValue(0);
   const previousScrollY = useSharedValue(0);
@@ -803,6 +807,27 @@ export default function DiscoverScreen() {
       );
     }
   }, [audioRecorder, isTranscribing]);
+
+  const handleSearch = useCallback(() => {
+    const hasFilters = selectedCity || selectedDate || selectedCompanion || transcript;
+    
+    if (!hasFilters) {
+      Alert.alert(
+        "Selecione filtros",
+        "Escolha pelo menos um filtro para buscar eventos.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+    
+    const searchQuery = transcript || (selectedCompanion ? selectedCompanion.label : undefined);
+    
+    navigation.navigate("SearchResults", {
+      city: selectedCity?.name,
+      date: selectedDate?.value,
+      query: searchQuery,
+    });
+  }, [navigation, selectedCity, selectedDate, selectedCompanion, transcript]);
 
   const updateCurrentSection = useCallback((scrollPosition: number) => {
     const headerOffset = stickyHeaderHeightRef.current || 150;
@@ -1026,6 +1051,18 @@ export default function DiscoverScreen() {
               onPress={() => setComQuemModalVisible(true)}
               hasValue={!!selectedCompanion}
             />
+            
+            <Pressable 
+              style={({ pressed }) => [
+                styles.searchButton,
+                pressed && styles.searchButtonPressed,
+                (selectedCity || selectedDate || selectedCompanion || transcript) && styles.searchButtonActive
+              ]}
+              onPress={handleSearch}
+            >
+              <Feather name="search" size={20} color="#FFFFFF" />
+              <Text style={styles.searchButtonText}>Buscar eventos</Text>
+            </Pressable>
             
             <View style={styles.helperTextContainer}>
               <Text style={styles.helperText}>
@@ -1316,6 +1353,29 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.dark.brand,
     alignItems: "center",
     justifyContent: "center",
+  },
+  searchButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.dark.brand,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: BorderRadius.xl,
+    marginTop: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  searchButtonPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  searchButtonActive: {
+    backgroundColor: Colors.dark.brand,
+  },
+  searchButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
   helperTextContainer: {
     alignItems: "center",

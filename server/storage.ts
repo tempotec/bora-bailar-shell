@@ -26,6 +26,7 @@ export interface IStorage {
   getEvent(id: string): Promise<Event | undefined>;
   getFeaturedEvents(): Promise<Event[]>;
   searchEvents(query: string): Promise<Event[]>;
+  advancedSearchEvents(filters: { city?: string; date?: string; query?: string }): Promise<Event[]>;
   createEvent(event: InsertEvent): Promise<Event>;
   
   getVenues(): Promise<Venue[]>;
@@ -85,6 +86,44 @@ export class DatabaseStorage implements IStorage {
         ilike(events.description, `%${query}%`)
       )
     );
+  }
+
+  async advancedSearchEvents(filters: {
+    city?: string;
+    date?: string;
+    query?: string;
+  }): Promise<Event[]> {
+    const conditions: any[] = [];
+    
+    if (filters.city) {
+      conditions.push(
+        or(
+          ilike(events.city, `%${filters.city}%`),
+          ilike(events.address, `%${filters.city}%`),
+          ilike(events.venueName, `%${filters.city}%`)
+        )
+      );
+    }
+    
+    if (filters.date) {
+      conditions.push(eq(events.date, filters.date));
+    }
+    
+    if (filters.query) {
+      conditions.push(
+        or(
+          ilike(events.title, `%${filters.query}%`),
+          ilike(events.description, `%${filters.query}%`),
+          ilike(events.venueName, `%${filters.query}%`)
+        )
+      );
+    }
+    
+    if (conditions.length === 0) {
+      return this.getEvents();
+    }
+    
+    return db.select().from(events).where(and(...conditions)).orderBy(desc(events.createdAt));
   }
 
   async createEvent(event: InsertEvent): Promise<Event> {

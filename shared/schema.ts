@@ -35,6 +35,7 @@ export const events = pgTable("events", {
   venueId: varchar("venue_id").references(() => venues.id),
   venueName: text("venue_name"),
   address: text("address"),
+  city: text("city"),
   date: text("date").notNull(),
   time: text("time").notNull(),
   endTime: text("end_time"),

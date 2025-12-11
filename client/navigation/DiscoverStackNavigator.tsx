@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import DiscoverScreen from "@/screens/DiscoverScreen";
 import EventDetailsScreen from "@/screens/EventDetailsScreen";
 import SignUpScreen from "@/screens/SignUpScreen";
+import SearchResultsScreen from "@/screens/SearchResultsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { Colors, Spacing } from "@/constants/theme";
 
@@ -13,6 +14,7 @@ export type DiscoverStackParamList = {
   Discover: undefined;
   EventDetails: { eventId: string };
   SignUp: undefined;
+  SearchResults: { city?: string; date?: string; query?: string };
 };
 
 const Stack = createNativeStackNavigator<DiscoverStackParamList>();
@@ -85,6 +87,17 @@ export default function DiscoverStackNavigator() {
         options={{
           headerShown: false,
           presentation: "modal",
+        }}
+      />
+      <Stack.Screen
+        name="SearchResults"
+        component={SearchResultsScreen}
+        options={{
+          headerTitle: "Buscar",
+          headerStyle: {
+            backgroundColor: Colors.dark.backgroundRoot,
+          },
+          headerShadowVisible: false,
         }}
       />
     </Stack.Navigator>

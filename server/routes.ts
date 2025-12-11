@@ -45,6 +45,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/events/search", async (req, res) => {
+    try {
+      const { city, date, query } = req.query;
+      const filters: { city?: string; date?: string; query?: string } = {};
+      
+      if (city && typeof city === "string") {
+        filters.city = city;
+      }
+      if (date && typeof date === "string") {
+        filters.date = date;
+      }
+      if (query && typeof query === "string") {
+        filters.query = query;
+      }
+      
+      const eventsList = await storage.advancedSearchEvents(filters);
+      res.json(eventsList);
+    } catch (error) {
+      console.error("Error searching events:", error);
+      res.status(500).json({ error: "Failed to search events" });
+    }
+  });
+
   app.get("/api/events/nearby", async (req, res) => {
     try {
       const { lat, lng, radius } = req.query;
