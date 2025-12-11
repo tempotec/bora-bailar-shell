@@ -7,6 +7,8 @@ import {
   Text,
   Dimensions,
   LayoutChangeEvent,
+  Platform,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -23,6 +25,14 @@ import Animated, {
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors, Fonts } from "@/constants/theme";
 import { useTabBar } from "@/contexts/TabBarContext";
+import { 
+  OndeModal, 
+  QuandoModal, 
+  ComQuemModal,
+  CITIES,
+  DATE_OPTIONS,
+  COMPANION_OPTIONS,
+} from "@/components/SearchModals";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
@@ -548,20 +558,25 @@ function WizardSearchField({
   label,
   type,
   onPress,
+  hasValue = false,
 }: {
   label: string;
   type: "chevron" | "mic";
   onPress?: () => void;
+  hasValue?: boolean;
 }) {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.wizardField,
+        hasValue && styles.wizardFieldSelected,
         pressed && styles.wizardFieldPressed,
       ]}
       onPress={onPress}
     >
-      <Text style={styles.wizardFieldLabel}>{label}</Text>
+      <Text style={[styles.wizardFieldLabel, hasValue && styles.wizardFieldLabelSelected]}>
+        {label}
+      </Text>
       {type === "chevron" ? <ChevronUpDownIcon /> : <MicrophoneIcon />}
     </Pressable>
   );
@@ -672,6 +687,38 @@ export default function DiscoverScreen() {
     dicas: 0,
     recomendacoes: 0,
   });
+
+  const [ondeModalVisible, setOndeModalVisible] = useState(false);
+  const [quandoModalVisible, setQuandoModalVisible] = useState(false);
+  const [comQuemModalVisible, setComQuemModalVisible] = useState(false);
+  
+  const [selectedCity, setSelectedCity] = useState<typeof CITIES[0] | null>(null);
+  const [selectedDate, setSelectedDate] = useState<typeof DATE_OPTIONS[0] | null>(null);
+  const [selectedCompanion, setSelectedCompanion] = useState<typeof COMPANION_OPTIONS[0] | null>(null);
+  
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState("");
+
+  const handleMicPress = useCallback(() => {
+    if (Platform.OS === "web") {
+      Alert.alert(
+        "Funcionalidade indisponível",
+        "O reconhecimento de voz funciona apenas no aplicativo Expo Go. Escaneie o QR code para testar no seu celular.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+    
+    if (isRecording) {
+      setIsRecording(false);
+    } else {
+      setIsRecording(true);
+      setTimeout(() => {
+        setIsRecording(false);
+        setTranscript("quero sair para dançar forró");
+      }, 3000);
+    }
+  }, [isRecording]);
 
   const updateCurrentSection = useCallback((scrollPosition: number) => {
     const headerOffset = stickyHeaderHeightRef.current || 150;
@@ -877,9 +924,24 @@ export default function DiscoverScreen() {
 
         <Animated.View style={[styles.wizardSection, expandedWizardStyle]}>
           <View style={styles.wizardContainer}>
-            <WizardSearchField label="Onde" type="chevron" />
-            <WizardSearchField label="Quando" type="chevron" />
-            <WizardSearchField label="Com quem" type="mic" />
+            <WizardSearchField 
+              label={selectedCity ? selectedCity.name : "Onde"} 
+              type="chevron" 
+              onPress={() => setOndeModalVisible(true)}
+              hasValue={!!selectedCity}
+            />
+            <WizardSearchField 
+              label={selectedDate ? selectedDate.label : "Quando"} 
+              type="chevron" 
+              onPress={() => setQuandoModalVisible(true)}
+              hasValue={!!selectedDate}
+            />
+            <WizardSearchField 
+              label={selectedCompanion ? selectedCompanion.label : "Com quem"} 
+              type="mic" 
+              onPress={() => setComQuemModalVisible(true)}
+              hasValue={!!selectedCompanion}
+            />
             
             <View style={styles.helperTextContainer}>
               <Text style={styles.helperText}>
@@ -1000,6 +1062,30 @@ export default function DiscoverScreen() {
         
         <View style={{ height: tabBarHeight + Spacing.xl }} />
       </Animated.ScrollView>
+
+      <OndeModal
+        visible={ondeModalVisible}
+        onClose={() => setOndeModalVisible(false)}
+        onSelect={setSelectedCity}
+        selectedCity={selectedCity}
+      />
+      
+      <QuandoModal
+        visible={quandoModalVisible}
+        onClose={() => setQuandoModalVisible(false)}
+        onSelect={setSelectedDate}
+        selectedOption={selectedDate}
+      />
+      
+      <ComQuemModal
+        visible={comQuemModalVisible}
+        onClose={() => setComQuemModalVisible(false)}
+        onSelect={setSelectedCompanion}
+        selectedOption={selectedCompanion}
+        onMicPress={handleMicPress}
+        isRecording={isRecording}
+        transcript={transcript}
+      />
     </View>
   );
 }
@@ -1124,6 +1210,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.dark.textSecondary,
     fontWeight: "400",
+  },
+  wizardFieldSelected: {
+    borderWidth: 1,
+    borderColor: Colors.dark.primary,
+    backgroundColor: Colors.dark.primary + "10",
+  },
+  wizardFieldLabelSelected: {
+    color: Colors.dark.primary,
+    fontWeight: "500",
   },
   chevronIconContainer: {
     alignItems: "center",
