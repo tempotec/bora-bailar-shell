@@ -188,6 +188,77 @@ const QUERER_DATA = [
   },
 ];
 
+const getDicasDaSemanaData = () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + mondayOffset);
+
+  const daysOfWeek = [
+    "Segunda-feira",
+    "Terça-feira", 
+    "Quarta-feira",
+    "Quinta-feira",
+    "Sexta-feira",
+    "Sábado",
+    "Domingo",
+  ];
+
+  const dicasPorDia = [
+    [
+      { title: "Café da manhã com música", price: "R$20" },
+      { title: "Almoço gostoso na Lapa", price: "R$0" },
+      { title: "Sarau no Centro da Cidade", price: "R$0" },
+    ],
+    [
+      { title: "Aula de forró", price: "R$30" },
+      { title: "Happy hour dançante", price: "R$25" },
+      { title: "Noite de samba", price: "R$15" },
+    ],
+    [
+      { title: "Workshop de salsa", price: "R$40" },
+      { title: "Tarde de bolero", price: "R$10" },
+      { title: "Baile de quarta", price: "R$20" },
+    ],
+    [
+      { title: "Zouk na praça", price: "R$0" },
+      { title: "Jantar com show", price: "R$80" },
+      { title: "Roda de samba", price: "R$15" },
+    ],
+    [
+      { title: "Sexta social", price: "R$35" },
+      { title: "Balada latina", price: "R$50" },
+      { title: "Forró pé de serra", price: "R$25" },
+    ],
+    [
+      { title: "Matinê dançante", price: "R$20" },
+      { title: "Festival de dança", price: "R$60" },
+      { title: "Noitada especial", price: "R$45" },
+    ],
+    [
+      { title: "Brunch com música", price: "R$55" },
+      { title: "Tarde de tango", price: "R$30" },
+      { title: "Sunset dance", price: "R$25" },
+    ],
+  ];
+
+  return daysOfWeek.slice(0, 7).map((day, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    const formattedDate = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+    
+    return {
+      id: String(index + 1),
+      day,
+      date: formattedDate,
+      dicas: dicasPorDia[index],
+    };
+  });
+};
+
+const DICAS_DA_SEMANA_DATA = getDicasDaSemanaData();
+
 const RECOMENDACOES_ESPECIAIS_DATA = [
   {
     id: "1",
@@ -403,6 +474,56 @@ function QueroParticiparButton({ onPress }: { onPress?: () => void }) {
   );
 }
 
+const DICA_IMAGES = [
+  require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+  require("../../attached_assets/stock_images/ballroom_dancing_cou_a3f721af.jpg"),
+  require("../../attached_assets/stock_images/ballroom_dancing_cou_83e25a1a.jpg"),
+];
+
+const DICA_CARD_WIDTH = SCREEN_WIDTH * 0.75;
+
+function DicaDaSemanaCard({
+  day,
+  date,
+  dicas,
+  onPress,
+}: {
+  day: string;
+  date: string;
+  dicas: { title: string; price: string }[];
+  onPress?: () => void;
+}) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.dicaDaSemanaCard,
+        pressed && { opacity: 0.9 },
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.dicaDayHeader}>
+        <Text style={styles.dicaDayName}>{day}</Text>
+        <Text style={styles.dicaDate}>({date})</Text>
+      </View>
+      <View style={styles.dicasRow}>
+        {dicas.map((dica, index) => (
+          <View key={index} style={styles.dicaEventCard}>
+            <Image 
+              source={DICA_IMAGES[index % DICA_IMAGES.length]} 
+              style={styles.dicaEventImage} 
+              resizeMode="cover"
+            />
+            <Text style={styles.dicaEventTitle} numberOfLines={2}>{dica.title}</Text>
+            <Text style={styles.dicaEventPrice}>
+              A partir de {dica.price === "R$0" ? "R$0" : dica.price}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </Pressable>
+  );
+}
+
 function ChevronUpDownIcon() {
   return (
     <View style={styles.chevronIconContainer}>
@@ -521,9 +642,10 @@ function QuererCard({
 
 const SECTIONS = {
   querer: { title: "O seu querer é que faz acontecer", highlightWords: ["querer", "acontecer"] },
-  recomendacoes: { title: "Recomendações especiais", highlightWords: [] },
   momento: { title: "Momento dança é momento feliz", highlightWords: ["dança", "feliz"] },
   awards: { title: "BORABAILAR TOP DANCE AWARDS", highlightWords: ["BORABAILAR"] },
+  dicas: { title: "Dicas da semana", highlightWords: ["semana"] },
+  recomendacoes: { title: "Recomendações especiais", highlightWords: [] },
 } as const;
 
 type SectionKey = keyof typeof SECTIONS;
@@ -539,9 +661,10 @@ export default function DiscoverScreen() {
   const stickyHeaderHeightRef = useRef(0);
   const sectionOffsetsRef = useRef<Record<SectionKey, number>>({
     querer: 0,
-    recomendacoes: 0,
     momento: 0,
     awards: 0,
+    dicas: 0,
+    recomendacoes: 0,
   });
 
   const updateCurrentSection = useCallback((scrollPosition: number) => {
@@ -552,7 +675,7 @@ export default function DiscoverScreen() {
       newSection = null;
     } else {
       const offsets = sectionOffsetsRef.current;
-      const orderedSections: SectionKey[] = ["querer", "recomendacoes", "momento", "awards"];
+      const orderedSections: SectionKey[] = ["querer", "momento", "awards", "dicas", "recomendacoes"];
       
       for (let i = orderedSections.length - 1; i >= 0; i--) {
         const sectionKey = orderedSections[i];
@@ -594,9 +717,10 @@ export default function DiscoverScreen() {
   }, []);
 
   const handleQuererLayout = useMemo(() => createSectionLayoutHandler("querer"), [createSectionLayoutHandler]);
-  const handleRecomendacoesLayout = useMemo(() => createSectionLayoutHandler("recomendacoes"), [createSectionLayoutHandler]);
   const handleMomentoLayout = useMemo(() => createSectionLayoutHandler("momento"), [createSectionLayoutHandler]);
   const handleAwardsLayout = useMemo(() => createSectionLayoutHandler("awards"), [createSectionLayoutHandler]);
+  const handleDicasLayout = useMemo(() => createSectionLayoutHandler("dicas"), [createSectionLayoutHandler]);
+  const handleRecomendacoesLayout = useMemo(() => createSectionLayoutHandler("recomendacoes"), [createSectionLayoutHandler]);
 
   const currentSection = currentSectionKey ? SECTIONS[currentSectionKey] : null;
 
@@ -766,25 +890,6 @@ export default function DiscoverScreen() {
           </View>
         </View>
 
-        <View style={styles.recomendacoesSection} onLayout={handleRecomendacoesLayout}>
-          <Text style={styles.recomendacoesTitle}>Recomendações especiais</Text>
-          <Animated.ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.recomendacoesContainer}
-          >
-            {RECOMENDACOES_ESPECIAIS_DATA.map((item) => (
-              <OfertaEspecialCard
-                key={item.id}
-                title={item.title}
-                price={item.price}
-                discount={item.discount}
-                image={item.image}
-              />
-            ))}
-          </Animated.ScrollView>
-        </View>
-
         <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
           <Text style={styles.momentoTitle}>
             Momento{" "}
@@ -833,6 +938,46 @@ export default function DiscoverScreen() {
               />
             ))}
           </View>
+        </View>
+
+        <View style={styles.dicasDaSemanaSection} onLayout={handleDicasLayout}>
+          <Text style={styles.dicasDaSemanaTitle}>
+            Dicas da{" "}
+            <Text style={styles.sectionTitleHighlight}>semana</Text>
+          </Text>
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.dicasDaSemanaContainer}
+          >
+            {DICAS_DA_SEMANA_DATA.map((item) => (
+              <DicaDaSemanaCard
+                key={item.id}
+                day={item.day}
+                date={item.date}
+                dicas={item.dicas}
+              />
+            ))}
+          </Animated.ScrollView>
+        </View>
+
+        <View style={styles.recomendacoesSection} onLayout={handleRecomendacoesLayout}>
+          <Text style={styles.recomendacoesTitle}>Recomendações especiais</Text>
+          <Animated.ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.recomendacoesContainer}
+          >
+            {RECOMENDACOES_ESPECIAIS_DATA.map((item) => (
+              <OfertaEspecialCard
+                key={item.id}
+                title={item.title}
+                price={item.price}
+                discount={item.discount}
+                image={item.image}
+              />
+            ))}
+          </Animated.ScrollView>
         </View>
         
         <View style={{ height: tabBarHeight + Spacing.xl }} />
@@ -1224,6 +1369,65 @@ const styles = StyleSheet.create({
     width: 70,
     height: 50,
     borderRadius: BorderRadius.md,
+  },
+  dicasDaSemanaSection: {
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.xl + Spacing.lg,
+  },
+  dicasDaSemanaTitle: {
+    fontSize: 18,
+    color: Colors.dark.text,
+    fontWeight: "600",
+    marginBottom: Spacing.lg,
+  },
+  dicasDaSemanaContainer: {
+    paddingRight: Spacing.lg,
+    gap: Spacing.md,
+    marginLeft: -Spacing.lg,
+    paddingLeft: Spacing.lg,
+  },
+  dicaDaSemanaCard: {
+    width: DICA_CARD_WIDTH,
+    backgroundColor: "#FFFFFF",
+  },
+  dicaDayHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  dicaDayName: {
+    fontSize: 16,
+    color: Colors.dark.brand,
+    fontWeight: "600",
+  },
+  dicaDate: {
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
+    marginLeft: Spacing.xs,
+  },
+  dicasRow: {
+    flexDirection: "row",
+    gap: Spacing.sm,
+  },
+  dicaEventCard: {
+    width: (DICA_CARD_WIDTH - Spacing.sm * 2) / 3,
+  },
+  dicaEventImage: {
+    width: "100%",
+    height: 70,
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.xs,
+  },
+  dicaEventTitle: {
+    fontSize: 11,
+    color: Colors.dark.text,
+    fontWeight: "500",
+    lineHeight: 14,
+  },
+  dicaEventPrice: {
+    fontSize: 10,
+    color: Colors.dark.textSecondary,
+    marginTop: 2,
   },
   recomendacoesSection: {
     paddingHorizontal: Spacing.lg,
