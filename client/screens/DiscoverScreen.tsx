@@ -190,6 +190,8 @@ const QUERER_DATA = [
 
 const VIDEO_STORY_WIDTH = 100;
 const VIDEO_STORY_HEIGHT = 140;
+const WIZARD_EXPANDED_HEIGHT = 320;
+const HERO_EXPANDED_HEIGHT = 200;
 
 function VideoStoryCard({
   title,
@@ -511,8 +513,16 @@ export default function DiscoverScreen() {
       [0, -50],
       Extrapolation.CLAMP
     );
+    const height = interpolate(
+      scrollY.value,
+      [0, SCROLL_THRESHOLD],
+      [HERO_EXPANDED_HEIGHT, 0],
+      Extrapolation.CLAMP
+    );
     return {
       opacity,
+      height,
+      overflow: "hidden" as const,
       transform: [{ scale }, { translateY }],
     };
   });
@@ -524,8 +534,23 @@ export default function DiscoverScreen() {
       [1, 0],
       Extrapolation.CLAMP
     );
+    const height = interpolate(
+      scrollY.value,
+      [0, SCROLL_THRESHOLD],
+      [WIZARD_EXPANDED_HEIGHT, 0],
+      Extrapolation.CLAMP
+    );
+    const marginBottom = interpolate(
+      scrollY.value,
+      [0, SCROLL_THRESHOLD],
+      [Spacing.xl, 0],
+      Extrapolation.CLAMP
+    );
     return {
       opacity,
+      height,
+      marginBottom,
+      overflow: "hidden" as const,
     };
   });
 
@@ -863,7 +888,7 @@ const styles = StyleSheet.create({
   },
   quererSection: {
     paddingHorizontal: Spacing.lg,
-    marginTop: Spacing.xl + Spacing.xl,
+    marginTop: Spacing.lg,
   },
   sectionTitle: {
     fontSize: 18,
