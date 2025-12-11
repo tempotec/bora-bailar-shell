@@ -206,6 +206,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/transcribe", async (req, res) => {
+    let tempFilePath: string | null = null;
+    
     try {
       const { audio, filename } = req.body;
       
@@ -213,38 +215,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "audio and filename are required" });
       }
       
+      if (typeof audio !== "string" || typeof filename !== "string") {
+        return res.status(400).json({ error: "Invalid request format" });
+      }
+      
+      const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
+      const audioBuffer = Buffer.from(audio, "base64");
+      
+      if (audioBuffer.length > MAX_AUDIO_SIZE) {
+        return res.status(400).json({ error: "Audio file too large (max 10MB)" });
+      }
+      
+      if (audioBuffer.length < 1000) {
+        return res.status(400).json({ error: "Audio file too small or empty" });
+      }
+      
       const openai = getOpenAIClient();
       if (!openai) {
         return res.status(500).json({ error: "OpenAI API key not configured" });
       }
       
-      const audioBuffer = Buffer.from(audio, "base64");
-      const tempFilePath = path.join(os.tmpdir(), `recording_${Date.now()}.m4a`);
-      
+      tempFilePath = path.join(os.tmpdir(), `recording_${Date.now()}_${Math.random().toString(36).slice(2)}.m4a`);
       fs.writeFileSync(tempFilePath, audioBuffer);
       
-      try {
-        const audioFile = fs.createReadStream(tempFilePath);
-        
-        const transcription = await openai.audio.transcriptions.create({
-          file: audioFile,
-          model: "whisper-1",
-          language: "pt",
-        });
-        
-        fs.unlinkSync(tempFilePath);
-        
-        res.json({ 
-          text: transcription.text,
-        });
-      } catch (transcriptionError: any) {
-        fs.unlinkSync(tempFilePath);
-        console.error("Transcription API error:", transcriptionError);
-        res.status(500).json({ error: "Failed to transcribe audio" });
+      const audioFile = fs.createReadStream(tempFilePath);
+      
+      const transcription = await openai.audio.transcriptions.create({
+        file: audioFile,
+        model: "whisper-1",
+        language: "pt",
+      });
+      
+      res.json({ 
+        text: transcription.text,
+      });
+    } catch (error: any) {
+      console.error("Transcription error:", error);
+      res.status(500).json({ error: "Failed to transcribe audio" });
+    } finally {
+      if (tempFilePath && fs.existsSync(tempFilePath)) {
+        try {
+          fs.unlinkSync(tempFilePath);
+        } catch (e) {
+          console.error("Failed to delete temp file:", e);
+        }
       }
-    } catch (error) {
-      console.error("Error in transcription route:", error);
-      res.status(500).json({ error: "Failed to process audio" });
     }
   });
 

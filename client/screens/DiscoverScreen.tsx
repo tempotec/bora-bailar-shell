@@ -702,6 +702,7 @@ export default function DiscoverScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [pendingTranscription, setPendingTranscription] = useState(false);
   
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   
@@ -725,6 +726,9 @@ export default function DiscoverScreen() {
       });
       
       const apiUrl = getApiUrl();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      
       const response = await fetch(new URL("/api/transcribe", apiUrl).toString(), {
         method: "POST",
         headers: {
@@ -734,7 +738,10 @@ export default function DiscoverScreen() {
           audio: base64Audio,
           filename: "recording.m4a",
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error("Transcription failed");
@@ -742,17 +749,23 @@ export default function DiscoverScreen() {
       
       const data = await response.json();
       setTranscript(data.text || "");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Transcription error:", error);
-      Alert.alert(
-        "Erro na transcrição",
-        "Não foi possível transcrever o áudio. Tente novamente.",
-        [{ text: "OK" }]
-      );
+      const message = error.name === "AbortError" 
+        ? "A transcrição demorou muito. Tente novamente." 
+        : "Não foi possível transcrever o áudio. Tente novamente.";
+      Alert.alert("Erro na transcrição", message, [{ text: "OK" }]);
     } finally {
       setIsTranscribing(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (pendingTranscription && !audioRecorder.isRecording && audioRecorder.uri) {
+      setPendingTranscription(false);
+      transcribeAudio(audioRecorder.uri);
+    }
+  }, [pendingTranscription, audioRecorder.isRecording, audioRecorder.uri, transcribeAudio]);
 
   const handleMicPress = useCallback(async () => {
     if (Platform.OS === "web") {
@@ -764,29 +777,32 @@ export default function DiscoverScreen() {
       return;
     }
     
+    if (isTranscribing) {
+      return;
+    }
+    
     try {
       if (audioRecorder.isRecording) {
+        setPendingTranscription(true);
         await audioRecorder.stop();
         setIsRecording(false);
-        
-        if (audioRecorder.uri) {
-          await transcribeAudio(audioRecorder.uri);
-        }
       } else {
         setTranscript("");
+        setPendingTranscription(false);
         await audioRecorder.record();
         setIsRecording(true);
       }
     } catch (error) {
       console.error("Recording error:", error);
       setIsRecording(false);
+      setPendingTranscription(false);
       Alert.alert(
         "Erro na gravação",
         "Não foi possível gravar o áudio. Verifique as permissões do microfone.",
         [{ text: "OK" }]
       );
     }
-  }, [audioRecorder, transcribeAudio]);
+  }, [audioRecorder, isTranscribing]);
 
   const updateCurrentSection = useCallback((scrollPosition: number) => {
     const headerOffset = stickyHeaderHeightRef.current || 150;
