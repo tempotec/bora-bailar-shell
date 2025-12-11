@@ -2,6 +2,19 @@ import type { Express } from "express";
 import { createServer, type Server } from "node:http";
 import { storage } from "./storage";
 import { insertEventSchema, insertVenueSchema, insertUserSchema } from "@shared/schema";
+import OpenAI from "openai";
+import fs from "fs";
+import path from "path";
+import os from "os";
+
+// OpenAI integration for audio transcription (lazy initialization)
+// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+function getOpenAIClient(): OpenAI | null {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/events", async (req, res) => {
@@ -189,6 +202,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error checking favorite:", error);
       res.status(500).json({ error: "Failed to check favorite" });
+    }
+  });
+
+  app.post("/api/transcribe", async (req, res) => {
+    try {
+      const { audio, filename } = req.body;
+      
+      if (!audio || !filename) {
+        return res.status(400).json({ error: "audio and filename are required" });
+      }
+      
+      const openai = getOpenAIClient();
+      if (!openai) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+      
+      const audioBuffer = Buffer.from(audio, "base64");
+      const tempFilePath = path.join(os.tmpdir(), `recording_${Date.now()}.m4a`);
+      
+      fs.writeFileSync(tempFilePath, audioBuffer);
+      
+      try {
+        const audioFile = fs.createReadStream(tempFilePath);
+        
+        const transcription = await openai.audio.transcriptions.create({
+          file: audioFile,
+          model: "whisper-1",
+          language: "pt",
+        });
+        
+        fs.unlinkSync(tempFilePath);
+        
+        res.json({ 
+          text: transcription.text,
+        });
+      } catch (transcriptionError: any) {
+        fs.unlinkSync(tempFilePath);
+        console.error("Transcription API error:", transcriptionError);
+        res.status(500).json({ error: "Failed to transcribe audio" });
+      }
+    } catch (error) {
+      console.error("Error in transcription route:", error);
+      res.status(500).json({ error: "Failed to process audio" });
     }
   });
 

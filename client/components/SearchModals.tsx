@@ -178,6 +178,7 @@ interface ComQuemModalProps {
   selectedOption: typeof COMPANION_OPTIONS[0] | null;
   onMicPress: () => void;
   isRecording: boolean;
+  isTranscribing?: boolean;
   transcript: string;
 }
 
@@ -188,6 +189,7 @@ export function ComQuemModal({
   selectedOption,
   onMicPress,
   isRecording,
+  isTranscribing = false,
   transcript,
 }: ComQuemModalProps) {
   const insets = useSafeAreaInsets();
@@ -229,7 +231,11 @@ export function ComQuemModal({
         
         <View style={styles.voiceSection}>
           <Text style={styles.voiceHint}>
-            Toque no microfone e fale o que você procura
+            {isRecording 
+              ? "Gravando... Toque para parar" 
+              : isTranscribing 
+                ? "Transcrevendo..." 
+                : "Toque no microfone e fale o que você procura"}
           </Text>
           
           <Animated.View style={micButtonStyle}>
@@ -237,10 +243,12 @@ export function ComQuemModal({
               style={[
                 styles.micButton,
                 isRecording && styles.micButtonRecording,
+                isTranscribing && styles.micButtonTranscribing,
               ]}
               onPress={onMicPress}
+              disabled={isTranscribing}
             >
-              {isRecording ? (
+              {isRecording || isTranscribing ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <Feather name="mic" size={32} color="#FFFFFF" />
@@ -394,6 +402,10 @@ const styles = StyleSheet.create({
   },
   micButtonRecording: {
     backgroundColor: Colors.dark.error,
+  },
+  micButtonTranscribing: {
+    backgroundColor: Colors.dark.secondary,
+    opacity: 0.8,
   },
   transcriptContainer: {
     backgroundColor: Colors.dark.backgroundDefault,

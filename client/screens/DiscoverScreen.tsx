@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -10,6 +10,9 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
+import * as FileSystem from "expo-file-system";
+import { getApiUrl } from "@/lib/query-client";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
@@ -697,9 +700,61 @@ export default function DiscoverScreen() {
   const [selectedCompanion, setSelectedCompanion] = useState<typeof COMPANION_OPTIONS[0] | null>(null);
   
   const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState("");
+  
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== "web") {
+        const status = await AudioModule.requestRecordingPermissionsAsync();
+        if (!status.granted) {
+          console.log("Audio recording permission not granted");
+        }
+      }
+    })();
+  }, []);
 
-  const handleMicPress = useCallback(() => {
+  const transcribeAudio = useCallback(async (audioUri: string) => {
+    try {
+      setIsTranscribing(true);
+      
+      const base64Audio = await FileSystem.readAsStringAsync(audioUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      const apiUrl = getApiUrl();
+      const response = await fetch(new URL("/api/transcribe", apiUrl).toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          audio: base64Audio,
+          filename: "recording.m4a",
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Transcription failed");
+      }
+      
+      const data = await response.json();
+      setTranscript(data.text || "");
+    } catch (error) {
+      console.error("Transcription error:", error);
+      Alert.alert(
+        "Erro na transcrição",
+        "Não foi possível transcrever o áudio. Tente novamente.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsTranscribing(false);
+    }
+  }, []);
+
+  const handleMicPress = useCallback(async () => {
     if (Platform.OS === "web") {
       Alert.alert(
         "Funcionalidade indisponível",
@@ -709,16 +764,29 @@ export default function DiscoverScreen() {
       return;
     }
     
-    if (isRecording) {
-      setIsRecording(false);
-    } else {
-      setIsRecording(true);
-      setTimeout(() => {
+    try {
+      if (audioRecorder.isRecording) {
+        await audioRecorder.stop();
         setIsRecording(false);
-        setTranscript("quero sair para dançar forró");
-      }, 3000);
+        
+        if (audioRecorder.uri) {
+          await transcribeAudio(audioRecorder.uri);
+        }
+      } else {
+        setTranscript("");
+        await audioRecorder.record();
+        setIsRecording(true);
+      }
+    } catch (error) {
+      console.error("Recording error:", error);
+      setIsRecording(false);
+      Alert.alert(
+        "Erro na gravação",
+        "Não foi possível gravar o áudio. Verifique as permissões do microfone.",
+        [{ text: "OK" }]
+      );
     }
-  }, [isRecording]);
+  }, [audioRecorder, transcribeAudio]);
 
   const updateCurrentSection = useCallback((scrollPosition: number) => {
     const headerOffset = stickyHeaderHeightRef.current || 150;
@@ -1084,6 +1152,7 @@ export default function DiscoverScreen() {
         selectedOption={selectedCompanion}
         onMicPress={handleMicPress}
         isRecording={isRecording}
+        isTranscribing={isTranscribing}
         transcript={transcript}
       />
     </View>
