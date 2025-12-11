@@ -73,6 +73,70 @@ const DESTAQUE_MES_DATA = {
   thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
 };
 
+const TOP_DANCE_AWARDS_DATA = [
+  {
+    id: "1",
+    category: "Categoria 1",
+    title: "O que vale é animação",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+  },
+  {
+    id: "2",
+    category: "Categoria 2",
+    title: "Baladas badaladas",
+    thumbnail: require("../../attached_assets/stock_images/ballroom_dancing_cou_a3f721af.jpg"),
+  },
+  {
+    id: "3",
+    category: "Categoria 3",
+    title: "Aiquibão a dança de salão",
+    thumbnail: require("../../attached_assets/stock_images/ballroom_dancing_cou_83e25a1a.jpg"),
+  },
+  {
+    id: "4",
+    category: "Categoria 4",
+    title: "É samba no pé",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
+  },
+  {
+    id: "5",
+    category: "Categoria 5",
+    title: "Famosos no BoraBailar",
+    highlightWord: "BoraBailar",
+    thumbnail: require("../../attached_assets/stock_images/ballroom_dancing_cou_4ebc2182.jpg"),
+  },
+  {
+    id: "6",
+    category: "Categoria 6",
+    title: "Forró pé de serra",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
+  },
+  {
+    id: "7",
+    category: "Categoria 7",
+    title: "Zouk love",
+    thumbnail: require("../../attached_assets/stock_images/ballroom_dancing_cou_476ab99c.jpg"),
+  },
+  {
+    id: "8",
+    category: "Categoria 8",
+    title: "Bachata sensual",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
+  },
+  {
+    id: "9",
+    category: "Categoria 9",
+    title: "Tango argentino",
+    thumbnail: require("../../attached_assets/stock_images/ballroom_dancing_cou_7a8e006d.jpg"),
+  },
+  {
+    id: "10",
+    category: "Categoria 10",
+    title: "Danças urbanas",
+    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
+  },
+];
+
 const QUERER_DATA = [
   {
     id: "1",
@@ -187,6 +251,64 @@ function DestaqueDoMes({ thumbnail, onPress }: { thumbnail: any; onPress?: () =>
           <Feather name="play" size={32} color="#FFFFFF" />
         </View>
       </View>
+    </Pressable>
+  );
+}
+
+function AwardCategoryCard({
+  category,
+  title,
+  thumbnail,
+  highlightWord,
+  onPress,
+}: {
+  category: string;
+  title: string;
+  thumbnail: any;
+  highlightWord?: string;
+  onPress?: () => void;
+}) {
+  const renderTitle = () => {
+    if (highlightWord && title.includes(highlightWord)) {
+      const parts = title.split(highlightWord);
+      return (
+        <Text style={styles.awardCategoryTitle}>
+          {parts[0]}
+          <Text style={styles.awardCategoryHighlight}>{highlightWord}</Text>
+          {parts[1]}
+        </Text>
+      );
+    }
+    return <Text style={styles.awardCategoryTitle}>{title}</Text>;
+  };
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.awardCategoryCard,
+        pressed && { opacity: 0.8 },
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.awardCategoryContent}>
+        <Text style={styles.awardCategoryNumber}>{category}</Text>
+        {renderTitle()}
+      </View>
+      <Image source={thumbnail} style={styles.awardCategoryThumbnail} resizeMode="cover" />
+    </Pressable>
+  );
+}
+
+function QueroParticiparButton({ onPress }: { onPress?: () => void }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.queroParticiparButton,
+        pressed && { opacity: 0.9 },
+      ]}
+      onPress={onPress}
+    >
+      <Text style={styles.queroParticiparButtonText}>Quero Participar</Text>
     </Pressable>
   );
 }
@@ -563,6 +685,27 @@ export default function DiscoverScreen() {
             <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
             <DestaqueDoMes thumbnail={DESTAQUE_MES_DATA.thumbnail} />
           </View>
+          
+          <View style={styles.topDanceAwardsSection}>
+            <Text style={styles.topDanceAwardsTitle}>
+              <Text style={styles.topDanceAwardsBrand}>BORABAILAR</Text>
+              {"\n"}TOP DANCE AWARDS
+            </Text>
+            
+            <QueroParticiparButton />
+            
+            <View style={styles.awardCategoriesList}>
+              {TOP_DANCE_AWARDS_DATA.map((item) => (
+                <AwardCategoryCard
+                  key={item.id}
+                  category={item.category}
+                  title={item.title}
+                  thumbnail={item.thumbnail}
+                  highlightWord={(item as any).highlightWord}
+                />
+              ))}
+            </View>
+          </View>
         </View>
         
         <View style={{ height: tabBarHeight + Spacing.xl }} />
@@ -888,5 +1031,69 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.6)",
     alignItems: "center",
     justifyContent: "center",
+  },
+  topDanceAwardsSection: {
+    marginTop: Spacing.xl + Spacing.xl,
+  },
+  topDanceAwardsTitle: {
+    fontSize: 18,
+    color: Colors.dark.text,
+    textAlign: "center",
+    fontWeight: "600",
+    lineHeight: 26,
+  },
+  topDanceAwardsBrand: {
+    color: Colors.dark.brand,
+    fontWeight: "700",
+    fontSize: 22,
+    letterSpacing: 1,
+  },
+  queroParticiparButton: {
+    backgroundColor: "#4CAF50",
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    alignItems: "center",
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
+  },
+  queroParticiparButtonText: {
+    fontSize: 15,
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  awardCategoriesList: {
+    gap: Spacing.md,
+  },
+  awardCategoryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  awardCategoryContent: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  awardCategoryNumber: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  awardCategoryTitle: {
+    fontSize: 15,
+    color: Colors.dark.text,
+    fontWeight: "600",
+  },
+  awardCategoryHighlight: {
+    color: Colors.dark.brand,
+    fontWeight: "700",
+  },
+  awardCategoryThumbnail: {
+    width: 70,
+    height: 50,
+    borderRadius: BorderRadius.md,
   },
 });
