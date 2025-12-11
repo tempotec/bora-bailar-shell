@@ -480,34 +480,36 @@ const DICA_IMAGES = [
   require("../../attached_assets/stock_images/ballroom_dancing_cou_83e25a1a.jpg"),
 ];
 
-const DICA_CARD_WIDTH = SCREEN_WIDTH * 0.75;
+const DICA_EVENT_CARD_WIDTH = 100;
 
-function DicaDaSemanaCard({
+function DicaDaSemanaRow({
   day,
   date,
   dicas,
-  onPress,
 }: {
   day: string;
   date: string;
   dicas: { title: string; price: string }[];
-  onPress?: () => void;
 }) {
   return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.dicaDaSemanaCard,
-        pressed && { opacity: 0.9 },
-      ]}
-      onPress={onPress}
-    >
+    <View style={styles.dicaDaSemanaRow}>
       <View style={styles.dicaDayHeader}>
         <Text style={styles.dicaDayName}>{day}</Text>
         <Text style={styles.dicaDate}>({date})</Text>
       </View>
-      <View style={styles.dicasRow}>
+      <Animated.ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.dicasEventScrollContainer}
+      >
         {dicas.map((dica, index) => (
-          <View key={index} style={styles.dicaEventCard}>
+          <Pressable 
+            key={index} 
+            style={({ pressed }) => [
+              styles.dicaEventCard,
+              pressed && { opacity: 0.8 },
+            ]}
+          >
             <Image 
               source={DICA_IMAGES[index % DICA_IMAGES.length]} 
               style={styles.dicaEventImage} 
@@ -517,10 +519,10 @@ function DicaDaSemanaCard({
             <Text style={styles.dicaEventPrice}>
               A partir de {dica.price === "R$0" ? "R$0" : dica.price}
             </Text>
-          </View>
+          </Pressable>
         ))}
-      </View>
-    </Pressable>
+      </Animated.ScrollView>
+    </View>
   );
 }
 
@@ -945,20 +947,16 @@ export default function DiscoverScreen() {
             Dicas da{" "}
             <Text style={styles.sectionTitleHighlight}>semana</Text>
           </Text>
-          <Animated.ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.dicasDaSemanaContainer}
-          >
+          <View style={styles.dicasDaSemanaList}>
             {DICAS_DA_SEMANA_DATA.map((item) => (
-              <DicaDaSemanaCard
+              <DicaDaSemanaRow
                 key={item.id}
                 day={item.day}
                 date={item.date}
                 dicas={item.dicas}
               />
             ))}
-          </Animated.ScrollView>
+          </View>
         </View>
 
         <View style={styles.recomendacoesSection} onLayout={handleRecomendacoesLayout}>
@@ -1380,15 +1378,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: Spacing.lg,
   },
-  dicasDaSemanaContainer: {
-    paddingRight: Spacing.lg,
-    gap: Spacing.md,
-    marginLeft: -Spacing.lg,
-    paddingLeft: Spacing.lg,
+  dicasDaSemanaList: {
+    gap: Spacing.xl,
   },
-  dicaDaSemanaCard: {
-    width: DICA_CARD_WIDTH,
-    backgroundColor: "#FFFFFF",
+  dicaDaSemanaRow: {
+    marginBottom: Spacing.md,
   },
   dicaDayHeader: {
     flexDirection: "row",
@@ -1405,16 +1399,18 @@ const styles = StyleSheet.create({
     color: Colors.dark.textSecondary,
     marginLeft: Spacing.xs,
   },
-  dicasRow: {
-    flexDirection: "row",
-    gap: Spacing.sm,
+  dicasEventScrollContainer: {
+    gap: Spacing.md,
+    paddingRight: Spacing.lg,
+    marginLeft: -Spacing.lg,
+    paddingLeft: Spacing.lg,
   },
   dicaEventCard: {
-    width: (DICA_CARD_WIDTH - Spacing.sm * 2) / 3,
+    width: DICA_EVENT_CARD_WIDTH,
   },
   dicaEventImage: {
-    width: "100%",
-    height: 70,
+    width: DICA_EVENT_CARD_WIDTH,
+    height: 80,
     borderRadius: BorderRadius.md,
     marginBottom: Spacing.xs,
   },
