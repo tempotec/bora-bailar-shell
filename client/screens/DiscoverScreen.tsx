@@ -190,8 +190,6 @@ const QUERER_DATA = [
 
 const VIDEO_STORY_WIDTH = 100;
 const VIDEO_STORY_HEIGHT = 140;
-const WIZARD_EXPANDED_HEIGHT = 380;
-const HERO_EXPANDED_HEIGHT = 250;
 
 function VideoStoryCard({
   title,
@@ -442,12 +440,10 @@ export default function DiscoverScreen() {
   const { theme } = useTheme();
   
   const scrollY = useSharedValue(0);
-  const heroHeight = useSharedValue(HERO_EXPANDED_HEIGHT);
-  const wizardHeight = useSharedValue(WIZARD_EXPANDED_HEIGHT);
   const [currentSectionKey, setCurrentSectionKey] = useState<keyof typeof SECTIONS | null>(null);
   const currentSectionRef = useRef<keyof typeof SECTIONS | null>(null);
   const stickyHeaderHeightRef = useRef(0);
-  const layoutDataRef = useRef({ quererY: 0, momentoLocalY: 0, heroHeight: 0, wizardHeight: 0 });
+  const layoutDataRef = useRef({ quererY: 0, momentoLocalY: 0 });
 
   const getMomentoAbsoluteY = useCallback(() => {
     return layoutDataRef.current.quererY + layoutDataRef.current.momentoLocalY;
@@ -456,19 +452,11 @@ export default function DiscoverScreen() {
   const updateCurrentSection = useCallback((scrollPosition: number) => {
     const headerOffset = stickyHeaderHeightRef.current || 150;
     const momentoAbsoluteY = getMomentoAbsoluteY();
-    
-    const collapsedOffset = layoutDataRef.current.heroHeight + layoutDataRef.current.wizardHeight;
-    const pullUpOffset = scrollPosition >= SCROLL_THRESHOLD 
-      ? collapsedOffset 
-      : (scrollPosition / SCROLL_THRESHOLD) * collapsedOffset;
-    
-    const adjustedMomentoY = momentoAbsoluteY - pullUpOffset;
-    
     let newSection: keyof typeof SECTIONS | null = null;
     
     if (scrollPosition < SCROLL_THRESHOLD) {
       newSection = null;
-    } else if (adjustedMomentoY > 0 && scrollPosition >= adjustedMomentoY - headerOffset) {
+    } else if (momentoAbsoluteY > 0 && scrollPosition >= momentoAbsoluteY - headerOffset) {
       newSection = "momento";
     } else {
       newSection = "querer";
@@ -501,18 +489,6 @@ export default function DiscoverScreen() {
     const { y } = event.nativeEvent.layout;
     layoutDataRef.current.momentoLocalY = y;
   }, []);
-
-  const handleHeroLayout = useCallback((event: LayoutChangeEvent) => {
-    const { height } = event.nativeEvent.layout;
-    layoutDataRef.current.heroHeight = height;
-    heroHeight.value = height;
-  }, [heroHeight]);
-
-  const handleWizardLayout = useCallback((event: LayoutChangeEvent) => {
-    const { height } = event.nativeEvent.layout;
-    layoutDataRef.current.wizardHeight = height;
-    wizardHeight.value = height;
-  }, [wizardHeight]);
 
   const currentSection = currentSectionKey ? SECTIONS[currentSectionKey] : null;
 
@@ -550,19 +526,6 @@ export default function DiscoverScreen() {
     );
     return {
       opacity,
-    };
-  });
-
-  const contentPullUpStyle = useAnimatedStyle(() => {
-    const totalCollapsedHeight = heroHeight.value + wizardHeight.value;
-    const pullUp = interpolate(
-      scrollY.value,
-      [0, SCROLL_THRESHOLD],
-      [0, -totalCollapsedHeight],
-      Extrapolation.CLAMP
-    );
-    return {
-      transform: [{ translateY: pullUp }],
     };
   });
 
@@ -641,7 +604,7 @@ export default function DiscoverScreen() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        <Animated.View style={[styles.heroSection, heroAnimatedStyle]} onLayout={handleHeroLayout}>
+        <Animated.View style={[styles.heroSection, heroAnimatedStyle]}>
           <Image
             source={logoImage}
             style={styles.logo}
@@ -658,7 +621,7 @@ export default function DiscoverScreen() {
           <Text style={styles.tagline}>PRA SAIR, DANÇAR E SE DIVERTIR!</Text>
         </Animated.View>
 
-        <Animated.View style={[styles.wizardSection, expandedWizardStyle]} onLayout={handleWizardLayout}>
+        <Animated.View style={[styles.wizardSection, expandedWizardStyle]}>
           <View style={styles.wizardContainer}>
             <WizardSearchField label="Onde" type="chevron" />
             <WizardSearchField label="Quando" type="chevron" />
@@ -675,7 +638,7 @@ export default function DiscoverScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.quererSection, contentPullUpStyle]} onLayout={handleQuererLayout}>
+        <View style={styles.quererSection} onLayout={handleQuererLayout}>
           <Text style={styles.sectionTitle}>
             O seu{" "}
             <Text style={styles.sectionTitleHighlight}>querer</Text>
@@ -743,7 +706,7 @@ export default function DiscoverScreen() {
               ))}
             </View>
           </View>
-        </Animated.View>
+        </View>
         
         <View style={{ height: tabBarHeight + Spacing.xl }} />
       </Animated.ScrollView>
@@ -900,7 +863,7 @@ const styles = StyleSheet.create({
   },
   quererSection: {
     paddingHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl + Spacing.xl,
   },
   sectionTitle: {
     fontSize: 18,
