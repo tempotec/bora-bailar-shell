@@ -30,7 +30,7 @@ export default function RegisterStep2Screen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  const { setIsLoggedIn, setUserName } = useContext(AuthContext);
+  const { setIsLoggedIn, setUserName, setUserEmail } = useContext(AuthContext);
   const [email, setEmail] = useState("");
 
   const userName = route.params?.userName || "";
@@ -47,6 +47,7 @@ export default function RegisterStep2Screen() {
   const handleComplete = () => {
     if (isValidEmail(email)) {
       setUserName(userName);
+      setUserEmail(email.trim());
       setIsLoggedIn(true);
       
       navigation.dispatch(
