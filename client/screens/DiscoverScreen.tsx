@@ -1013,8 +1013,15 @@ export default function DiscoverScreen() {
   }, [rootNavigation]);
 
   const handleQuererCardPress = useCallback((title: string, description: string) => {
-    rootNavigation.navigate("AIChat", { cardTitle: title, cardDescription: description });
-  }, [rootNavigation]);
+    if (isLoggedIn) {
+      rootNavigation.navigate("QueroDetail", { queroTitle: title, queroDescription: description });
+    } else {
+      rootNavigation.navigate("FaltaPouco", {
+        eventName: title.replace(/\n/g, " "),
+        eventDetails: description,
+      });
+    }
+  }, [rootNavigation, isLoggedIn]);
 
   const handleDanceAwardsPress = useCallback(() => {
     rootNavigation.navigate("AIChat", { 

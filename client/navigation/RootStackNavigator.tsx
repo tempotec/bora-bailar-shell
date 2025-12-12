@@ -7,6 +7,7 @@ import RegisterStep1Screen from "@/screens/RegisterStep1Screen";
 import RegisterStep2Screen from "@/screens/RegisterStep2Screen";
 import CadastreSeScreen from "@/screens/CadastreSeScreen";
 import FaltaPoucoScreen from "@/screens/FaltaPoucoScreen";
+import QueroDetailScreen from "@/screens/QueroDetailScreen";
 import ReelsScreen, { ReelsScreenParams } from "@/screens/ReelsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   RegisterStep2: { userName: string };
   CadastreSe: undefined;
   FaltaPouco: { eventName?: string; eventDetails?: string; eventImage?: string } | undefined;
+  QueroDetail: { queroTitle: string; queroDescription: string };
   Reels: ReelsScreenParams;
 };
 
@@ -84,6 +86,13 @@ export default function RootStackNavigator() {
         component={FaltaPoucoScreen}
         options={{
           presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="QueroDetail"
+        component={QueroDetailScreen}
+        options={{
           headerShown: false,
         }}
       />
