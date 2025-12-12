@@ -7,6 +7,8 @@ import {
   Pressable,
   Image,
   Dimensions,
+  Alert,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, FontAwesome } from "@expo/vector-icons";
@@ -133,16 +135,25 @@ export default function CadastreSeScreen() {
     navigation.navigate("RegisterStep1");
   };
 
+  const handleSocialLoginInDevelopment = (provider: string) => {
+    const message = `Login com ${provider} em desenvolvimento. Por enquanto, use o cadastro por e-mail.`;
+    if (Platform.OS === "web") {
+      window.alert(`Em breve!\n\n${message}`);
+    } else {
+      Alert.alert("Em breve!", message, [{ text: "OK" }]);
+    }
+  };
+
   const handleGoogleSignUp = () => {
-    navigation.navigate("RegisterStep1");
+    handleSocialLoginInDevelopment("Google");
   };
 
   const handleFacebookSignUp = () => {
-    navigation.navigate("RegisterStep1");
+    handleSocialLoginInDevelopment("Facebook");
   };
 
   const handleAppleSignUp = () => {
-    navigation.navigate("RegisterStep1");
+    handleSocialLoginInDevelopment("Apple");
   };
 
   return (
