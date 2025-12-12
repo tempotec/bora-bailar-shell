@@ -14,10 +14,98 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withDelay,
+  withSequence,
+  Easing,
+  SharedValue,
+} from "react-native-reanimated";
 import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
+
+function TypingIndicator() {
+  const dot1 = useSharedValue(0);
+  const dot2 = useSharedValue(0);
+  const dot3 = useSharedValue(0);
+
+  useEffect(() => {
+    const animateDot = (dotValue: SharedValue<number>, delay: number) => {
+      dotValue.value = withDelay(
+        delay,
+        withRepeat(
+          withSequence(
+            withTiming(-6, { duration: 300, easing: Easing.out(Easing.ease) }),
+            withTiming(0, { duration: 300, easing: Easing.in(Easing.ease) })
+          ),
+          -1,
+          false
+        )
+      );
+    };
+
+    animateDot(dot1, 0);
+    animateDot(dot2, 150);
+    animateDot(dot3, 300);
+  }, [dot1, dot2, dot3]);
+
+  const dot1Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: dot1.value }],
+  }));
+
+  const dot2Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: dot2.value }],
+  }));
+
+  const dot3Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: dot3.value }],
+  }));
+
+  return (
+    <View style={typingStyles.container}>
+      <View style={typingStyles.bubble}>
+        <View style={typingStyles.dotsContainer}>
+          <Animated.View style={[typingStyles.dot, dot1Style]} />
+          <Animated.View style={[typingStyles.dot, dot2Style]} />
+          <Animated.View style={[typingStyles.dot, dot3Style]} />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const typingStyles = StyleSheet.create({
+  container: {
+    alignSelf: "flex-start",
+    marginVertical: Spacing.xs,
+    maxWidth: "80%",
+  },
+  bubble: {
+    backgroundColor: "#F5F5F5",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    borderBottomLeftRadius: BorderRadius.xs,
+  },
+  dotsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    height: 20,
+    justifyContent: "center",
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.dark.textSecondary,
+  },
+});
 
 type Message = {
   id: string;
@@ -48,22 +136,29 @@ export default function AIChatScreen() {
   const [inputText, setInputText] = useState("");
   const [chatStep, setChatStep] = useState<ChatStep>("initial");
   const [userName, setUserName] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    const initialMessages: Message[] = [
-      {
-        id: "1",
-        text: `QUERO ir no ${cardTitle.replace(/\n/g, " ")}`,
-        isUser: true,
-      },
-      {
+    const userMessage: Message = {
+      id: "1",
+      text: `QUERO ir no ${cardTitle.replace(/\n/g, " ")}`,
+      isUser: true,
+    };
+    setMessages([userMessage]);
+    setIsTyping(true);
+    
+    const timer = setTimeout(() => {
+      setIsTyping(false);
+      const aiMessage: Message = {
         id: "2",
         text: AI_RESPONSES.initial,
         isUser: false,
-      },
-    ];
-    setMessages(initialMessages);
-    setChatStep("asked_name");
+      };
+      setMessages(prev => [...prev, aiMessage]);
+      setChatStep("asked_name");
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, [cardTitle]);
 
   const scrollToBottom = useCallback(() => {
@@ -81,12 +176,16 @@ export default function AIChatScreen() {
       isUser: true,
     };
 
+    const currentInput = inputText.trim();
     setMessages(prev => [...prev, userMessage]);
     setInputText("");
+    setIsTyping(true);
+    scrollToBottom();
 
     setTimeout(() => {
+      setIsTyping(false);
       if (chatStep === "asked_name") {
-        setUserName(inputText.trim());
+        setUserName(currentInput);
         const aiResponse: Message = {
           id: (Date.now() + 1).toString(),
           text: AI_RESPONSES.asked_name,
@@ -111,9 +210,7 @@ export default function AIChatScreen() {
         setChatStep("complete");
       }
       scrollToBottom();
-    }, 800);
-
-    scrollToBottom();
+    }, 1200);
   }, [inputText, chatStep, scrollToBottom]);
 
   const handleVamosBailar = useCallback(() => {
@@ -201,6 +298,7 @@ export default function AIChatScreen() {
         style={styles.messagesList}
         contentContainerStyle={styles.messagesContent}
         onContentSizeChange={scrollToBottom}
+        ListFooterComponent={isTyping ? <TypingIndicator /> : null}
       />
 
       <KeyboardAvoidingView
