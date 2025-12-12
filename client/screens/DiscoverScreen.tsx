@@ -1006,8 +1006,8 @@ export default function DiscoverScreen() {
   });
 
   const handleSignUp = useCallback(() => {
-    navigation.navigate("SignUp");
-  }, [navigation]);
+    rootNavigation.navigate("CadastreSe");
+  }, [rootNavigation]);
 
   const handleQuererCardPress = useCallback((title: string, description: string) => {
     rootNavigation.navigate("AIChat", { cardTitle: title, cardDescription: description });
@@ -1019,7 +1019,7 @@ export default function DiscoverScreen() {
 
   const handleUploadPress = useCallback(() => {
     if (!isLoggedIn) {
-      rootNavigation.navigate("RegisterStep1");
+      rootNavigation.navigate("CadastreSe");
     } else {
       Alert.alert(
         "Upload de vídeo",
