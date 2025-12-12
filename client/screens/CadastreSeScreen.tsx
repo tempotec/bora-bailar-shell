@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
+import { Feather, AntDesign, FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
 import { useNavigation } from "@react-navigation/native";
@@ -74,7 +74,7 @@ function SocialButton({ icon, label, variant, onPress }: SocialButtonProps) {
 function GoogleIcon() {
   return (
     <View style={styles.googleIconContainer}>
-      <Text style={styles.googleIconText}>G</Text>
+      <AntDesign name="google" size={20} color="#4285F4" />
     </View>
   );
 }
@@ -82,7 +82,7 @@ function GoogleIcon() {
 function FacebookIcon() {
   return (
     <View style={styles.facebookIconContainer}>
-      <Feather name="facebook" size={18} color="#FFFFFF" />
+      <FontAwesome name="facebook" size={20} color="#FFFFFF" />
     </View>
   );
 }
@@ -90,7 +90,7 @@ function FacebookIcon() {
 function AppleIcon() {
   return (
     <View style={styles.appleIconContainer}>
-      <Feather name="smartphone" size={18} color="#FFFFFF" />
+      <FontAwesome name="apple" size={22} color="#FFFFFF" />
     </View>
   );
 }
@@ -387,11 +387,6 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: "center",
     justifyContent: "center",
-  },
-  googleIconText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#4285F4",
   },
   facebookIconContainer: {
     width: 24,
