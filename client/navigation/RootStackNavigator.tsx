@@ -18,7 +18,7 @@ export type RootStackParamList = {
   RegisterStep1: undefined;
   RegisterStep2: { userName: string };
   CadastreSe: undefined;
-  FaltaPouco: undefined;
+  FaltaPouco: { eventName?: string; eventDetails?: string; eventImage?: string } | undefined;
   Reels: ReelsScreenParams;
 };
 

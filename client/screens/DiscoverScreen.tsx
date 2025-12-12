@@ -1034,6 +1034,14 @@ export default function DiscoverScreen() {
     rootNavigation.navigate("Reels", { initialIndex: index });
   }, [rootNavigation]);
 
+  const handleRecomendacaoPress = useCallback((title: string, price: string, discount: string, image: string) => {
+    rootNavigation.navigate("FaltaPouco", {
+      eventName: title,
+      eventDetails: `${price} | ${discount}`,
+      eventImage: image,
+    });
+  }, [rootNavigation]);
+
   const handleUploadPress = useCallback(() => {
     if (!isLoggedIn) {
       rootNavigation.navigate("CadastreSe");
@@ -1257,6 +1265,7 @@ export default function DiscoverScreen() {
                 price={item.price}
                 discount={item.discount}
                 image={item.image}
+                onPress={() => handleRecomendacaoPress(item.title, item.price, item.discount, item.image)}
               />
             ))}
           </Animated.ScrollView>
