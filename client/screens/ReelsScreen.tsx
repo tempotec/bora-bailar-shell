@@ -11,14 +11,17 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Image } from "expo-image";
-import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { LinearGradient } from "expo-linear-gradient";
+import { useTabBar } from "@/contexts/TabBarContext";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const SCREEN_HEIGHT = Dimensions.get("screen").height;
 
 type ReelItem = {
   id: string;
@@ -27,7 +30,7 @@ type ReelItem = {
   verified: boolean;
   description: string;
   thumbnail: any;
-  videoUrl?: string;
+  videoUrl: string;
   likes: number;
   comments: number;
   shares: number;
@@ -41,6 +44,7 @@ const REELS_DATA: ReelItem[] = [
     verified: true,
     description: "Dançando com a gata em Ipanema",
     thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     likes: 1234,
     comments: 89,
     shares: 45,
@@ -52,6 +56,7 @@ const REELS_DATA: ReelItem[] = [
     verified: true,
     description: "Samba no pé na Lapa!",
     thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
     likes: 2567,
     comments: 156,
     shares: 78,
@@ -63,6 +68,7 @@ const REELS_DATA: ReelItem[] = [
     verified: false,
     description: "Forró universitário é vida!",
     thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
     likes: 890,
     comments: 34,
     shares: 12,
@@ -74,6 +80,7 @@ const REELS_DATA: ReelItem[] = [
     verified: true,
     description: "Noite de salsa no Rio",
     thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
     likes: 3456,
     comments: 234,
     shares: 123,
@@ -85,6 +92,7 @@ const REELS_DATA: ReelItem[] = [
     verified: false,
     description: "Zouk brasileiro com muito amor",
     thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
     likes: 1567,
     comments: 67,
     shares: 34,
@@ -96,6 +104,7 @@ const REELS_DATA: ReelItem[] = [
     verified: true,
     description: "Tango argentino no coração",
     thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_dbae0db5.jpg"),
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
     likes: 4567,
     comments: 345,
     shares: 189,
@@ -115,6 +124,31 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
   const [likeCount, setLikeCount] = useState(item.likes);
   const [commentCount] = useState(item.comments);
   const [shareCount, setShareCount] = useState(item.shares);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const insets = useSafeAreaInsets();
+
+  const player = useVideoPlayer(item.videoUrl, (p) => {
+    p.loop = true;
+  });
+
+  useEffect(() => {
+    if (isVisible && player) {
+      player.play();
+    } else if (player) {
+      player.pause();
+    }
+  }, [isVisible, player]);
+
+  useEffect(() => {
+    if (player) {
+      const subscription = player.addListener("playingChange", (isPlaying) => {
+        if (isPlaying) {
+          setIsVideoLoaded(true);
+        }
+      });
+      return () => subscription.remove();
+    }
+  }, [player]);
 
   const handleLike = () => {
     if (!liked) {
@@ -140,18 +174,28 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
 
   return (
     <View style={styles.reelContainer}>
-      <Image
-        source={item.thumbnail}
-        style={styles.reelImage}
+      {!isVideoLoaded ? (
+        <Image
+          source={item.thumbnail}
+          style={styles.posterImage}
+          contentFit="cover"
+        />
+      ) : null}
+      
+      <VideoView
+        player={player}
+        style={[styles.video, { opacity: isVideoLoaded ? 1 : 0 }]}
         contentFit="cover"
+        nativeControls={false}
       />
       
       <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.7)"]}
+        colors={["rgba(0,0,0,0.4)", "transparent", "transparent", "rgba(0,0,0,0.7)"]}
+        locations={[0, 0.2, 0.5, 1]}
         style={styles.gradient}
       />
 
-      <View style={styles.tooltipContainer}>
+      <View style={[styles.tooltipContainer, { top: insets.top + 60 }]}>
         <View style={styles.tooltip}>
           <Feather name="filter" size={16} color={Colors.dark.text} />
           <Text style={styles.tooltipText}>
@@ -160,7 +204,7 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
         </View>
       </View>
 
-      <View style={styles.sideActions}>
+      <View style={[styles.sideActions, { bottom: insets.bottom + 160 }]}>
         <Pressable style={styles.actionButton} onPress={handleLike}>
           <Feather 
             name="heart" 
@@ -181,7 +225,7 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
         </Pressable>
       </View>
 
-      <View style={styles.bottomContent}>
+      <View style={[styles.bottomContent, { bottom: insets.bottom + 20 }]}>
         <View style={styles.userInfo}>
           <Text style={styles.username}>
             {item.username}
@@ -200,10 +244,6 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
             <Text style={styles.shareButtonText}>É AQUI!</Text>
           </Pressable>
         </View>
-      </View>
-
-      <View style={styles.swipeHint}>
-        <Text style={styles.swipeHintText}>Arraste para baixo para ver mais</Text>
       </View>
     </View>
   );
@@ -225,8 +265,20 @@ export default function ReelsScreen() {
   const route = useRoute<RouteProp<{ Reels: ReelsScreenParams }, "Reels">>();
   const flatListRef = useRef<FlatList>(null);
   const [visibleIndex, setVisibleIndex] = useState(route.params?.initialIndex || 0);
+  const { isTabBarVisible } = useTabBar();
 
   const initialIndex = route.params?.initialIndex || 0;
+
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setHidden(true, "fade");
+      isTabBarVisible.value = false;
+      return () => {
+        StatusBar.setHidden(false, "fade");
+        isTabBarVisible.value = true;
+      };
+    }, [isTabBarVisible])
+  );
 
   useEffect(() => {
     if (initialIndex > 0 && flatListRef.current) {
@@ -237,15 +289,12 @@ export default function ReelsScreen() {
   }, [initialIndex]);
 
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 80,
+    itemVisiblePercentThreshold: 50,
   }).current;
 
   const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0) {
-      const firstVisibleItem = viewableItems[0];
-      if (firstVisibleItem.index !== null) {
-        setVisibleIndex(firstVisibleItem.index);
-      }
+    if (viewableItems.length > 0 && viewableItems[0].index !== null) {
+      setVisibleIndex(viewableItems[0].index);
     }
   }, []);
 
@@ -282,17 +331,9 @@ export default function ReelsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-      
-      <View style={[styles.header, { paddingTop: insets.top }]}>
+      <View style={[styles.topActions, { top: insets.top + Spacing.sm }]}>
         <Pressable style={styles.backButton} onPress={handleBack}>
           <Feather name="chevron-left" size={28} color="#FFFFFF" />
-        </Pressable>
-        
-        <Text style={styles.headerTitle}>M</Text>
-        
-        <Pressable style={styles.notificationButton}>
-          <Feather name="bell" size={24} color="#FFFFFF" />
         </Pressable>
       </View>
 
@@ -304,6 +345,7 @@ export default function ReelsScreen() {
         pagingEnabled
         showsVerticalScrollIndicator={false}
         snapToAlignment="start"
+        snapToInterval={SCREEN_HEIGHT}
         decelerationRate="fast"
         getItemLayout={getItemLayout}
         initialScrollIndex={initialIndex}
@@ -313,22 +355,8 @@ export default function ReelsScreen() {
         maxToRenderPerBatch={2}
         removeClippedSubviews={true}
         initialNumToRender={2}
+        style={styles.flatList}
       />
-
-      <View style={[styles.bottomNav, { paddingBottom: insets.bottom }]}>
-        <Pressable style={styles.navItem}>
-          <Feather name="home" size={24} color="#FFFFFF" />
-        </Pressable>
-        <Pressable style={styles.navItem}>
-          <Feather name="compass" size={24} color="#FFFFFF" />
-        </Pressable>
-        <Pressable style={styles.navItem}>
-          <Feather name="heart" size={24} color="#FFFFFF" />
-        </Pressable>
-        <Pressable style={styles.navItem}>
-          <Feather name="user" size={24} color="#FFFFFF" />
-        </Pressable>
-      </View>
     </View>
   );
 }
@@ -338,55 +366,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
   },
-  header: {
+  flatList: {
+    flex: 1,
+  },
+  topActions: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
+    left: Spacing.sm,
     zIndex: 100,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm,
   },
   backButton: {
     width: 44,
     height: 44,
     alignItems: "center",
     justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    fontFamily: Fonts?.serif,
-  },
-  notificationButton: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderRadius: 22,
   },
   reelContainer: {
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
     position: "relative",
+    backgroundColor: "#000000",
   },
-  reelImage: {
+  video: {
     width: "100%",
     height: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  posterImage: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   gradient: {
     position: "absolute",
+    top: 0,
     bottom: 0,
     left: 0,
     right: 0,
-    height: "50%",
   },
   tooltipContainer: {
     position: "absolute",
-    top: 100,
     left: Spacing.md,
     right: 60,
   },
@@ -407,7 +435,6 @@ const styles = StyleSheet.create({
   sideActions: {
     position: "absolute",
     right: Spacing.md,
-    bottom: 200,
     alignItems: "center",
     gap: Spacing.lg,
   },
@@ -422,7 +449,6 @@ const styles = StyleSheet.create({
   },
   bottomContent: {
     position: "absolute",
-    bottom: 120,
     left: 0,
     right: 0,
     paddingHorizontal: Spacing.md,
@@ -465,33 +491,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: "#FFFFFF",
-  },
-  swipeHint: {
-    position: "absolute",
-    bottom: 90,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  swipeHintText: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.7)",
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingVertical: Spacing.sm,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  navItem: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });
