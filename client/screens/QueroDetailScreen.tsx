@@ -7,6 +7,7 @@ import {
   Pressable,
   Image,
   Dimensions,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -73,6 +74,42 @@ const LOCATIONS = [
   { id: "sudoeste", label: "Sudoeste" },
   { id: "centro", label: "Centro" },
 ];
+
+const FILTER_CATEGORIES = {
+  partner: {
+    title: "Seu par",
+    options: [
+      { id: "com_homem", label: "Com homem" },
+      { id: "com_mulher", label: "Com mulher" },
+    ],
+  },
+  distance: {
+    title: "Distância",
+    options: [
+      { id: "1km", label: "1km" },
+      { id: "2km", label: "2km" },
+      { id: "5km", label: "5km" },
+      { id: "10km", label: "10km" },
+    ],
+  },
+  danceStyle: {
+    title: "Estilo de dança",
+    options: [
+      { id: "bachata", label: "Bachata" },
+      { id: "ballet", label: "Ballet" },
+      { id: "forro", label: "Forró" },
+      { id: "funk", label: "Funk" },
+      { id: "hip_hop", label: "Hip Hop" },
+      { id: "kizomba", label: "Kizomba" },
+      { id: "pagode", label: "Pagode" },
+      { id: "salsa", label: "Salsa" },
+      { id: "samba", label: "Samba" },
+      { id: "swing", label: "Swing" },
+      { id: "tango", label: "Tango" },
+      { id: "zouk", label: "Zouk" },
+    ],
+  },
+};
 
 const DAY_ABBREVS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
 
@@ -253,18 +290,35 @@ export default function QueroDetailScreen() {
   const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>(["com_homem", "5km", "forro"]);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
   
   const eventsData = useMemo(() => generateDynamicEvents(), []);
+  
+  const activeFilterCount = useMemo(() => {
+    return activeFilters.length;
+  }, [activeFilters]);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
 
   const handleFilterPress = useCallback((filterId: string) => {
+    if (filterId === "filtros") {
+      setFilterModalVisible(true);
+      return;
+    }
     setActiveFilters(prev => 
       prev.includes(filterId) 
         ? prev.filter(id => id !== filterId)
         : [...prev, filterId]
+    );
+  }, []);
+  
+  const handleFilterOptionToggle = useCallback((optionId: string) => {
+    setActiveFilters(prev => 
+      prev.includes(optionId) 
+        ? prev.filter(id => id !== optionId)
+        : [...prev, optionId]
     );
   }, []);
 
@@ -331,9 +385,9 @@ export default function QueroDetailScreen() {
             <FilterTag
               key={tag.id}
               label={tag.label}
-              count={tag.count}
+              count={tag.isSpecial ? activeFilterCount : tag.count}
               isSpecial={tag.isSpecial}
-              isActive={activeFilters.includes(tag.id)}
+              isActive={tag.isSpecial ? activeFilterCount > 0 : activeFilters.includes(tag.id)}
               onPress={() => handleFilterPress(tag.id)}
             />
           ))}
@@ -411,6 +465,91 @@ export default function QueroDetailScreen() {
 
         <View style={{ height: insets.bottom + Spacing.xl }} />
       </ScrollView>
+      
+      <Modal
+        visible={filterModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.filterModal}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Filtros</Text>
+              <Pressable 
+                onPress={() => setFilterModalVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Feather name="x" size={24} color={Colors.dark.text} />
+              </Pressable>
+            </View>
+            
+            <ScrollView 
+              style={styles.filterModalContent}
+              showsVerticalScrollIndicator={true}
+            >
+              <Text style={styles.filterCategoryTitle}>{FILTER_CATEGORIES.partner.title}</Text>
+              {FILTER_CATEGORIES.partner.options.map((option) => (
+                <Pressable
+                  key={option.id}
+                  style={styles.filterOption}
+                  onPress={() => handleFilterOptionToggle(option.id)}
+                >
+                  <View style={[
+                    styles.filterCheckbox,
+                    activeFilters.includes(option.id) && styles.filterCheckboxActive,
+                  ]}>
+                    {activeFilters.includes(option.id) ? (
+                      <Feather name="check" size={14} color="#FFFFFF" />
+                    ) : null}
+                  </View>
+                  <Text style={styles.filterOptionLabel}>{option.label}</Text>
+                </Pressable>
+              ))}
+              
+              <Text style={styles.filterCategoryTitle}>{FILTER_CATEGORIES.distance.title}</Text>
+              {FILTER_CATEGORIES.distance.options.map((option) => (
+                <Pressable
+                  key={option.id}
+                  style={styles.filterOption}
+                  onPress={() => handleFilterOptionToggle(option.id)}
+                >
+                  <View style={[
+                    styles.filterCheckbox,
+                    activeFilters.includes(option.id) && styles.filterCheckboxActive,
+                  ]}>
+                    {activeFilters.includes(option.id) ? (
+                      <Feather name="check" size={14} color="#FFFFFF" />
+                    ) : null}
+                  </View>
+                  <Text style={styles.filterOptionLabel}>{option.label}</Text>
+                </Pressable>
+              ))}
+              
+              <Text style={styles.filterCategoryTitle}>{FILTER_CATEGORIES.danceStyle.title}</Text>
+              {FILTER_CATEGORIES.danceStyle.options.map((option) => (
+                <Pressable
+                  key={option.id}
+                  style={styles.filterOption}
+                  onPress={() => handleFilterOptionToggle(option.id)}
+                >
+                  <View style={[
+                    styles.filterCheckbox,
+                    activeFilters.includes(option.id) && styles.filterCheckboxActive,
+                  ]}>
+                    {activeFilters.includes(option.id) ? (
+                      <Feather name="check" size={14} color="#FFFFFF" />
+                    ) : null}
+                  </View>
+                  <Text style={styles.filterOptionLabel}>{option.label}</Text>
+                </Pressable>
+              ))}
+              
+              <View style={{ height: Spacing.xl }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -701,5 +840,64 @@ const styles = StyleSheet.create({
   detailsLink: {
     fontSize: 11,
     color: Colors.dark.brand,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+  },
+  filterModal: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: BorderRadius.lg,
+    width: "100%",
+    maxHeight: "80%",
+    paddingVertical: Spacing.lg,
+  },
+  filterModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  filterModalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.dark.text,
+  },
+  filterModalContent: {
+    paddingHorizontal: Spacing.lg,
+  },
+  filterCategoryTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.dark.text,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  filterOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  filterCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#CCCCCC",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterCheckboxActive: {
+    backgroundColor: Colors.dark.brand,
+    borderColor: Colors.dark.brand,
+  },
+  filterOptionLabel: {
+    fontSize: 14,
+    color: Colors.dark.text,
   },
 });
