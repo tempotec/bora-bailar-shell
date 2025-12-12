@@ -1327,19 +1327,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
+    paddingTop: Spacing.md,
     backgroundColor: "transparent",
   },
   authButtonsContainer: {
     minWidth: 60,
   },
   authButton: {
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
   authButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
-    color: Colors.dark.brand,
+    color: "#666666",
     letterSpacing: 0.5,
   },
   topHeaderSpacer: {
