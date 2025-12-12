@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -74,58 +74,64 @@ const LOCATIONS = [
   { id: "centro", label: "Centro" },
 ];
 
-const EVENTS_DATA = [
+const DAY_ABBREVS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
+
+const EVENT_TEMPLATES = [
   {
-    id: "1",
-    dayAbbrev: "QUI",
-    date: "14/09",
     title: "QUINTANEJA NO PADANO",
     location: "Barra da Tijuca",
     time: "17h00",
     image: "https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=100&h=100&fit=crop",
-    color: "#C41E3A",
   },
   {
-    id: "2",
-    dayAbbrev: "SEX",
-    date: "14/09",
     title: "HAPPY HOUR NO CARIOCA DA GEMA",
     location: "Lapa - Centro",
     time: "18h00",
     image: "https://images.unsplash.com/photo-1545959570-a94084071b5d?w=100&h=100&fit=crop",
-    color: "#22C55E",
   },
   {
-    id: "3",
-    dayAbbrev: "SAB",
-    date: "14/09",
     title: "MALHAÇÃO COM DANÇA",
     location: "Leblon",
     time: "15h00",
     image: "https://images.unsplash.com/photo-1508700929628-666bc8bd84ea?w=100&h=100&fit=crop",
-    color: "#C41E3A",
   },
   {
-    id: "4",
-    dayAbbrev: "DOM",
-    date: "14/09",
     title: "JANTAR DANÇANTE",
     location: "Jacarepaguá",
     time: "18h00",
     image: "https://images.unsplash.com/photo-1566737236500-c8ac43014a67?w=100&h=100&fit=crop",
-    color: "#C41E3A",
   },
   {
-    id: "5",
-    dayAbbrev: "SEG",
-    date: "14/09",
     title: "CAFÉ DA MANHÃ COM MÚSICA",
     location: "Tijuca",
     time: "10h02",
     image: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=100&h=100&fit=crop",
-    color: "#C41E3A",
   },
 ];
+
+function generateDynamicEvents() {
+  const today = new Date();
+  
+  return EVENT_TEMPLATES.map((template, index) => {
+    const eventDate = new Date(today);
+    eventDate.setDate(today.getDate() + index);
+    
+    const dayOfWeek = eventDate.getDay();
+    const dayAbbrev = DAY_ABBREVS[dayOfWeek];
+    const formattedDate = `${String(eventDate.getDate()).padStart(2, "0")}/${String(eventDate.getMonth() + 1).padStart(2, "0")}`;
+    
+    return {
+      id: String(index + 1),
+      dayAbbrev,
+      date: formattedDate,
+      title: template.title,
+      location: template.location,
+      time: template.time,
+      image: template.image,
+      color: index === 0 ? "#C41E3A" : (index === 1 ? "#22C55E" : "#C41E3A"),
+    };
+  });
+}
 
 type VideoStoryCardProps = {
   title: string;
@@ -247,6 +253,8 @@ export default function QueroDetailScreen() {
   const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>(["com_homem", "5km", "forro"]);
+  
+  const eventsData = useMemo(() => generateDynamicEvents(), []);
 
   const handleBack = useCallback(() => {
     navigation.goBack();
@@ -385,7 +393,7 @@ export default function QueroDetailScreen() {
         </ScrollView>
 
         <View style={styles.eventsSection}>
-          {EVENTS_DATA.map((event) => (
+          {eventsData.map((event) => (
             <EventCard
               key={event.id}
               dayAbbrev={event.dayAbbrev}
