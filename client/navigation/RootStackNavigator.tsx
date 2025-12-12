@@ -6,6 +6,7 @@ import AIChatScreen from "@/screens/AIChatScreen";
 import RegisterStep1Screen from "@/screens/RegisterStep1Screen";
 import RegisterStep2Screen from "@/screens/RegisterStep2Screen";
 import CadastreSeScreen from "@/screens/CadastreSeScreen";
+import FaltaPoucoScreen from "@/screens/FaltaPoucoScreen";
 import ReelsScreen, { ReelsScreenParams } from "@/screens/ReelsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
@@ -17,6 +18,7 @@ export type RootStackParamList = {
   RegisterStep1: undefined;
   RegisterStep2: { userName: string };
   CadastreSe: undefined;
+  FaltaPouco: undefined;
   Reels: ReelsScreenParams;
 };
 
@@ -72,6 +74,14 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="CadastreSe"
         component={CadastreSeScreen}
+        options={{
+          presentation: "modal",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="FaltaPouco"
+        component={FaltaPoucoScreen}
         options={{
           presentation: "modal",
           headerShown: false,

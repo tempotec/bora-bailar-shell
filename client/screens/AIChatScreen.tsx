@@ -107,21 +107,35 @@ const typingStyles = StyleSheet.create({
   },
 });
 
+type EventCardData = {
+  title: string;
+  date: string;
+  location: string;
+  time: string;
+  price: string;
+};
+
 type Message = {
   id: string;
   text: string;
   isUser: boolean;
   isButton?: boolean;
   buttonText?: string;
+  isEventCard?: boolean;
+  eventCardData?: EventCardData;
 };
 
 type ChatStep = "initial" | "awaiting_confirmation" | "asked_name" | "asked_email" | "complete";
 
-type AIChatMode = "reservation" | "dance_awards";
+type AIChatMode = "reservation" | "dance_awards" | "dicas_semana";
 
-const getInitialAIMessage = (mode: AIChatMode, cardTitle: string) => {
+const getInitialAIMessage = (mode: AIChatMode, cardTitle: string, cardDescription: string) => {
   if (mode === "dance_awards") {
     return `Olá, sou a IA do BORABAILAR. Você gostaria de participar do BORABAILAR TOP DANCE AWARDS?`;
+  }
+  if (mode === "dicas_semana") {
+    const dicaName = cardTitle.replace("DICA_SEMANA:", "");
+    return `Olá, sou a IA do BORABAILAR.\nVocê gostou de nossa dica da semana:\n${dicaName}?\n\nVocê prefere falar por áudio? Clique no botão e fale livremente.`;
   }
   return "Maravilha! Estou reservando pra você, me diga qual é seu nome?";
 };
@@ -131,6 +145,7 @@ const AI_RESPONSES = {
   asked_name: "Ok. Qual é seu e-mail ou telefone de contato?",
   asked_email: "Maravilha! Agora é hora de completar sua reserva e BoraBailar!",
   dance_awards_yes: "Ah legal. Crie uma conta para você ter mais informações!",
+  dicas_semana_yes: "Ah legal. Veja mais informações do evento e garanta já seu lugar!",
 };
 
 export default function AIChatScreen() {
@@ -143,7 +158,8 @@ export default function AIChatScreen() {
   const cardDescription = route.params?.cardDescription || "";
   
   const isDanceAwards = cardTitle.includes("DANCE AWARDS") || cardTitle.includes("TOP DANCE");
-  const chatMode: AIChatMode = isDanceAwards ? "dance_awards" : "reservation";
+  const isDicasSemana = cardTitle.startsWith("DICA_SEMANA:");
+  const chatMode: AIChatMode = isDanceAwards ? "dance_awards" : isDicasSemana ? "dicas_semana" : "reservation";
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -158,11 +174,11 @@ export default function AIChatScreen() {
       setIsTyping(false);
       const aiMessage: Message = {
         id: "1",
-        text: getInitialAIMessage(chatMode, cardTitle),
+        text: getInitialAIMessage(chatMode, cardTitle, cardDescription),
         isUser: false,
       };
       setMessages([aiMessage]);
-      setChatStep(chatMode === "dance_awards" ? "awaiting_confirmation" : "asked_name");
+      setChatStep((chatMode === "dance_awards" || chatMode === "dicas_semana") ? "awaiting_confirmation" : "asked_name");
     }, 1500);
 
     return () => clearTimeout(timer);
@@ -173,6 +189,29 @@ export default function AIChatScreen() {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
   }, []);
+
+  const parseEventDataFromDescription = useCallback(() => {
+    const dicaName = cardTitle.replace("DICA_SEMANA:", "");
+    const parts = cardDescription.split("|");
+    const dayDatePart = parts[0] || "";
+    const price = parts[1] || "R$0";
+    
+    const dayMatch = dayDatePart.match(/([^(]+)\s*\(([^)]+)\)/);
+    const dayName = dayMatch ? dayMatch[1].trim() : "";
+    const dateStr = dayMatch ? dayMatch[2].trim() : "";
+    
+    const dayAbbrev = dayName.substring(0, 3).toUpperCase();
+    const dayNumber = dateStr.split("/")[0] || "00";
+    const monthNumber = dateStr.split("/")[1] || "00";
+    
+    return {
+      title: dicaName.toUpperCase(),
+      date: `${dayAbbrev}\n${dayNumber}/${monthNumber}`,
+      location: "Lapa - Centro",
+      time: "18h00",
+      price,
+    };
+  }, [cardTitle, cardDescription]);
 
   const handleSend = useCallback(() => {
     if (!inputText.trim()) return;
@@ -197,20 +236,37 @@ export default function AIChatScreen() {
                           currentInput.toLowerCase().includes("quero") ||
                           currentInput.toLowerCase().includes("yes");
         if (isPositive) {
-          const aiResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            text: AI_RESPONSES.dance_awards_yes,
-            isUser: false,
-          };
-          const buttonMessage: Message = {
-            id: (Date.now() + 2).toString(),
-            text: "",
-            isUser: false,
-            isButton: true,
-            buttonText: "Bora bailar? Crie sua conta",
-          };
-          setMessages(prev => [...prev, aiResponse, buttonMessage]);
-          setChatStep("complete");
+          if (chatMode === "dicas_semana") {
+            const aiResponse: Message = {
+              id: (Date.now() + 1).toString(),
+              text: AI_RESPONSES.dicas_semana_yes,
+              isUser: false,
+            };
+            const eventCardMessage: Message = {
+              id: (Date.now() + 2).toString(),
+              text: "",
+              isUser: false,
+              isEventCard: true,
+              eventCardData: parseEventDataFromDescription(),
+            };
+            setMessages(prev => [...prev, aiResponse, eventCardMessage]);
+            setChatStep("complete");
+          } else {
+            const aiResponse: Message = {
+              id: (Date.now() + 1).toString(),
+              text: AI_RESPONSES.dance_awards_yes,
+              isUser: false,
+            };
+            const buttonMessage: Message = {
+              id: (Date.now() + 2).toString(),
+              text: "",
+              isUser: false,
+              isButton: true,
+              buttonText: "Bora bailar? Crie sua conta",
+            };
+            setMessages(prev => [...prev, aiResponse, buttonMessage]);
+            setChatStep("complete");
+          }
         }
       } else if (chatStep === "asked_name") {
         setUserName(currentInput);
@@ -239,15 +295,63 @@ export default function AIChatScreen() {
       }
       scrollToBottom();
     }, 1200);
-  }, [inputText, chatStep, scrollToBottom]);
+  }, [inputText, chatStep, chatMode, scrollToBottom, parseEventDataFromDescription]);
 
   const handleVamosBailar = useCallback(() => {
     navigation.navigate("CadastreSe");
   }, [navigation]);
 
+  const handleFaltaPouco = useCallback(() => {
+    navigation.navigate("FaltaPouco");
+  }, [navigation]);
+
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  const renderEventCard = useCallback((eventData: EventCardData) => {
+    const dateLines = eventData.date.split("\n");
+    const dayAbbrev = dateLines[0] || "";
+    const dateStr = dateLines[1] || "";
+    
+    return (
+      <View style={styles.eventCardContainer}>
+        <View style={styles.eventCard}>
+          <Image 
+            source={require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg")} 
+            style={styles.eventCardImage} 
+            resizeMode="cover"
+          />
+          <View style={styles.eventCardDateBox}>
+            <Text style={styles.eventCardDayAbbrev}>{dayAbbrev}</Text>
+            <Text style={styles.eventCardDateStr}>{dateStr}</Text>
+          </View>
+          <View style={styles.eventCardInfo}>
+            <Text style={styles.eventCardTitle} numberOfLines={2}>{eventData.title}</Text>
+            <View style={styles.eventCardLocationRow}>
+              <Feather name="map-pin" size={12} color={Colors.dark.textSecondary} />
+              <Text style={styles.eventCardLocation}>{eventData.location}</Text>
+            </View>
+            <View style={styles.eventCardTimeRow}>
+              <Feather name="clock" size={12} color={Colors.dark.textSecondary} />
+              <Text style={styles.eventCardTime}>{eventData.time}</Text>
+            </View>
+            <View style={styles.eventCardButtons}>
+              <Pressable 
+                style={styles.eventCardGreenButton}
+                onPress={handleFaltaPouco}
+              >
+                <Text style={styles.eventCardGreenButtonText}>Quero ir</Text>
+              </Pressable>
+              <Pressable style={styles.eventCardMoreButton}>
+                <Text style={styles.eventCardMoreButtonText}>Ver mais</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  }, [handleFaltaPouco]);
 
   const renderMessage = useCallback(({ item }: { item: Message }) => {
     if (item.isButton) {
@@ -262,6 +366,10 @@ export default function AIChatScreen() {
           </Pressable>
         </View>
       );
+    }
+
+    if (item.isEventCard && item.eventCardData) {
+      return renderEventCard(item.eventCardData);
     }
 
     return (
@@ -282,7 +390,7 @@ export default function AIChatScreen() {
         </View>
       </View>
     );
-  }, [handleVamosBailar]);
+  }, [handleVamosBailar, renderEventCard]);
 
   const getCurrentTime = () => {
     const now = new Date();
@@ -519,5 +627,98 @@ const styles = StyleSheet.create({
   taglineHighlight: {
     color: Colors.dark.brand,
     fontWeight: "700",
+  },
+  eventCardContainer: {
+    alignSelf: "flex-start",
+    marginVertical: Spacing.sm,
+    maxWidth: "90%",
+  },
+  eventCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    flexDirection: "row",
+  },
+  eventCardImage: {
+    width: 80,
+    height: 100,
+  },
+  eventCardDateBox: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: Colors.dark.brand,
+    paddingHorizontal: Spacing.xs + 2,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+    alignItems: "center",
+  },
+  eventCardDayAbbrev: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  eventCardDateStr: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  eventCardInfo: {
+    flex: 1,
+    padding: Spacing.sm,
+    justifyContent: "space-between",
+  },
+  eventCardTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.dark.text,
+    marginBottom: 2,
+  },
+  eventCardLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  eventCardLocation: {
+    fontSize: 11,
+    color: Colors.dark.textSecondary,
+  },
+  eventCardTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  eventCardTime: {
+    fontSize: 11,
+    color: Colors.dark.textSecondary,
+  },
+  eventCardButtons: {
+    flexDirection: "row",
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  eventCardGreenButton: {
+    backgroundColor: "#22C55E",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+  },
+  eventCardGreenButtonText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  eventCardMoreButton: {
+    backgroundColor: "#F5F5F5",
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+  },
+  eventCardMoreButtonText: {
+    color: Colors.dark.textSecondary,
+    fontSize: 11,
+    fontWeight: "500",
   },
 });

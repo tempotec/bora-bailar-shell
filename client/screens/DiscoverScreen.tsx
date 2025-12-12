@@ -505,10 +505,12 @@ function DicaDaSemanaRow({
   day,
   date,
   dicas,
+  onDicaPress,
 }: {
   day: string;
   date: string;
   dicas: { title: string; price: string }[];
+  onDicaPress?: (title: string, price: string, day: string, date: string) => void;
 }) {
   return (
     <View style={styles.dicaDaSemanaRow}>
@@ -528,6 +530,7 @@ function DicaDaSemanaRow({
               styles.dicaEventCard,
               pressed && { opacity: 0.8 },
             ]}
+            onPress={() => onDicaPress?.(dica.title, dica.price, day, date)}
           >
             <Image 
               source={DICA_IMAGES[index % DICA_IMAGES.length]} 
@@ -1020,6 +1023,13 @@ export default function DiscoverScreen() {
     });
   }, [rootNavigation]);
 
+  const handleDicaPress = useCallback((title: string, price: string, day: string, date: string) => {
+    rootNavigation.navigate("AIChat", { 
+      cardTitle: `DICA_SEMANA:${title}`, 
+      cardDescription: `${day} (${date})|${price}`,
+    });
+  }, [rootNavigation]);
+
   const handleVideoStoryPress = useCallback((index: number) => {
     rootNavigation.navigate("Reels", { initialIndex: index });
   }, [rootNavigation]);
@@ -1227,6 +1237,7 @@ export default function DiscoverScreen() {
                 day={item.day}
                 date={item.date}
                 dicas={item.dicas}
+                onDicaPress={handleDicaPress}
               />
             ))}
           </View>
