@@ -123,6 +123,7 @@ type Message = {
   buttonText?: string;
   isEventCard?: boolean;
   eventCardData?: EventCardData;
+  isQueroHighlight?: boolean;
 };
 
 type ChatStep = "initial" | "awaiting_confirmation" | "asked_name" | "asked_email" | "complete";
@@ -168,21 +169,45 @@ export default function AIChatScreen() {
   const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    setIsTyping(true);
-    
-    const timer = setTimeout(() => {
-      setIsTyping(false);
-      const aiMessage: Message = {
-        id: "1",
-        text: getInitialAIMessage(chatMode, cardTitle, cardDescription),
-        isUser: false,
+    if (chatMode === "reservation") {
+      const queroMessage: Message = {
+        id: "0",
+        text: `QUERO ir no ${cardTitle.toUpperCase()}`,
+        isUser: true,
+        isQueroHighlight: true,
       };
-      setMessages([aiMessage]);
-      setChatStep((chatMode === "dance_awards" || chatMode === "dicas_semana") ? "awaiting_confirmation" : "asked_name");
-    }, 1500);
+      setMessages([queroMessage]);
+      setIsTyping(true);
+      
+      const timer = setTimeout(() => {
+        setIsTyping(false);
+        const aiMessage: Message = {
+          id: "1",
+          text: getInitialAIMessage(chatMode, cardTitle, cardDescription),
+          isUser: false,
+        };
+        setMessages(prev => [...prev, aiMessage]);
+        setChatStep("asked_name");
+      }, 1500);
 
-    return () => clearTimeout(timer);
-  }, [cardTitle, chatMode]);
+      return () => clearTimeout(timer);
+    } else {
+      setIsTyping(true);
+      
+      const timer = setTimeout(() => {
+        setIsTyping(false);
+        const aiMessage: Message = {
+          id: "1",
+          text: getInitialAIMessage(chatMode, cardTitle, cardDescription),
+          isUser: false,
+        };
+        setMessages([aiMessage]);
+        setChatStep("awaiting_confirmation");
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [cardTitle, chatMode, cardDescription]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -370,6 +395,16 @@ export default function AIChatScreen() {
 
     if (item.isEventCard && item.eventCardData) {
       return renderEventCard(item.eventCardData);
+    }
+
+    if (item.isQueroHighlight) {
+      return (
+        <View style={[styles.messageContainer, styles.userMessageContainer]}>
+          <View style={styles.queroHighlightBubble}>
+            <Text style={styles.queroHighlightText}>{item.text}</Text>
+          </View>
+        </View>
+      );
     }
 
     return (
@@ -720,5 +755,20 @@ const styles = StyleSheet.create({
     color: Colors.dark.textSecondary,
     fontSize: 11,
     fontWeight: "500",
+  },
+  queroHighlightBubble: {
+    backgroundColor: Colors.dark.brand,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    borderColor: Colors.dark.brand,
+  },
+  queroHighlightText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
 });
