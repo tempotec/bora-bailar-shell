@@ -1013,6 +1013,10 @@ export default function DiscoverScreen() {
     rootNavigation.navigate("AIChat", { cardTitle: title, cardDescription: description });
   }, [rootNavigation]);
 
+  const handleVideoStoryPress = useCallback((index: number) => {
+    rootNavigation.navigate("Reels", { initialIndex: index });
+  }, [rootNavigation]);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       {!isLoggedIn ? (
@@ -1154,12 +1158,13 @@ export default function DiscoverScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.videoStoriesContainer}
           >
-            {VIDEO_STORIES_DATA.map((story) => (
+            {VIDEO_STORIES_DATA.map((story, index) => (
               <VideoStoryCard
                 key={story.id}
                 title={story.title}
                 username={story.username}
                 thumbnail={story.thumbnail}
+                onPress={() => handleVideoStoryPress(index)}
               />
             ))}
           </Animated.ScrollView>
@@ -1167,7 +1172,7 @@ export default function DiscoverScreen() {
           <UploadButton />
           
           <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
-          <DestaqueDoMes thumbnail={DESTAQUE_MES_DATA.thumbnail} />
+          <DestaqueDoMes thumbnail={DESTAQUE_MES_DATA.thumbnail} onPress={() => handleVideoStoryPress(0)} />
         </View>
         
         <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>

@@ -5,6 +5,7 @@ import SignUpScreen from "@/screens/SignUpScreen";
 import AIChatScreen from "@/screens/AIChatScreen";
 import RegisterStep1Screen from "@/screens/RegisterStep1Screen";
 import RegisterStep2Screen from "@/screens/RegisterStep2Screen";
+import ReelsScreen, { ReelsScreenParams } from "@/screens/ReelsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   AIChat: { cardTitle: string; cardDescription: string };
   RegisterStep1: undefined;
   RegisterStep2: { userName: string };
+  Reels: ReelsScreenParams;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -63,6 +65,14 @@ export default function RootStackNavigator() {
         component={RegisterStep2Screen}
         options={{
           headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Reels"
+        component={ReelsScreen}
+        options={{
+          headerShown: false,
+          animation: "slide_from_bottom",
         }}
       />
     </Stack.Navigator>
