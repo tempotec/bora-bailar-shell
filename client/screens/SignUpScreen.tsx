@@ -11,8 +11,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 type SocialButtonProps = {
   icon: React.ReactNode;
@@ -114,30 +118,30 @@ function TicketIcon() {
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
 
   const handleGoBack = () => {
     navigation.goBack();
   };
 
   const handleGoogleSignUp = () => {
-    console.log("Google sign up");
+    navigation.navigate("RegisterStep1");
   };
 
   const handleFacebookSignUp = () => {
-    console.log("Facebook sign up");
+    navigation.navigate("RegisterStep1");
   };
 
   const handleAppleSignUp = () => {
-    console.log("Apple sign up");
+    navigation.navigate("RegisterStep1");
   };
 
   const handleEmailSignUp = () => {
-    console.log("Email sign up");
+    navigation.navigate("RegisterStep1");
   };
 
   const handleRegister = () => {
-    console.log("Register");
+    navigation.navigate("RegisterStep1");
   };
 
   return (

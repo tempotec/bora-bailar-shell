@@ -3,6 +3,8 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MainTabNavigator from "@/navigation/MainTabNavigator";
 import SignUpScreen from "@/screens/SignUpScreen";
 import AIChatScreen from "@/screens/AIChatScreen";
+import RegisterStep1Screen from "@/screens/RegisterStep1Screen";
+import RegisterStep2Screen from "@/screens/RegisterStep2Screen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -10,6 +12,8 @@ export type RootStackParamList = {
   SignUp: undefined;
   Login: undefined;
   AIChat: { cardTitle: string; cardDescription: string };
+  RegisterStep1: undefined;
+  RegisterStep2: { userName: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -43,6 +47,20 @@ export default function RootStackNavigator() {
       <Stack.Screen
         name="AIChat"
         component={AIChatScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="RegisterStep1"
+        component={RegisterStep1Screen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="RegisterStep2"
+        component={RegisterStep2Screen}
         options={{
           headerShown: false,
         }}

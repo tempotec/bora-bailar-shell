@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import React, { useState, useCallback, useRef, useMemo, useEffect, useContext } from "react";
 import {
   View,
   StyleSheet,
@@ -40,6 +40,7 @@ import {
 } from "@/components/SearchModals";
 import type { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { AuthContext } from "@/contexts/AuthContext";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
@@ -680,6 +681,7 @@ export default function DiscoverScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const { isTabBarVisible } = useTabBar();
+  const { isLoggedIn } = useContext(AuthContext);
   const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   
@@ -1013,17 +1015,19 @@ export default function DiscoverScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
-      <Animated.View style={[styles.topHeader, { paddingTop: insets.top }, authButtonsStyle]}>
-        <Pressable style={styles.authButton} onPress={handleSignUp}>
-          <Text style={styles.authButtonText}>SIGN UP</Text>
-        </Pressable>
-        
-        <View style={styles.topHeaderSpacer} />
-        
-        <Pressable style={styles.authButton}>
-          <Text style={styles.authButtonText}>LOG IN</Text>
-        </Pressable>
-      </Animated.View>
+      {!isLoggedIn ? (
+        <Animated.View style={[styles.topHeader, { paddingTop: insets.top }, authButtonsStyle]}>
+          <Pressable style={styles.authButton} onPress={handleSignUp}>
+            <Text style={styles.authButtonText}>SIGN UP</Text>
+          </Pressable>
+          
+          <View style={styles.topHeaderSpacer} />
+          
+          <Pressable style={styles.authButton}>
+            <Text style={styles.authButtonText}>LOG IN</Text>
+          </Pressable>
+        </Animated.View>
+      ) : null}
 
       <Animated.View 
         style={[styles.stickyHeader, stickyHeaderStyle, { paddingTop: insets.top }]}
