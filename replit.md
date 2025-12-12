@@ -40,7 +40,13 @@ client/
 │   ├── EventDetailsScreen.tsx # Event details modal
 │   ├── MessagesScreen.tsx     # Chat conversations
 │   ├── MyEventsScreen.tsx     # User's events
-│   └── ProfileScreen.tsx      # User profile
+│   ├── ProfileScreen.tsx      # User profile
+│   ├── AIChatScreen.tsx       # AI chat with multiple modes
+│   ├── CadastreSeScreen.tsx   # Theatrical registration entry
+│   ├── FaltaPoucoScreen.tsx   # Event-specific signup modal
+│   ├── RegisterStep1Screen.tsx # Registration step 1 (email)
+│   ├── RegisterStep2Screen.tsx # Registration step 2 (password)
+│   └── ReelsScreen.tsx        # Full-screen video stories
 └── lib/
     └── query-client.ts
 server/
@@ -86,6 +92,20 @@ server/
 - **Demo User**: Uses "demo-user" ID for favorites functionality
 - **Recomendações Especiais**: Horizontal carousel with 6 special offers (admin-managed, currently mocked)
 - **BoraBailar Top Dance Awards**: 10 dance award categories with participation button
+- **Dicas da Semana**: Weekly tips section with AI-guided event discovery flow
+- **AI Chat System**: Context-based chat supporting dance_awards, querer, and dicas_semana modes
+- **Authentication Flow**: Theatrical CadastreSeScreen entry point with social login options
+- **FaltaPoucoScreen**: Event-specific signup modal for ticket acquisition
+
+## AI Chat Modes
+- **dance_awards**: Guides users through dance awards participation → CadastreSeScreen
+- **querer**: Handles "QUERO" card interactions → CadastreSeScreen
+- **dicas_semana**: Weekly tips flow → EventCard display → FaltaPoucoScreen
+
+## Navigation Flows
+1. **Sign Up/Upload**: CadastreSeScreen → RegisterStep1 → RegisterStep2
+2. **QUERO cards/Dance Awards**: AIChat → CadastreSeScreen
+3. **Dicas da Semana**: AIChat with EventCard → FaltaPoucoScreen
 
 ## Recent Changes
 - December 2024: Complete home screen redesign with wizard-style search
@@ -97,3 +117,5 @@ server/
 - December 2024: Implemented favorites system with PostgreSQL persistence
 - December 2024: Added search and venue filtering functionality
 - December 2024: Initial MVP implementation with all core screens
+- December 2024: Implemented Dicas da Semana flow with AI chat and EventCard
+- December 2024: Created FaltaPoucoScreen for event-specific signup
