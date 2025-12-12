@@ -1017,6 +1017,18 @@ export default function DiscoverScreen() {
     rootNavigation.navigate("Reels", { initialIndex: index });
   }, [rootNavigation]);
 
+  const handleUploadPress = useCallback(() => {
+    if (!isLoggedIn) {
+      rootNavigation.navigate("RegisterStep1");
+    } else {
+      Alert.alert(
+        "Upload de vídeo",
+        "Funcionalidade de upload em desenvolvimento.",
+        [{ text: "OK" }]
+      );
+    }
+  }, [isLoggedIn, rootNavigation]);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       {!isLoggedIn ? (
@@ -1169,7 +1181,7 @@ export default function DiscoverScreen() {
             ))}
           </Animated.ScrollView>
           
-          <UploadButton />
+          <UploadButton onPress={handleUploadPress} />
           
           <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
           <DestaqueDoMes thumbnail={DESTAQUE_MES_DATA.thumbnail} onPress={() => handleVideoStoryPress(0)} />
