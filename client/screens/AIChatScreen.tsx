@@ -115,12 +115,22 @@ type Message = {
   buttonText?: string;
 };
 
-type ChatStep = "initial" | "asked_name" | "asked_email" | "complete";
+type ChatStep = "initial" | "awaiting_confirmation" | "asked_name" | "asked_email" | "complete";
+
+type AIChatMode = "reservation" | "dance_awards";
+
+const getInitialAIMessage = (mode: AIChatMode, cardTitle: string) => {
+  if (mode === "dance_awards") {
+    return `Olá, sou a IA do BORABAILAR. Você gostaria de participar do BORABAILAR TOP DANCE AWARDS?`;
+  }
+  return "Maravilha! Estou reservando pra você, me diga qual é seu nome?";
+};
 
 const AI_RESPONSES = {
   initial: "Maravilha! Estou reservando pra você, me diga qual é seu nome?",
   asked_name: "Ok. Qual é seu e-mail ou telefone de contato?",
   asked_email: "Maravilha! Agora é hora de completar sua reserva e BoraBailar!",
+  dance_awards_yes: "Ah legal. Crie uma conta para você ter mais informações!",
 };
 
 export default function AIChatScreen() {
@@ -132,6 +142,9 @@ export default function AIChatScreen() {
   const cardTitle = route.params?.cardTitle || "SEXTANEJA NO PADANO";
   const cardDescription = route.params?.cardDescription || "";
   
+  const isDanceAwards = cardTitle.includes("DANCE AWARDS") || cardTitle.includes("TOP DANCE");
+  const chatMode: AIChatMode = isDanceAwards ? "dance_awards" : "reservation";
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [chatStep, setChatStep] = useState<ChatStep>("initial");
@@ -139,27 +152,21 @@ export default function AIChatScreen() {
   const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    const userMessage: Message = {
-      id: "1",
-      text: `QUERO ir no ${cardTitle.replace(/\n/g, " ")}`,
-      isUser: true,
-    };
-    setMessages([userMessage]);
     setIsTyping(true);
     
     const timer = setTimeout(() => {
       setIsTyping(false);
       const aiMessage: Message = {
-        id: "2",
-        text: AI_RESPONSES.initial,
+        id: "1",
+        text: getInitialAIMessage(chatMode, cardTitle),
         isUser: false,
       };
-      setMessages(prev => [...prev, aiMessage]);
-      setChatStep("asked_name");
+      setMessages([aiMessage]);
+      setChatStep(chatMode === "dance_awards" ? "awaiting_confirmation" : "asked_name");
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [cardTitle]);
+  }, [cardTitle, chatMode]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -184,7 +191,28 @@ export default function AIChatScreen() {
 
     setTimeout(() => {
       setIsTyping(false);
-      if (chatStep === "asked_name") {
+      
+      if (chatStep === "awaiting_confirmation") {
+        const isPositive = currentInput.toLowerCase().includes("sim") || 
+                          currentInput.toLowerCase().includes("quero") ||
+                          currentInput.toLowerCase().includes("yes");
+        if (isPositive) {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            text: AI_RESPONSES.dance_awards_yes,
+            isUser: false,
+          };
+          const buttonMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            text: "",
+            isUser: false,
+            isButton: true,
+            buttonText: "Bora bailar? Crie sua conta",
+          };
+          setMessages(prev => [...prev, aiResponse, buttonMessage]);
+          setChatStep("complete");
+        }
+      } else if (chatStep === "asked_name") {
         setUserName(currentInput);
         const aiResponse: Message = {
           id: (Date.now() + 1).toString(),
@@ -214,7 +242,7 @@ export default function AIChatScreen() {
   }, [inputText, chatStep, scrollToBottom]);
 
   const handleVamosBailar = useCallback(() => {
-    navigation.navigate("SignUp");
+    navigation.navigate("CadastreSe");
   }, [navigation]);
 
   const handleBack = useCallback(() => {
@@ -230,7 +258,7 @@ export default function AIChatScreen() {
             onPress={handleVamosBailar}
           >
             <Text style={styles.vamosBailarText}>{item.buttonText}</Text>
-            <Feather name="arrow-right" size={16} color={Colors.dark.brand} />
+            <Feather name="arrow-right" size={16} color="#FFFFFF" />
           </Pressable>
         </View>
       );
@@ -441,16 +469,16 @@ const styles = StyleSheet.create({
   vamosBailarButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E8F5E9",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    backgroundColor: "#22C55E",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: BorderRadius.lg,
     gap: Spacing.sm,
   },
   vamosBailarText: {
     fontSize: 15,
     fontWeight: "600",
-    color: Colors.dark.brand,
+    color: "#FFFFFF",
   },
   inputContainer: {
     paddingHorizontal: Spacing.lg,

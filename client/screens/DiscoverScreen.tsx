@@ -1013,6 +1013,13 @@ export default function DiscoverScreen() {
     rootNavigation.navigate("AIChat", { cardTitle: title, cardDescription: description });
   }, [rootNavigation]);
 
+  const handleDanceAwardsPress = useCallback(() => {
+    rootNavigation.navigate("AIChat", { 
+      cardTitle: "BORABAILAR TOP DANCE AWARDS", 
+      cardDescription: "Participe do maior prêmio de dança do Brasil" 
+    });
+  }, [rootNavigation]);
+
   const handleVideoStoryPress = useCallback((index: number) => {
     rootNavigation.navigate("Reels", { initialIndex: index });
   }, [rootNavigation]);
@@ -1193,7 +1200,7 @@ export default function DiscoverScreen() {
             {"\n"}TOP DANCE AWARDS
           </Text>
           
-          <QueroParticiparButton />
+          <QueroParticiparButton onPress={handleDanceAwardsPress} />
           
           <View style={styles.awardCategoriesList}>
             {TOP_DANCE_AWARDS_DATA.map((item) => (
