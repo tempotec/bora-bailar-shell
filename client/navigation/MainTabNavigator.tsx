@@ -15,6 +15,7 @@ import Animated, {
 import DiscoverStackNavigator from "@/navigation/DiscoverStackNavigator";
 import MyEventsStackNavigator from "@/navigation/MyEventsStackNavigator";
 import MessagesStackNavigator from "@/navigation/MessagesStackNavigator";
+import ChatStackNavigator from "@/navigation/ChatStackNavigator";
 import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
 import { useTabBar } from "@/contexts/TabBarContext";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
@@ -23,6 +24,7 @@ export type MainTabParamList = {
   DiscoverTab: undefined;
   MyEventsTab: undefined;
   MessagesTab: undefined;
+  ChatTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -106,6 +108,9 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             case "MessagesTab":
               iconName = "heart";
               break;
+            case "ChatTab":
+              iconName = "message-circle";
+              break;
             case "ProfileTab":
               iconName = "user";
               break;
@@ -165,7 +170,14 @@ export default function MainTabNavigator() {
           name="MessagesTab"
           component={MessagesStackNavigator}
           options={{
-            title: "Mensagens",
+            title: "Matches",
+          }}
+        />
+        <Tab.Screen
+          name="ChatTab"
+          component={ChatStackNavigator}
+          options={{
+            title: "Chat",
           }}
         />
         <Tab.Screen
