@@ -30,7 +30,7 @@ export default function RegisterStep2Screen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProps>();
-  const { setIsLoggedIn, setUserName, setUserEmail } = useContext(AuthContext);
+  const { signUp } = useContext(AuthContext);
   const [email, setEmail] = useState("");
 
   const userName = route.params?.userName || "";
@@ -44,18 +44,20 @@ export default function RegisterStep2Screen() {
     return emailRegex.test(text);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (isValidEmail(email)) {
-      setUserName(userName);
-      setUserEmail(email.trim());
-      setIsLoggedIn(true);
-      
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: "Main" }],
-        })
-      );
+      try {
+        await signUp(userName, email.trim());
+
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: "Main" }],
+          })
+        );
+      } catch (error) {
+        console.error("Sign up error:", error);
+      }
     }
   };
 
@@ -65,7 +67,7 @@ export default function RegisterStep2Screen() {
         <Pressable style={styles.backButton} onPress={handleGoBack}>
           <Feather name="chevron-left" size={28} color={Colors.dark.text} />
         </Pressable>
-        
+
         <Text style={styles.stepIndicator}>Passo 2 de 2</Text>
       </View>
 

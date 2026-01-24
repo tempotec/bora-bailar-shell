@@ -1,12 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, Pressable, Linking } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable } from "react-native";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 
 interface Brand {
     id: string;
     name: string;
-    logo: any; // ImageSource
-    color?: string; // Fallback background color
+    logo: any;
+    color?: string;
 }
 
 // Local partner assets
@@ -46,7 +46,7 @@ const BRANDS: Brand[] = [
         id: "5",
         name: "Guetta",
         logo: guettaLogo,
-        color: "#0f0f0fff", // White background for Guetta
+        color: "#0f0f0fff",
     },
     {
         id: "6",
@@ -67,7 +67,6 @@ export function PartnerBrands() {
                         key={brand.id}
                         style={[styles.brandCard, { backgroundColor: brand.color || "#FFFFFF" }]}
                         onPress={() => {
-                            // Optional: link to brand website
                             console.log(`Open ${brand.name}`);
                         }}
                     >
@@ -106,7 +105,7 @@ const styles = StyleSheet.create({
         gap: Spacing.md,
     },
     brandCard: {
-        width: "30%", // approx 3 items per row with gap
+        width: "30%",
         aspectRatio: 1,
         borderRadius: BorderRadius.lg,
         alignItems: "center",

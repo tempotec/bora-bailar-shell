@@ -10,6 +10,7 @@ type AuthContextType = {
   signIn: (email: string) => Promise<void>;
   signUp: (name: string, email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  loginDemo: () => Promise<void>; // Quick demo login for testing
 };
 
 export const AuthContext = createContext<AuthContextType>({
@@ -19,6 +20,7 @@ export const AuthContext = createContext<AuthContextType>({
   signIn: async () => { },
   signUp: async () => { },
   signOut: async () => { },
+  loginDemo: async () => { },
 });
 
 type AuthProviderProps = {
@@ -58,7 +60,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     try {
       const { user, token } = await api.auth.signIn(email);
-      await AsyncStorage.setItem(SESSION_KEY, token);
+      if (token) {
+        await AsyncStorage.setItem(SESSION_KEY, token);
+      }
       setUser(user);
       setIsLoggedIn(true);
     } catch (e) {
@@ -72,7 +76,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     try {
       const { user, token } = await api.auth.signUp({ name, email });
-      await AsyncStorage.setItem(SESSION_KEY, token);
+      if (token) {
+        await AsyncStorage.setItem(SESSION_KEY, token);
+      }
       setUser(user);
       setIsLoggedIn(true);
     } catch (e) {
@@ -99,6 +105,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const loginDemo = async () => {
+    setIsLoading(true);
+    try {
+      // Try to sign in with demo user
+      await signIn("demo@borabailar.com");
+    } catch (e: any) {
+      // If user doesn't exist, create it
+      if (e?.message?.includes("não encontrado")) {
+        await signUp("Demo User", "demo@borabailar.com");
+      } else {
+        throw e;
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -108,6 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         signIn,
         signUp,
         signOut,
+        loginDemo,
       }}
     >
       {children}

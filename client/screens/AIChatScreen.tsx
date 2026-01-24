@@ -154,14 +154,14 @@ export default function AIChatScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "AIChat">>();
   const flatListRef = useRef<FlatList>(null);
-  
+
   const cardTitle = route.params?.cardTitle || "SEXTANEJA NO PADANO";
   const cardDescription = route.params?.cardDescription || "";
-  
+
   const isDanceAwards = cardTitle.includes("DANCE AWARDS") || cardTitle.includes("TOP DANCE");
   const isDicasSemana = cardTitle.startsWith("DICA_SEMANA:");
   const chatMode: AIChatMode = isDanceAwards ? "dance_awards" : isDicasSemana ? "dicas_semana" : "reservation";
-  
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [chatStep, setChatStep] = useState<ChatStep>("initial");
@@ -178,7 +178,7 @@ export default function AIChatScreen() {
       };
       setMessages([queroMessage]);
       setIsTyping(true);
-      
+
       const timer = setTimeout(() => {
         setIsTyping(false);
         const aiMessage: Message = {
@@ -193,7 +193,7 @@ export default function AIChatScreen() {
       return () => clearTimeout(timer);
     } else {
       setIsTyping(true);
-      
+
       const timer = setTimeout(() => {
         setIsTyping(false);
         const aiMessage: Message = {
@@ -220,15 +220,15 @@ export default function AIChatScreen() {
     const parts = cardDescription.split("|");
     const dayDatePart = parts[0] || "";
     const price = parts[1] || "R$0";
-    
+
     const dayMatch = dayDatePart.match(/([^(]+)\s*\(([^)]+)\)/);
     const dayName = dayMatch ? dayMatch[1].trim() : "";
     const dateStr = dayMatch ? dayMatch[2].trim() : "";
-    
+
     const dayAbbrev = dayName.substring(0, 3).toUpperCase();
     const dayNumber = dateStr.split("/")[0] || "00";
     const monthNumber = dateStr.split("/")[1] || "00";
-    
+
     return {
       title: dicaName.toUpperCase(),
       date: `${dayAbbrev}\n${dayNumber}/${monthNumber}`,
@@ -255,11 +255,11 @@ export default function AIChatScreen() {
 
     setTimeout(() => {
       setIsTyping(false);
-      
+
       if (chatStep === "awaiting_confirmation") {
-        const isPositive = currentInput.toLowerCase().includes("sim") || 
-                          currentInput.toLowerCase().includes("quero") ||
-                          currentInput.toLowerCase().includes("yes");
+        const isPositive = currentInput.toLowerCase().includes("sim") ||
+          currentInput.toLowerCase().includes("quero") ||
+          currentInput.toLowerCase().includes("yes");
         if (isPositive) {
           if (chatMode === "dicas_semana") {
             const aiResponse: Message = {
@@ -323,7 +323,17 @@ export default function AIChatScreen() {
   }, [inputText, chatStep, chatMode, scrollToBottom, parseEventDataFromDescription]);
 
   const handleVamosBailar = useCallback(() => {
-    navigation.navigate("CadastreSe");
+    const finalMessage: Message = {
+      id: Date.now().toString(),
+      text: "Reserva confirmada! ✅ Você receberá mais informações em breve. Até lá!",
+      isUser: false,
+    };
+    setMessages(prev => [...prev, finalMessage]);
+
+    // Navigate back after showing confirmation
+    setTimeout(() => {
+      navigation.goBack();
+    }, 2000);
   }, [navigation]);
 
   const handleFaltaPouco = useCallback(() => {
@@ -338,13 +348,13 @@ export default function AIChatScreen() {
     const dateLines = eventData.date.split("\n");
     const dayAbbrev = dateLines[0] || "";
     const dateStr = dateLines[1] || "";
-    
+
     return (
       <View style={styles.eventCardContainer}>
         <View style={styles.eventCard}>
-          <Image 
-            source={require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg")} 
-            style={styles.eventCardImage} 
+          <Image
+            source={require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg")}
+            style={styles.eventCardImage}
             resizeMode="cover"
           />
           <View style={styles.eventCardDateBox}>
@@ -362,7 +372,7 @@ export default function AIChatScreen() {
               <Text style={styles.eventCardTime}>{eventData.time}</Text>
             </View>
             <View style={styles.eventCardButtons}>
-              <Pressable 
+              <Pressable
                 style={styles.eventCardGreenButton}
                 onPress={handleFaltaPouco}
               >
@@ -382,7 +392,7 @@ export default function AIChatScreen() {
     if (item.isButton) {
       return (
         <View style={styles.buttonMessageContainer}>
-          <Pressable 
+          <Pressable
             style={styles.vamosBailarButton}
             onPress={handleVamosBailar}
           >
@@ -438,7 +448,7 @@ export default function AIChatScreen() {
         <Pressable style={styles.backButton} onPress={handleBack}>
           <Feather name="chevron-left" size={28} color={Colors.dark.text} />
         </Pressable>
-        
+
         <View style={styles.headerCenter}>
           <View style={styles.aiIconContainer}>
             <Text style={styles.aiIconText}>AI</Text>
@@ -451,7 +461,7 @@ export default function AIChatScreen() {
             <Text style={styles.brandGray}>AILAR</Text>
           </Text>
         </View>
-        
+
         <Pressable style={styles.bellButton}>
           <Feather name="bell" size={22} color={Colors.dark.textSecondary} />
         </Pressable>
@@ -491,7 +501,7 @@ export default function AIChatScreen() {
               <Feather name="mic" size={20} color={Colors.dark.brand} />
             </Pressable>
           </View>
-          
+
           <Text style={styles.bottomTagline}>
             É só <Text style={styles.taglineHighlight}>falar</Text> que a gente te{" "}
             <Text style={styles.taglineHighlight}>entende!</Text>
@@ -666,7 +676,7 @@ const styles = StyleSheet.create({
   eventCardContainer: {
     alignSelf: "flex-start",
     marginVertical: Spacing.sm,
-    maxWidth: "90%",
+    width: 280, // Fixed width to ensure flex children render correctly
   },
   eventCard: {
     backgroundColor: "#FFFFFF",

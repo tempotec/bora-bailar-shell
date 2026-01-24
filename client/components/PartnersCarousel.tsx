@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -101,6 +101,28 @@ function PartnerCard({ item, onPress }: { item: PartnerType; onPress: () => void
 }
 
 export function PartnersCarousel() {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const AUTO_SCROLL_INTERVAL = 4000; // 4 seconds
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % PARTNER_TYPES.length;
+
+        // Scroll to next card
+        scrollViewRef.current?.scrollTo({
+          x: nextIndex * (CARD_WIDTH + Spacing.md),
+          animated: true,
+        });
+
+        return nextIndex;
+      });
+    }, AUTO_SCROLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handlePress = () => {
     Alert.alert(
       "Em desenvolvimento",
@@ -152,6 +174,7 @@ export function PartnersCarousel() {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}

@@ -8,6 +8,7 @@ import {
   Image,
   Dimensions,
   Modal,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -148,15 +149,15 @@ const EVENT_TEMPLATES = [
 
 function generateDynamicEvents() {
   const today = new Date();
-  
+
   return EVENT_TEMPLATES.map((template, index) => {
     const eventDate = new Date(today);
     eventDate.setDate(today.getDate() + index);
-    
+
     const dayOfWeek = eventDate.getDay();
     const dayAbbrev = DAY_ABBREVS[dayOfWeek];
     const formattedDate = `${String(eventDate.getDate()).padStart(2, "0")}/${String(eventDate.getMonth() + 1).padStart(2, "0")}`;
-    
+
     return {
       id: String(index + 1),
       dayAbbrev,
@@ -284,16 +285,16 @@ export default function QueroDetailScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "QueroDetail">>();
-  
+
   const { queroTitle, queroDescription } = route.params || { queroTitle: "SAIR PRA DANÇAR", queroDescription: "" };
-  
+
   const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>(["com_homem", "5km", "forro"]);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-  
+
   const eventsData = useMemo(() => generateDynamicEvents(), []);
-  
+
   const activeFilterCount = useMemo(() => {
     return activeFilters.length;
   }, [activeFilters]);
@@ -307,16 +308,16 @@ export default function QueroDetailScreen() {
       setFilterModalVisible(true);
       return;
     }
-    setActiveFilters(prev => 
-      prev.includes(filterId) 
+    setActiveFilters(prev =>
+      prev.includes(filterId)
         ? prev.filter(id => id !== filterId)
         : [...prev, filterId]
     );
   }, []);
-  
+
   const handleFilterOptionToggle = useCallback((optionId: string) => {
-    setActiveFilters(prev => 
-      prev.includes(optionId) 
+    setActiveFilters(prev =>
+      prev.includes(optionId)
         ? prev.filter(id => id !== optionId)
         : [...prev, optionId]
     );
@@ -335,8 +336,8 @@ export default function QueroDetailScreen() {
   }, [navigation]);
 
   const handleDetails = useCallback((eventId: string) => {
-    console.log("View details for event:", eventId);
-  }, []);
+    navigation.navigate("EventDetails", { eventId });
+  }, [navigation]);
 
   const handleVideoPress = useCallback((index: number) => {
     navigation.navigate("Reels", { initialIndex: index });
@@ -371,7 +372,7 @@ export default function QueroDetailScreen() {
         <Text style={styles.searchText}>Onde, quando e com quem?</Text>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -393,15 +394,15 @@ export default function QueroDetailScreen() {
           ))}
         </ScrollView>
 
-        <Pressable 
+        <Pressable
           style={styles.locationDropdown}
           onPress={() => setLocationDropdownOpen(!locationDropdownOpen)}
         >
           <Text style={styles.locationText}>{selectedLocation.label}</Text>
-          <Feather 
-            name={locationDropdownOpen ? "chevron-up" : "chevron-down"} 
-            size={16} 
-            color={Colors.dark.text} 
+          <Feather
+            name={locationDropdownOpen ? "chevron-up" : "chevron-down"}
+            size={16}
+            color={Colors.dark.text}
           />
         </Pressable>
 
@@ -465,7 +466,7 @@ export default function QueroDetailScreen() {
 
         <View style={{ height: insets.bottom + Spacing.xl }} />
       </ScrollView>
-      
+
       <Modal
         visible={filterModalVisible}
         transparent
@@ -476,15 +477,15 @@ export default function QueroDetailScreen() {
           <View style={styles.filterModal}>
             <View style={styles.filterModalHeader}>
               <Text style={styles.filterModalTitle}>Filtros</Text>
-              <Pressable 
+              <Pressable
                 onPress={() => setFilterModalVisible(false)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Feather name="x" size={24} color={Colors.dark.text} />
               </Pressable>
             </View>
-            
-            <ScrollView 
+
+            <ScrollView
               style={styles.filterModalContent}
               showsVerticalScrollIndicator={true}
             >
@@ -506,7 +507,7 @@ export default function QueroDetailScreen() {
                   <Text style={styles.filterOptionLabel}>{option.label}</Text>
                 </Pressable>
               ))}
-              
+
               <Text style={styles.filterCategoryTitle}>{FILTER_CATEGORIES.distance.title}</Text>
               {FILTER_CATEGORIES.distance.options.map((option) => (
                 <Pressable
@@ -525,7 +526,7 @@ export default function QueroDetailScreen() {
                   <Text style={styles.filterOptionLabel}>{option.label}</Text>
                 </Pressable>
               ))}
-              
+
               <Text style={styles.filterCategoryTitle}>{FILTER_CATEGORIES.danceStyle.title}</Text>
               {FILTER_CATEGORIES.danceStyle.options.map((option) => (
                 <Pressable
@@ -544,7 +545,7 @@ export default function QueroDetailScreen() {
                   <Text style={styles.filterOptionLabel}>{option.label}</Text>
                 </Pressable>
               ))}
-              
+
               <View style={{ height: Spacing.xl }} />
             </ScrollView>
           </View>

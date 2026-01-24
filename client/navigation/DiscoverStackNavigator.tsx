@@ -21,7 +21,7 @@ const Stack = createNativeStackNavigator<DiscoverStackParamList>();
 
 function SignUpButton() {
   const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
-  
+
   const handlePress = () => {
     navigation.navigate("SignUp");
   };

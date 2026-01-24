@@ -540,10 +540,17 @@ export default function DiscoverScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const { data: discoverData } = useQuery({
+  const { data: discoverData, isLoading, error } = useQuery({
     queryKey: ["discover"],
     queryFn: api.events.getDiscoverData,
   });
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Discover Data:", discoverData);
+    console.log("Is Loading:", isLoading);
+    console.log("Error:", error);
+  }, [discoverData, isLoading, error]);
 
   const scrollY = useSharedValue(0);
   const previousScrollY = useSharedValue(0);

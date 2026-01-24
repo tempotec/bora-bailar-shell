@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -22,12 +24,12 @@ const MOCK_USER = {
   bio: "Eu me chamo Jose Thomaz, sou apaixonado por danças e esportes.\n\nEntrei nesse app para criar novas amizades.",
   profileImage: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
   photos: [
-    require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
-    require("../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
-    require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
-    require("../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
-    require("../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
-    require("../../attached_assets/stock_images/ballroom_dancing_cou_a3f721af.jpg"),
+    require("../../attached_assets/dancer_red_dress.jpg"),
+    require("../../attached_assets/dancer_multiple.jpg"),
+    require("../../attached_assets/dancer_powder.jpg"),
+    require("../../attached_assets/couple_dancing.jpg"),
+    require("../../attached_assets/profile_grid.png"),
+    require("../../attached_assets/dancer_red_dress.jpg"),
   ],
   danceStyles: [
     { name: "Forró", color: "#FF1493" },
@@ -42,14 +44,15 @@ const MOCK_USER = {
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { isLoggedIn, signIn, signOut, user } = useContext(AuthContext);
+  const { isLoggedIn, loginDemo, signOut, user } = useContext(AuthContext);
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [showProfilePreview, setShowProfilePreview] = useState(false);
 
   const handleLogin = async () => {
     try {
-      await signIn("demo@borabailar.com");
+      await loginDemo();
     } catch (e) {
-      console.error(e);
+      console.error("Login error:", e);
     }
   };
 
@@ -137,7 +140,10 @@ export default function ProfileScreen() {
           <View style={styles.profileHeaderText}>
             <Text style={styles.profileName}>{user?.name || MOCK_USER.name}</Text>
             <View style={styles.profileButtons}>
-              <Pressable style={styles.editButton}>
+              <Pressable
+                style={styles.editButton}
+                onPress={() => navigation.navigate("EditProfile")}
+              >
                 <Text style={styles.editButtonText}>Editar perfil</Text>
               </Pressable>
               <Pressable style={styles.viewButton} onPress={handleViewProfile}>

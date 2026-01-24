@@ -9,6 +9,7 @@ import CadastreSeScreen from "@/screens/CadastreSeScreen";
 import FaltaPoucoScreen from "@/screens/FaltaPoucoScreen";
 import QueroDetailScreen from "@/screens/QueroDetailScreen";
 import ReelsScreen, { ReelsScreenParams } from "@/screens/ReelsScreen";
+import EventDetailsScreen from "@/screens/EventDetailsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -22,6 +23,7 @@ export type RootStackParamList = {
   FaltaPouco: { eventName?: string; eventDetails?: string; eventImage?: string } | undefined;
   QueroDetail: { queroTitle: string; queroDescription: string };
   Reels: ReelsScreenParams;
+  EventDetails: { eventId: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -102,6 +104,13 @@ export default function RootStackNavigator() {
         options={{
           headerShown: false,
           animation: "slide_from_bottom",
+        }}
+      />
+      <Stack.Screen
+        name="EventDetails"
+        component={EventDetailsScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

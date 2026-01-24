@@ -163,7 +163,7 @@ export default function MainTabNavigator() {
           name="MyEventsTab"
           component={MyEventsStackNavigator}
           options={{
-            title: "Eventos",
+            title: "Explorar",
           }}
         />
         <Tab.Screen

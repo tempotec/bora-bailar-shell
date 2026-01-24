@@ -1,6 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import MyEventsScreen from "@/screens/MyEventsScreen";
+import ExplorarScreen from "@/screens/ExplorarScreen";
 import EventDetailsScreen from "@/screens/EventDetailsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
@@ -18,9 +18,9 @@ export default function MyEventsStackNavigator() {
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
         name="MyEvents"
-        component={MyEventsScreen}
+        component={ExplorarScreen}
         options={{
-          headerTitle: "Meus Eventos",
+          headerShown: false,
         }}
       />
       <Stack.Screen
