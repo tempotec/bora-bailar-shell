@@ -501,7 +501,7 @@ function QuererCard({
   return (
     <Pressable style={styles.quererCard} onPress={onPress}>
       <View style={styles.quererImageContainer}>
-        <Image source={{ uri: image }} style={styles.quererImage} />
+        <Image source={typeof image === 'string' ? { uri: image } : image} style={styles.quererImage} />
         <View style={styles.quererOverlay} />
         <Text style={styles.quererTitle}>{title}</Text>
         <Pressable style={styles.quererHeart} onPress={onFavorite}>

@@ -22,14 +22,14 @@ import { AuthContext } from "@/contexts/AuthContext";
 const MOCK_USER = {
   name: "Jose Thomaz Wollner",
   bio: "Eu me chamo Jose Thomaz, sou apaixonado por danças e esportes.\n\nEntrei nesse app para criar novas amizades.",
-  profileImage: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+  profileImage: require("../../attached_assets/profile_red_dress.jpg"),
   photos: [
-    require("../../attached_assets/dancer_red_dress.jpg"),
-    require("../../attached_assets/dancer_multiple.jpg"),
-    require("../../attached_assets/dancer_powder.jpg"),
-    require("../../attached_assets/couple_dancing.jpg"),
-    require("../../attached_assets/profile_grid.png"),
-    require("../../attached_assets/dancer_red_dress.jpg"),
+    require("../../attached_assets/profile_red_dress.jpg"),
+    require("../../attached_assets/profile_ballet_motion.jpg"),
+    require("../../attached_assets/profile_powder_dance.jpg"),
+    require("../../attached_assets/profile_couple_dance.jpg"),
+    require("../../attached_assets/profile_ballet_motion.jpg"),
+    require("../../attached_assets/profile_red_dress.jpg"),
   ],
   danceStyles: [
     { name: "Forró", color: "#FF1493" },
