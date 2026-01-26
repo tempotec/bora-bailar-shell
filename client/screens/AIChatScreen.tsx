@@ -9,6 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -167,6 +168,7 @@ export default function AIChatScreen() {
   const [chatStep, setChatStep] = useState<ChatStep>("initial");
   const [userName, setUserName] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [showDevModal, setShowDevModal] = useState(false);
 
   useEffect(() => {
     if (chatMode === "reservation") {
@@ -378,7 +380,7 @@ export default function AIChatScreen() {
               >
                 <Text style={styles.eventCardGreenButtonText}>Quero ir</Text>
               </Pressable>
-              <Pressable style={styles.eventCardMoreButton}>
+              <Pressable style={styles.eventCardMoreButton} onPress={() => setShowDevModal(true)}>
                 <Text style={styles.eventCardMoreButtonText}>Ver mais</Text>
               </Pressable>
             </View>
@@ -508,6 +510,35 @@ export default function AIChatScreen() {
           </Text>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Development Modal */}
+      <Modal
+        visible={showDevModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDevModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowDevModal(false)}
+        >
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHeader}>
+              <Feather name="info" size={48} color={Colors.dark.brand} />
+            </View>
+            <Text style={styles.modalTitle}>Funcionalidade em Desenvolvimento</Text>
+            <Text style={styles.modalMessage}>
+              Estamos trabalhando para trazer mais detalhes sobre este evento em breve!
+            </Text>
+            <Pressable
+              style={styles.modalButton}
+              onPress={() => setShowDevModal(false)}
+            >
+              <Text style={styles.modalButtonText}>Entendi</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -780,5 +811,54 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    width: "85%",
+    maxWidth: 400,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    marginBottom: Spacing.lg,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: Colors.dark.text,
+    textAlign: "center",
+    marginBottom: Spacing.md,
+  },
+  modalMessage: {
+    fontSize: 15,
+    color: Colors.dark.textSecondary,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: Spacing.xl,
+  },
+  modalButton: {
+    backgroundColor: Colors.dark.brand,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    width: "100%",
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
