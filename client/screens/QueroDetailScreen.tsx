@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   Dimensions,
   Modal,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -16,6 +17,7 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Spacing, BorderRadius, Colors, Fonts } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { getApiUrl } from "@/lib/query-client";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
@@ -286,12 +288,77 @@ export default function QueroDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "QueroDetail">>();
 
-  const { queroTitle, queroDescription } = route.params || { queroTitle: "SAIR PRA DANÇAR", queroDescription: "" };
+  const { queroTitle, queroDescription, preSelectedFilters } = route.params || {
+    queroTitle: "SAIR PRA DANÇAR",
+    queroDescription: "",
+    preSelectedFilters: undefined
+  };
 
   const [selectedLocation, setSelectedLocation] = useState(LOCATIONS[0]);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>(["com_homem", "5km", "forro"]);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+
+  // Função para buscar eventos filtrados
+  const fetchFilteredEvents = useCallback(async (filters: typeof preSelectedFilters) => {
+    if (!filters) return;
+
+    setIsLoadingEvents(true);
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/events/filter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(filters),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data);
+      } else {
+        console.error('Erro ao buscar eventos filtrados');
+      }
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  }, []);
+
+  // Função para buscar eventos gerais
+  const fetchGeneralEvents = useCallback(async () => {
+    setIsLoadingEvents(true);
+    try {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/api/events`);
+
+      if (response.ok) {
+        const data = await response.json();
+        setEvents(data.slice(0, 5)); // Pegar apenas os primeiros 5 eventos
+      } else {
+        console.error('Erro ao buscar eventos gerais');
+      }
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  }, []);
+
+  // UseEffect para aplicar filtros automaticamente
+  useEffect(() => {
+    if (preSelectedFilters) {
+      // Cenário 1: Filtros aplicados → Buscar eventos filtrados
+      fetchFilteredEvents(preSelectedFilters);
+    } else {
+      // Cenário 2: Sem filtros → Buscar eventos gerais (mockados)
+      fetchGeneralEvents();
+    }
+  }, [preSelectedFilters, fetchFilteredEvents, fetchGeneralEvents]);
 
   const eventsData = useMemo(() => generateDynamicEvents(), []);
 
@@ -377,22 +444,58 @@ export default function QueroDetailScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filtersContainer}
-        >
-          {FILTER_TAGS.map((tag) => (
-            <FilterTag
-              key={tag.id}
-              label={tag.label}
-              count={tag.isSpecial ? activeFilterCount : tag.count}
-              isSpecial={tag.isSpecial}
-              isActive={tag.isSpecial ? activeFilterCount > 0 : activeFilters.includes(tag.id)}
-              onPress={() => handleFilterPress(tag.id)}
-            />
-          ))}
-        </ScrollView>
+        {/* Filtros Aplicados (quando vem dos filtros do wizard) */}
+        {preSelectedFilters && (
+          <View style={styles.appliedFiltersSection}>
+            <Text style={styles.appliedFiltersTitle}>Filtros Aplicados:</Text>
+            <View style={styles.appliedFiltersRow}>
+              {preSelectedFilters.zona && (
+                <View style={styles.appliedFilterChip}>
+                  <Feather name="map-pin" size={14} color={Colors.dark.primary} />
+                  <Text style={styles.appliedFilterText}>{preSelectedFilters.zona}</Text>
+                </View>
+              )}
+              {preSelectedFilters.bairro && (
+                <View style={styles.appliedFilterChip}>
+                  <Feather name="map" size={14} color={Colors.dark.primary} />
+                  <Text style={styles.appliedFilterText}>{preSelectedFilters.bairro}</Text>
+                </View>
+              )}
+              {preSelectedFilters.tipoAcompanhamento && (
+                <View style={styles.appliedFilterChip}>
+                  <Feather name="users" size={14} color={Colors.dark.primary} />
+                  <Text style={styles.appliedFilterText}>
+                    {preSelectedFilters.tipoAcompanhamento === "sozinho" ? "Sozinho(a)" :
+                      preSelectedFilters.tipoAcompanhamento === "casal" ? "Em casal" :
+                        preSelectedFilters.tipoAcompanhamento === "amigos" ? "Com amigos" :
+                          "Em grupo"}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Filtros manuais (apenas quando NÃO há filtros pré-selecionados) */}
+        {!preSelectedFilters && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filtersContainer}
+          >
+            {FILTER_TAGS.map((tag) => (
+              <FilterTag
+                key={tag.id}
+                label={tag.label}
+                count={tag.isSpecial ? activeFilterCount : tag.count}
+                isSpecial={tag.isSpecial}
+                isActive={tag.isSpecial ? activeFilterCount > 0 : activeFilters.includes(tag.id)}
+                onPress={() => handleFilterPress(tag.id)}
+              />
+            ))}
+          </ScrollView>
+        )}
+
 
         <Pressable
           style={styles.locationDropdown}
@@ -900,5 +1003,38 @@ const styles = StyleSheet.create({
   filterOptionLabel: {
     fontSize: 14,
     color: Colors.dark.text,
+  },
+  appliedFiltersSection: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: "#1A1A1A",
+    borderBottomWidth: 1,
+    borderBottomColor: "#333",
+  },
+  appliedFiltersTitle: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: Colors.dark.textSecondary,
+    marginBottom: Spacing.xs,
+    textTransform: "uppercase",
+  },
+  appliedFiltersRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: Spacing.sm,
+  },
+  appliedFilterChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.dark.brand + "20",
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    gap: 4,
+  },
+  appliedFilterText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: Colors.dark.primary,
   },
 });

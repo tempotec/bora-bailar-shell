@@ -35,7 +35,7 @@ import {
   OndeModal,
   QuandoModal,
   ComQuemModal,
-  CITIES,
+  ALL_NEIGHBORHOODS,
   DATE_OPTIONS,
   COMPANION_OPTIONS,
 } from "@/components/SearchModals";
@@ -577,7 +577,7 @@ export default function DiscoverScreen() {
   const [quandoModalVisible, setQuandoModalVisible] = useState(false);
   const [comQuemModalVisible, setComQuemModalVisible] = useState(false);
 
-  const [selectedCity, setSelectedCity] = useState<typeof CITIES[0] | null>(null);
+  const [selectedCity, setSelectedCity] = useState<typeof ALL_NEIGHBORHOODS[0] | null>(null);
   const [selectedDate, setSelectedDate] = useState<typeof DATE_OPTIONS[0] | null>(null);
   const [selectedCompanion, setSelectedCompanion] = useState<typeof COMPANION_OPTIONS[0] | null>(null);
 
@@ -598,6 +598,63 @@ export default function DiscoverScreen() {
       }
     })();
   }, []);
+
+  // Navegação automática quando todos os 3 filtros são preenchidos
+  useEffect(() => {
+    // Verifica se os 3 filtros estão selecionados
+    if (selectedCity && selectedDate && selectedCompanion) {
+      // Mapear "Com Quem" para o "Quero" correspondente
+      const companionToQueroMap: Record<string, { title: string; description: string; categoria: string }> = {
+        "solo": {
+          title: "SAIR PARA DANÇAR",
+          description: "Encontre eventos para dançar sozinho",
+          categoria: "dançar"
+        },
+        "couple": {
+          title: "SAIR PARA DANÇAR",
+          description: "Encontre eventos para dançar em casal",
+          categoria: "dançar"
+        },
+        "friends": {
+          title: "SAIR COM AMIGOS",
+          description: "Encontre eventos para sair com amigos",
+          categoria: "amigos"
+        },
+        "group": {
+          title: "SAIR EM GRUPO",
+          description: "Encontre eventos para sair em grupo",
+          categoria: "grupo"
+        }
+      };
+
+      const queroInfo = companionToQueroMap[selectedCompanion.id];
+
+      if (queroInfo && isLoggedIn) {
+        // Preparar filtros para passar na navegação
+        const filters = {
+          categoria: queroInfo.categoria,
+          zona: selectedCity.zone,
+          bairro: selectedCity.name,
+          tipoAcompanhamento: selectedCompanion.id === "solo" ? "sozinho" :
+            selectedCompanion.id === "couple" ? "casal" :
+              selectedCompanion.id === "friends" ? "amigos" : "grupo"
+        };
+
+        // Navegar para QueroDetailScreen com filtros
+        rootNavigation.navigate("QueroDetail", {
+          queroTitle: queroInfo.title,
+          queroDescription: queroInfo.description,
+          preSelectedFilters: filters
+        });
+
+        // Limpar os filtros após navegar (opcional)
+        setSelectedCity(null);
+        setSelectedDate(null);
+        setSelectedCompanion(null);
+      }
+    }
+  }, [selectedCity, selectedDate, selectedCompanion, isLoggedIn, rootNavigation]);
+
 
   const transcribeAudio = useCallback(async (audioUri: string) => {
     try {
@@ -748,9 +805,46 @@ export default function DiscoverScreen() {
     rootNavigation.navigate("CadastreSe");
   }, [rootNavigation]);
 
+
+  // Mapeamento de filtros padrão por tipo de "Quero"
+  const QUERO_FILTERS_MAP: Record<string, {
+    categoria: string;
+    zona: string;
+    tipoAcompanhamento: string;
+  }> = {
+    "SAIR PARA DANÇAR": {
+      categoria: "dançar",
+      zona: "Zona Sul",
+      tipoAcompanhamento: "sozinho"
+    },
+    "SAIR EM GRUPO": {
+      categoria: "grupo",
+      zona: "Centro",
+      tipoAcompanhamento: "grupo"
+    },
+    "SAIR COM AMIGOS": {
+      categoria: "amigos",
+      zona: "Sudoeste",
+      tipoAcompanhamento: "amigos"
+    }
+  };
+
   const handleQuererCardPress = useCallback((title: string, description: string) => {
     if (isLoggedIn) {
-      rootNavigation.navigate("QueroDetail", { queroTitle: title, queroDescription: description });
+      // Buscar filtros padrão para este card
+      const normalizedTitle = title.replace(/\n/g, " ").trim();
+      const filters = QUERO_FILTERS_MAP[normalizedTitle];
+
+      rootNavigation.navigate("QueroDetail", {
+        queroTitle: title,
+        queroDescription: description,
+        // Passar filtros pré-definidos se existirem
+        preSelectedFilters: filters ? {
+          categoria: filters.categoria,
+          zona: filters.zona,
+          tipoAcompanhamento: filters.tipoAcompanhamento
+        } : undefined
+      });
     } else {
       rootNavigation.navigate("FaltaPouco", {
         eventName: title.replace(/\n/g, " "),

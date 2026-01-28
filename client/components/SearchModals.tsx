@@ -20,17 +20,53 @@ import Animated, {
 } from "react-native-reanimated";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 
-const CITIES = [
-  { id: "sp", name: "São Paulo", region: "SP" },
-  { id: "rj", name: "Rio de Janeiro", region: "RJ" },
-  { id: "bh", name: "Belo Horizonte", region: "MG" },
-  { id: "ctb", name: "Curitiba", region: "PR" },
-  { id: "poa", name: "Porto Alegre", region: "RS" },
-  { id: "rec", name: "Recife", region: "PE" },
-  { id: "sal", name: "Salvador", region: "BA" },
-  { id: "for", name: "Fortaleza", region: "CE" },
-  { id: "bsb", name: "Brasília", region: "DF" },
-  { id: "flo", name: "Florianópolis", region: "SC" },
+// Zonas e bairros do Rio de Janeiro
+export const ZONES_AND_NEIGHBORHOODS = {
+  zonaSul: {
+    id: "zona_sul",
+    name: "Zona Sul",
+    neighborhoods: [
+      { id: "leblon", name: "Leblon", zone: "Zona Sul" },
+      { id: "ipanema", name: "Ipanema", zone: "Zona Sul" },
+      { id: "copacabana", name: "Copacabana", zone: "Zona Sul" },
+      { id: "gavea", name: "Gávea", zone: "Zona Sul" },
+      { id: "botafogo", name: "Botafogo", zone: "Zona Sul" },
+    ]
+  },
+  sudoeste: {
+    id: "sudoeste",
+    name: "Sudoeste",
+    neighborhoods: [
+      { id: "barra", name: "Barra da Tijuca", zone: "Sudoeste" },
+      { id: "recreio", name: "Recreio", zone: "Sudoeste" },
+      { id: "jacarepagua", name: "Jacarepaguá", zone: "Sudoeste" },
+      { id: "freguesia", name: "Freguesia", zone: "Sudoeste" },
+    ]
+  },
+  centro: {
+    id: "centro",
+    name: "Centro",
+    neighborhoods: [
+      { id: "lapa", name: "Lapa", zone: "Centro" },
+      { id: "rio_comprido", name: "Rio Comprido", zone: "Centro" },
+      { id: "tijuca", name: "Tijuca", zone: "Centro" },
+      { id: "estacio", name: "Estácio", zone: "Centro" },
+    ]
+  }
+};
+
+// Array flat de todos os bairros para seleção
+export const ALL_NEIGHBORHOODS = [
+  ...ZONES_AND_NEIGHBORHOODS.zonaSul.neighborhoods,
+  ...ZONES_AND_NEIGHBORHOODS.sudoeste.neighborhoods,
+  ...ZONES_AND_NEIGHBORHOODS.centro.neighborhoods,
+];
+
+// Array de zonas
+export const ZONES = [
+  { id: "zona_sul", name: "Zona Sul" },
+  { id: "sudoeste", name: "Sudoeste" },
+  { id: "centro", name: "Centro" },
 ];
 
 const DATE_OPTIONS = [
@@ -51,13 +87,13 @@ const COMPANION_OPTIONS = [
 interface OndeModalProps {
   visible: boolean;
   onClose: () => void;
-  onSelect: (city: typeof CITIES[0]) => void;
-  selectedCity: typeof CITIES[0] | null;
+  onSelect: (location: typeof ALL_NEIGHBORHOODS[0]) => void;
+  selectedCity: typeof ALL_NEIGHBORHOODS[0] | null;
 }
 
 export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModalProps) {
   const insets = useSafeAreaInsets();
-  
+
   return (
     <Modal
       visible={visible}
@@ -73,22 +109,56 @@ export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModa
           <Text style={styles.modalTitle}>Onde você quer dançar?</Text>
           <View style={styles.closeButton} />
         </View>
-        
-        <ScrollView 
+
+        <ScrollView
           style={styles.modalContent}
           contentContainerStyle={styles.optionsContainer}
           showsVerticalScrollIndicator={false}
         >
-          {CITIES.map((city) => (
+          {/* Zonas */}
+          <Text style={styles.sectionTitle}>Por Zona</Text>
+          {ZONES.map((zone) => (
             <Pressable
-              key={city.id}
+              key={zone.id}
               style={({ pressed }) => [
                 styles.optionItem,
-                selectedCity?.id === city.id && styles.optionItemSelected,
+                selectedCity?.zone === zone.name && styles.optionItemSelected,
                 pressed && styles.optionItemPressed,
               ]}
               onPress={() => {
-                onSelect(city);
+                // Seleciona primeiro bairro da zona como placeholder
+                const firstNeighborhood = ZONES_AND_NEIGHBORHOODS[
+                  zone.id === "zona_sul" ? "zonaSul" :
+                    zone.id === "sudoeste" ? "sudoeste" : "centro"
+                ].neighborhoods[0];
+                onSelect(firstNeighborhood);
+                onClose();
+              }}
+            >
+              <View style={styles.optionIcon}>
+                <Feather name="map" size={20} color={Colors.dark.primary} />
+              </View>
+              <View style={styles.optionTextContainer}>
+                <Text style={styles.optionTitle}>{zone.name}</Text>
+              </View>
+              {selectedCity?.zone === zone.name ? (
+                <Feather name="check" size={20} color={Colors.dark.primary} />
+              ) : null}
+            </Pressable>
+          ))}
+
+          {/* Bairros */}
+          <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Por Bairro</Text>
+          {ALL_NEIGHBORHOODS.map((neighborhood) => (
+            <Pressable
+              key={neighborhood.id}
+              style={({ pressed }) => [
+                styles.optionItem,
+                selectedCity?.id === neighborhood.id && styles.optionItemSelected,
+                pressed && styles.optionItemPressed,
+              ]}
+              onPress={() => {
+                onSelect(neighborhood);
                 onClose();
               }}
             >
@@ -96,10 +166,10 @@ export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModa
                 <Feather name="map-pin" size={20} color={Colors.dark.primary} />
               </View>
               <View style={styles.optionTextContainer}>
-                <Text style={styles.optionTitle}>{city.name}</Text>
-                <Text style={styles.optionSubtitle}>{city.region}</Text>
+                <Text style={styles.optionTitle}>{neighborhood.name}</Text>
+                <Text style={styles.optionSubtitle}>{neighborhood.zone}</Text>
               </View>
-              {selectedCity?.id === city.id ? (
+              {selectedCity?.id === neighborhood.id ? (
                 <Feather name="check" size={20} color={Colors.dark.primary} />
               ) : null}
             </Pressable>
@@ -119,7 +189,7 @@ interface QuandoModalProps {
 
 export function QuandoModal({ visible, onClose, onSelect, selectedOption }: QuandoModalProps) {
   const insets = useSafeAreaInsets();
-  
+
   return (
     <Modal
       visible={visible}
@@ -135,8 +205,8 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
           <Text style={styles.modalTitle}>Quando você quer sair?</Text>
           <View style={styles.closeButton} />
         </View>
-        
-        <ScrollView 
+
+        <ScrollView
           style={styles.modalContent}
           contentContainerStyle={styles.optionsContainer}
           showsVerticalScrollIndicator={false}
@@ -182,10 +252,10 @@ interface ComQuemModalProps {
   transcript: string;
 }
 
-export function ComQuemModal({ 
-  visible, 
-  onClose, 
-  onSelect, 
+export function ComQuemModal({
+  visible,
+  onClose,
+  onSelect,
   selectedOption,
   onMicPress,
   isRecording,
@@ -194,7 +264,7 @@ export function ComQuemModal({
 }: ComQuemModalProps) {
   const insets = useSafeAreaInsets();
   const pulseScale = useSharedValue(1);
-  
+
   useEffect(() => {
     if (isRecording) {
       const pulse = () => {
@@ -212,7 +282,7 @@ export function ComQuemModal({
   const micButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
   }));
-  
+
   return (
     <Modal
       visible={visible}
@@ -228,16 +298,16 @@ export function ComQuemModal({
           <Text style={styles.modalTitle}>Com quem você quer sair?</Text>
           <View style={styles.closeButton} />
         </View>
-        
+
         <View style={styles.voiceSection}>
           <Text style={styles.voiceHint}>
-            {isRecording 
-              ? "Gravando... Toque para parar" 
-              : isTranscribing 
-                ? "Transcrevendo..." 
+            {isRecording
+              ? "Gravando... Toque para parar"
+              : isTranscribing
+                ? "Transcrevendo..."
                 : "Toque no microfone e fale o que você procura"}
           </Text>
-          
+
           <Animated.View style={micButtonStyle}>
             <Pressable
               style={[
@@ -255,7 +325,7 @@ export function ComQuemModal({
               )}
             </Pressable>
           </Animated.View>
-          
+
           {transcript ? (
             <View style={styles.transcriptContainer}>
               <Text style={styles.transcriptLabel}>Você disse:</Text>
@@ -263,10 +333,10 @@ export function ComQuemModal({
             </View>
           ) : null}
         </View>
-        
+
         <Text style={styles.orDivider}>ou escolha uma opção</Text>
-        
-        <ScrollView 
+
+        <ScrollView
           style={styles.modalContent}
           contentContainerStyle={styles.optionsContainer}
           showsVerticalScrollIndicator={false}
@@ -431,6 +501,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     paddingVertical: Spacing.md,
   },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: Colors.dark.text,
+    marginBottom: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
 });
 
-export { CITIES, DATE_OPTIONS, COMPANION_OPTIONS };
+export { DATE_OPTIONS, COMPANION_OPTIONS };

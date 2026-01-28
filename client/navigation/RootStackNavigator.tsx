@@ -21,7 +21,16 @@ export type RootStackParamList = {
   RegisterStep2: { userName: string };
   CadastreSe: undefined;
   FaltaPouco: { eventName?: string; eventDetails?: string; eventImage?: string } | undefined;
-  QueroDetail: { queroTitle: string; queroDescription: string };
+  QueroDetail: {
+    queroTitle: string;
+    queroDescription: string;
+    preSelectedFilters?: {
+      categoria: string;
+      zona: string;
+      bairro?: string;
+      tipoAcompanhamento: string;
+    };
+  };
   Reels: ReelsScreenParams;
   EventDetails: { eventId: string };
 };

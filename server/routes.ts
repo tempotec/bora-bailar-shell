@@ -21,13 +21,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search } = req.query;
       let eventsList;
-      
+
       if (search && typeof search === "string") {
         eventsList = await storage.searchEvents(search);
       } else {
         eventsList = await storage.getEvents();
       }
-      
+
       res.json(eventsList);
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { city, date, query } = req.query;
       const filters: { city?: string; date?: string; query?: string } = {};
-      
+
       if (city && typeof city === "string") {
         filters.city = city;
       }
@@ -59,7 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (query && typeof query === "string") {
         filters.query = query;
       }
-      
+
       const eventsList = await storage.advancedSearchEvents(filters);
       res.json(eventsList);
     } catch (error) {
@@ -77,11 +77,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const latitude = parseFloat(lat as string);
       const longitude = parseFloat(lng as string);
       const radiusKm = radius ? parseFloat(radius as string) : 10;
-      
+
       if (isNaN(latitude) || isNaN(longitude)) {
         return res.status(400).json({ error: "Invalid coordinates" });
       }
-      
+
       const nearbyEvents = await storage.getNearbyEvents(latitude, longitude, radiusKm);
       res.json(nearbyEvents);
     } catch (error) {
@@ -230,46 +230,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/transcribe", async (req, res) => {
     let tempFilePath: string | null = null;
-    
+
     try {
       const { audio, filename } = req.body;
-      
+
       if (!audio || !filename) {
         return res.status(400).json({ error: "audio and filename are required" });
       }
-      
+
       if (typeof audio !== "string" || typeof filename !== "string") {
         return res.status(400).json({ error: "Invalid request format" });
       }
-      
+
       const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
       const audioBuffer = Buffer.from(audio, "base64");
-      
+
       if (audioBuffer.length > MAX_AUDIO_SIZE) {
         return res.status(400).json({ error: "Audio file too large (max 10MB)" });
       }
-      
+
       if (audioBuffer.length < 1000) {
         return res.status(400).json({ error: "Audio file too small or empty" });
       }
-      
+
       const openai = getOpenAIClient();
       if (!openai) {
         return res.status(500).json({ error: "OpenAI API key not configured" });
       }
-      
+
       tempFilePath = path.join(os.tmpdir(), `recording_${Date.now()}_${Math.random().toString(36).slice(2)}.m4a`);
       fs.writeFileSync(tempFilePath, audioBuffer);
-      
+
       const audioFile = fs.createReadStream(tempFilePath);
-      
+
       const transcription = await openai.audio.transcriptions.create({
         file: audioFile,
         model: "whisper-1",
         language: "pt",
       });
-      
-      res.json({ 
+
+      res.json({
         text: transcription.text,
       });
     } catch (error: any) {
@@ -283,6 +283,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Failed to delete temp file:", e);
         }
       }
+    }
+  });
+
+  // Novo endpoint para eventos filtrados
+  app.post("/api/events/filter", async (req, res) => {
+    try {
+      const { categoria, zona, bairro, tipoAcompanhamento } = req.body;
+
+      const filters: {
+        categoria?: string;
+        zona?: string;
+        bairro?: string;
+        tipoAcompanhamento?: string;
+      } = {};
+
+      if (categoria) filters.categoria = categoria;
+      if (zona) filters.zona = zona;
+      if (bairro) filters.bairro = bairro;
+      if (tipoAcompanhamento) filters.tipoAcompanhamento = tipoAcompanhamento;
+
+      const filteredEvents = storage.filterEvents(filters as any);
+      res.json(filteredEvents);
+    } catch (error) {
+      console.error("Error filtering events:", error);
+      res.status(500).json({ error: "Failed to filter events" });
     }
   });
 
