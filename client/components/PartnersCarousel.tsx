@@ -40,23 +40,23 @@ const PARTNER_TYPES: PartnerType[] = [
   },
   {
     id: "3",
-    title: "ESCOLAS DE DANÇA",
-    description: "Seu estúdio, nosso palco!\n\nConecte-se a uma rede de apaixonados por dança.\n\nVamos juntos formar a próxima geração de estrelas!",
-    icon: () => <FontAwesome5 name="users" size={28} color={Colors.dark.text} />,
-    listHighlight: true,
-  },
-  {
-    id: "4",
     title: "PROFESSOR DE DANÇA\nE ENTERTAINERS",
     description: "Ensine, performe e cresça com a gente.\n\nSua paixão pela dança, agora é sua carreira!",
     icon: () => <FontAwesome5 name="chalkboard-teacher" size={28} color={Colors.dark.text} />,
     listHighlight: true,
   },
   {
-    id: "5",
+    id: "4",
     title: "PROMOTERS",
     description: "Divulgue os melhores eventos e ganhe com isso.\n\nSeja a ponte entre a festa e a diversão.",
     icon: () => <Feather name="mic" size={32} color={Colors.dark.text} />,
+    listHighlight: true,
+  },
+  {
+    id: "5",
+    title: "ESCOLAS DE DANÇA",
+    description: "Seu estúdio, nosso palco!\n\nConecte-se a uma rede de apaixonados por dança.\n\nVamos juntos formar a próxima geração de estrelas!",
+    icon: () => <FontAwesome5 name="users" size={28} color={Colors.dark.text} />,
     listHighlight: true,
   },
   {
@@ -137,6 +137,14 @@ export function PartnersCarousel() {
     );
   };
 
+  const scrollToCard = (index: number) => {
+    scrollViewRef.current?.scrollTo({
+      x: index * (CARD_WIDTH + Spacing.md),
+      animated: true,
+    });
+    setCurrentIndex(index);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
@@ -157,17 +165,29 @@ export function PartnersCarousel() {
 
             <View style={styles.listContainer}>
               <View style={styles.listColumn}>
-                {PARTNER_TYPES.slice(0, 4).map((item) => (
-                  <Text key={item.id} style={[styles.listItem, item.listHighlight && styles.listItemHighlight]}>
-                    • {item.title.replace("\n", " ")}
-                  </Text>
+                {PARTNER_TYPES.slice(0, 3).map((item, index) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => scrollToCard(index)}
+                    style={({ pressed }) => pressed && { opacity: 0.7 }}
+                  >
+                    <Text style={[styles.listItem, item.listHighlight && styles.listItemHighlight]}>
+                      • {item.title.replace("\n", " ")}
+                    </Text>
+                  </Pressable>
                 ))}
               </View>
               <View style={styles.listColumn}>
-                {PARTNER_TYPES.slice(4).map((item) => (
-                  <Text key={item.id} style={[styles.listItem, item.listHighlight && styles.listItemHighlight]}>
-                    • {item.title.replace("\n", " ")}
-                  </Text>
+                {PARTNER_TYPES.slice(3).map((item, index) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={() => scrollToCard(index + 3)}
+                    style={({ pressed }) => pressed && { opacity: 0.7 }}
+                  >
+                    <Text style={[styles.listItem, item.listHighlight && styles.listItemHighlight]}>
+                      • {item.title.replace("\n", " ")}
+                    </Text>
+                  </Pressable>
                 ))}
               </View>
             </View>

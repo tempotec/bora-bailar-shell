@@ -1475,7 +1475,7 @@ const styles = StyleSheet.create({
   dicaEventPrice: { fontSize: 10, color: Colors.dark.textSecondary, marginTop: 2 },
   recomendacoesSection: { paddingHorizontal: Spacing.lg, marginTop: Spacing.xl + Spacing.lg },
   recomendacoesTitle: { fontSize: 18, color: Colors.dark.text, fontWeight: "600", marginBottom: Spacing.lg },
-  recomendacoesContainer: { paddingRight: Spacing.lg, gap: Spacing.md, marginLeft: -Spacing.lg, paddingLeft: Spacing.lg },
+  recomendacoesContainer: { paddingRight: Spacing.lg, gap: Spacing.md },
   ofertaCard: { width: OFERTA_CARD_WIDTH },
   ofertaImageContainer: { width: OFERTA_CARD_WIDTH, height: OFERTA_CARD_HEIGHT, borderRadius: BorderRadius.lg, overflow: "hidden", position: "relative" },
   ofertaImage: { width: "100%", height: "100%" },
