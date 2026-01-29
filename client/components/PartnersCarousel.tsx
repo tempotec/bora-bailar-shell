@@ -57,45 +57,51 @@ const PARTNER_TYPES: PartnerType[] = [
     title: "PROMOTERS",
     description: "Divulgue os melhores eventos e ganhe com isso.\n\nSeja a ponte entre a festa e a diversão.",
     icon: () => <Feather name="mic" size={32} color={Colors.dark.text} />,
+    listHighlight: true,
   },
   {
     id: "6",
     title: "EVENTOS",
     description: "Organize, divulgue e lote seus eventos com a gente.",
     icon: () => <MaterialIcons name="event" size={32} color={Colors.dark.text} />,
+    listHighlight: true,
   },
   {
     id: "7",
     title: "FRANCHISING",
     description: "Leve o BoraBailar para sua cidade.\n\nSeja dono do seu próprio negócio no mundo da dança.",
     icon: () => <MaterialCommunityIcons name="briefcase-outline" size={32} color={Colors.dark.text} />,
+    listHighlight: true,
   },
 ];
 
 function PartnerCard({ item, onPress }: { item: PartnerType; onPress: () => void }) {
   return (
-    <View style={styles.card}>
+    <View style={styles.cardWrapper}>
+      {/* Icon positioned above the card */}
       <View style={styles.iconContainer}>
         <View style={styles.iconCircle}>
           {item.icon()}
         </View>
       </View>
 
-      <Text style={styles.cardTitle}>{item.title}</Text>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>{item.title}</Text>
 
-      <Text style={styles.cardDescription}>
-        {item.description}
-      </Text>
+        <Text style={styles.cardDescription}>
+          {item.description}
+        </Text>
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.button,
-          pressed && { opacity: 0.9 },
-        ]}
-        onPress={onPress}
-      >
-        <Text style={styles.buttonText}>Quero ser parceiro</Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            pressed && { opacity: 0.9 },
+          ]}
+          onPress={onPress}
+        >
+          <Text style={styles.buttonText}>Quero ser parceiro</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -159,7 +165,7 @@ export function PartnersCarousel() {
               </View>
               <View style={styles.listColumn}>
                 {PARTNER_TYPES.slice(4).map((item) => (
-                  <Text key={item.id} style={styles.listItem}>
+                  <Text key={item.id} style={[styles.listItem, item.listHighlight && styles.listItemHighlight]}>
                     • {item.title.replace("\n", " ")}
                   </Text>
                 ))}
@@ -250,18 +256,26 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: 32, // Space for floating icon (half of icon height)
     gap: Spacing.md,
   },
-  card: {
+  cardWrapper: {
     width: CARD_WIDTH,
-    backgroundColor: "#F2DEDE", // Light pinkish/beige background from screenshot
+    alignItems: "center",
+    marginTop: 32, // Push card down to make room for icon
+  },
+  card: {
+    width: "100%",
+    backgroundColor: "#F2DEDE",
     borderRadius: BorderRadius.xl,
     padding: Spacing.xl,
+    paddingTop: Spacing.xl + 20, // Extra top padding for icon overlap
     alignItems: "center",
   },
   iconContainer: {
-    marginTop: -Spacing.xl - 20, // Pull icon up
-    marginBottom: Spacing.md,
+    position: "absolute",
+    top: -32, // Position icon above the card (half of icon height)
+    zIndex: 10,
   },
   iconCircle: {
     width: 64,
