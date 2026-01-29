@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   ScrollView,
+  ImageSourcePropType,
 } from "react-native";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 import * as FileSystem from "expo-file-system";
@@ -344,25 +345,71 @@ function QueroParticiparButton({ onPress }: { onPress?: () => void }) {
   );
 }
 
-const DICA_IMAGES = [
+// Fallback images for Sunday (no specific images available)
+const DICA_IMAGES_FALLBACK: ImageSourcePropType[] = [
   require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
   require("../../attached_assets/stock_images/ballroom_dancing_cou_a3f721af.jpg"),
   require("../../attached_assets/stock_images/ballroom_dancing_cou_83e25a1a.jpg"),
 ];
 
-const DICA_EVENT_CARD_WIDTH = 100;
+// Real images organized by day of the week (Monday = 0, Saturday = 5)
+const DICA_IMAGES_BY_DAY: ImageSourcePropType[][] = [
+  // Segunda-feira
+  [
+    require("../attached_assets/dicas/seg_01.jpg"),
+    require("../attached_assets/dicas/seg_02.jpg"),
+    require("../attached_assets/dicas/seg_03.jpg"),
+  ],
+  // Terça-feira
+  [
+    require("../attached_assets/dicas/ter_01.jpg"),
+    require("../attached_assets/dicas/ter_02.jpg"),
+    require("../attached_assets/dicas/ter_03.jpg"),
+  ],
+  // Quarta-feira
+  [
+    require("../attached_assets/dicas/qua_01.jpg"),
+    require("../attached_assets/dicas/qua_02.jpg"),
+    require("../attached_assets/dicas/qua_03.jpg"),
+  ],
+  // Quinta-feira
+  [
+    require("../attached_assets/dicas/qui_01.jpg"),
+    require("../attached_assets/dicas/qui_02.jpg"),
+    require("../attached_assets/dicas/qui_03.jpg"),
+  ],
+  // Sexta-feira
+  [
+    require("../attached_assets/dicas/sex_01.jpg"),
+    require("../attached_assets/dicas/sex_02.jpg"),
+    require("../attached_assets/dicas/sex_03.jpg"),
+  ],
+  // Sábado
+  [
+    require("../attached_assets/dicas/sab_01.jpg"),
+    require("../attached_assets/dicas/sab_02.jpg"),
+    require("../attached_assets/dicas/sab_03.jpg"),
+  ],
+  // Domingo: no specific images, will use fallback
+];
+
+const DICA_EVENT_CARD_WIDTH = 104; // Increased by 4px
 
 function DicaDaSemanaRow({
   day,
   date,
+  dayIndex,
   dicas,
   onDicaPress,
 }: {
   day: string;
   date: string;
+  dayIndex: number;
   dicas: { title: string; price: string }[];
   onDicaPress?: (title: string, price: string, day: string, date: string) => void;
 }) {
+  // Get images for this specific day, with fallback for Sunday
+  const imagesForDay = DICA_IMAGES_BY_DAY[dayIndex] ?? DICA_IMAGES_FALLBACK;
   return (
     <View style={styles.dicaDaSemanaRow}>
       <View style={styles.dicaDayHeader}>
@@ -374,26 +421,31 @@ function DicaDaSemanaRow({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.dicasEventScrollContainer}
       >
-        {dicas.map((dica, index) => (
-          <Pressable
-            key={index}
-            style={({ pressed }) => [
-              styles.dicaEventCard,
-              pressed && { opacity: 0.8 },
-            ]}
-            onPress={() => onDicaPress?.(dica.title, dica.price, day, date)}
-          >
-            <Image
-              source={DICA_IMAGES[index % DICA_IMAGES.length]}
-              style={styles.dicaEventImage}
-              resizeMode="cover"
-            />
-            <Text style={styles.dicaEventTitle} numberOfLines={2}>{dica.title}</Text>
-            <Text style={styles.dicaEventPrice}>
-              A partir de {dica.price === "R$0" ? "R$0" : dica.price}
-            </Text>
-          </Pressable>
-        ))}
+        {dicas.map((dica, index) => {
+          // Get the correct image for this event, with fallback
+          const imageSource = imagesForDay[index] ?? imagesForDay[index % imagesForDay.length];
+
+          return (
+            <Pressable
+              key={index}
+              style={({ pressed }) => [
+                styles.dicaEventCard,
+                pressed && { opacity: 0.8 },
+              ]}
+              onPress={() => onDicaPress?.(dica.title, dica.price, day, date)}
+            >
+              <Image
+                source={imageSource}
+                style={styles.dicaEventImage}
+                resizeMode="cover"
+              />
+              <Text style={styles.dicaEventTitle} numberOfLines={2}>{dica.title}</Text>
+              <Text style={styles.dicaEventPrice}>
+                A partir de {dica.price === "R$0" ? "R$0" : dica.price}
+              </Text>
+            </Pressable>
+          );
+        })}
       </Animated.ScrollView>
     </View>
   );
@@ -1081,11 +1133,12 @@ export default function DiscoverScreen() {
             <Text style={styles.sectionTitleHighlight}>semana</Text>
           </Text>
           <View style={styles.dicasDaSemanaList}>
-            {DICAS_DA_SEMANA_DATA.map((item) => (
+            {DICAS_DA_SEMANA_DATA.map((item, dayIndex) => (
               <DicaDaSemanaRow
                 key={item.id}
                 day={item.day}
                 date={item.date}
+                dayIndex={dayIndex}
                 dicas={item.dicas}
                 onDicaPress={handleDicaPress}
               />
@@ -1301,7 +1354,7 @@ const styles = StyleSheet.create({
   dicaDate: { fontSize: 14, color: Colors.dark.textSecondary, marginLeft: Spacing.xs },
   dicasEventScrollContainer: { gap: Spacing.md, paddingRight: Spacing.lg, marginLeft: -Spacing.lg, paddingLeft: Spacing.lg },
   dicaEventCard: { width: DICA_EVENT_CARD_WIDTH },
-  dicaEventImage: { width: DICA_EVENT_CARD_WIDTH, height: 80, borderRadius: BorderRadius.md, marginBottom: Spacing.xs },
+  dicaEventImage: { width: DICA_EVENT_CARD_WIDTH, height: 84, borderRadius: BorderRadius.md, marginBottom: Spacing.xs }, // Height increased by 4px
   dicaEventTitle: { fontSize: 11, color: Colors.dark.text, fontWeight: "500", lineHeight: 14 },
   dicaEventPrice: { fontSize: 10, color: Colors.dark.textSecondary, marginTop: 2 },
   recomendacoesSection: { paddingHorizontal: Spacing.lg, marginTop: Spacing.xl + Spacing.lg },
