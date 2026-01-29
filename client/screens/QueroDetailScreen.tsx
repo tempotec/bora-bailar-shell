@@ -18,42 +18,11 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Spacing, BorderRadius, Colors, Fonts } from "@/constants/theme";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { getApiUrl } from "@/lib/query-client";
+import { getQueroVideos } from "@/services/mock/data";
 
 const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
-thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
-  },
-{
-  id: "2",
-    title: "Leve como uma folha",
-      username: "@Ivete22",
-        location: "@ParqueBar",
-          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
-  },
-{
-  id: "3",
-    title: "Na rua é mais legal",
-      username: "@LuizaLulu",
-        location: "na Lapa",
-          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
-  },
-{
-  id: "4",
-    title: "Ritmo do coração",
-      username: "@MarceloDance",
-        location: "@ClubeDance",
-          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
-  },
-{
-  id: "5",
-    title: "Noite de salsa",
-      username: "@AnaForró",
-        location: "@SalsaHouse",
-          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
-  },
-];
 
 const FILTER_TAGS = [
   { id: "filtros", label: "Filtros", count: 4, isSpecial: true },
@@ -170,7 +139,7 @@ function generateDynamicEvents() {
 type VideoStoryCardProps = {
   title: string;
   username: string;
-  location: string;
+  location?: string;
   thumbnail: any;
   onPress?: () => void;
 };
@@ -401,8 +370,11 @@ export default function QueroDetailScreen() {
   }, [navigation]);
 
   const handleVideoPress = useCallback((index: number) => {
-    navigation.navigate("Reels", { initialIndex: index });
-  }, [navigation]);
+    navigation.navigate("Reels", {
+      initialIndex: index,
+      stories: getQueroVideos(queroTitle)
+    });
+  }, [navigation, queroTitle]);
 
   const cleanTitle = queroTitle.replace(/\n/g, " ");
 
@@ -532,12 +504,11 @@ export default function QueroDetailScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.storiesContainer}
         >
-          {VIDEO_STORIES_DATA.map((story, index) => (
+          {getQueroVideos(queroTitle).map((story, index) => (
             <VideoStoryCard
               key={story.id}
               title={story.title}
               username={story.username}
-              location={story.location}
               thumbnail={story.thumbnail}
               onPress={() => handleVideoPress(index)}
             />

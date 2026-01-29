@@ -268,8 +268,6 @@ export default function ReelsScreen() {
   const [visibleIndex, setVisibleIndex] = useState(route.params?.initialIndex || 0);
   const { isTabBarVisible } = useTabBar();
 
-  const initialIndex = route.params?.initialIndex || 0;
-
   // Convert stories from params to ReelItems, fallback to hardcoded data
   const reelsData = useMemo(() => {
     if (route.params?.stories && route.params.stories.length > 0) {
@@ -288,6 +286,10 @@ export default function ReelsScreen() {
     }
     return REELS_DATA;
   }, [route.params?.stories]);
+
+  // Clamp initialIndex to valid range to prevent out-of-bounds errors
+  const rawInitialIndex = route.params?.initialIndex ?? 0;
+  const initialIndex = Math.min(Math.max(rawInitialIndex, 0), reelsData.length - 1);
 
   useFocusEffect(
     useCallback(() => {

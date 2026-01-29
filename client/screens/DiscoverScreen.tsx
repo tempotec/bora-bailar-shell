@@ -868,8 +868,11 @@ export default function DiscoverScreen() {
   }, [rootNavigation]);
 
   const handleVideoStoryPress = useCallback((index: number) => {
-    rootNavigation.navigate("Reels", { initialIndex: index });
-  }, [rootNavigation]);
+    rootNavigation.navigate("Reels", {
+      initialIndex: index,
+      stories: videoStories
+    });
+  }, [rootNavigation, videoStories]);
 
   const handleRecomendacaoPress = useCallback((title: string, price: string, discount: string, image: string) => {
     rootNavigation.navigate("FaltaPouco", {
