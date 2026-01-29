@@ -970,18 +970,12 @@ const styles = StyleSheet.create({
     color: Colors.dark.text,
   },
   appliedFiltersSection: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    backgroundColor: "#1A1A1A",
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   appliedFiltersTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Colors.dark.textSecondary,
-    marginBottom: Spacing.xs,
-    textTransform: "uppercase",
+    display: "none", // Esconder o título "Filtros Aplicados:"
   },
   appliedFiltersRow: {
     flexDirection: "row",
@@ -991,15 +985,15 @@ const styles = StyleSheet.create({
   appliedFilterChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.dark.brand + "20",
+    backgroundColor: Colors.dark.brand,
     borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     gap: 4,
   },
   appliedFilterText: {
     fontSize: 13,
     fontWeight: "500",
-    color: Colors.dark.primary,
+    color: "#FFFFFF",
   },
 });

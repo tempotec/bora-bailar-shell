@@ -106,7 +106,7 @@ export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModa
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Feather name="x" size={24} color={Colors.dark.text} />
           </Pressable>
-          <Text style={styles.modalTitle}>Onde você quer dançar?</Text>
+          <Text style={styles.modalTitle}>Onde você quer sair para dançar?</Text>
           <View style={styles.closeButton} />
         </View>
 
@@ -203,7 +203,7 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Feather name="x" size={24} color={Colors.dark.text} />
           </Pressable>
-          <Text style={styles.modalTitle}>Quando você quer sair?</Text>
+          <Text style={styles.modalTitle}>Quando você quer sair pra dançar?</Text>
           <View style={styles.closeButton} />
         </View>
 
@@ -296,7 +296,7 @@ export function ComQuemModal({
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Feather name="x" size={24} color={Colors.dark.text} />
           </Pressable>
-          <Text style={styles.modalTitle}>Com quem você quer sair?</Text>
+          <Text style={styles.modalTitle}>Com quem você quer sair pra dançar?</Text>
           <View style={styles.closeButton} />
         </View>
 
@@ -335,7 +335,7 @@ export function ComQuemModal({
           ) : null}
         </View>
 
-        <Text style={styles.orDivider}>ou escolha uma opção</Text>
+        <Text style={styles.orDivider}>ou Escolha uma opção abaixo:</Text>
 
         <ScrollView
           style={styles.modalContent}

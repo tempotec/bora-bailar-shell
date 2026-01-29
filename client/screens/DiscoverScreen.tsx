@@ -1090,6 +1090,8 @@ export default function DiscoverScreen() {
               hasValue={!!selectedCompanion}
             />
 
+            <Text style={styles.micCta}>Pressione Aqui e fale livremente</Text>
+
             <View style={styles.helperTextContainer}>
               <Text style={styles.helperText}>
                 É só{" "}
@@ -1344,6 +1346,7 @@ const styles = StyleSheet.create({
   wizardFieldLabelSelected: { color: Colors.dark.primary, fontWeight: "500" },
   chevronIconContainer: { alignItems: "center", justifyContent: "center" },
   micIconContainer: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.dark.brand, alignItems: "center", justifyContent: "center" },
+  micCta: { fontSize: 14, color: Colors.dark.brand, textAlign: "center", fontWeight: "500", marginTop: Spacing.sm },
   helperTextContainer: { alignItems: "center", marginTop: Spacing.md, paddingBottom: Spacing.sm },
   helperText: { fontSize: 15, color: Colors.dark.text, textAlign: "center" },
   helperHighlight: { color: Colors.dark.brand, fontWeight: "700" },
