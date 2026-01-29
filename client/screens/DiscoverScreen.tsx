@@ -42,6 +42,7 @@ import {
   COMPANION_OPTIONS,
 } from "@/components/SearchModals";
 import { PartnersCarousel } from "@/components/PartnersCarousel";
+import { WizardSearchModal } from "@/components/WizardSearchModal";
 import { PartnerBrands } from "@/components/PartnerBrands";
 import type { DiscoverStackParamList } from "@/navigation/DiscoverStackNavigator";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
@@ -677,6 +678,7 @@ export default function DiscoverScreen() {
   const [ondeModalVisible, setOndeModalVisible] = useState(false);
   const [quandoModalVisible, setQuandoModalVisible] = useState(false);
   const [comQuemModalVisible, setComQuemModalVisible] = useState(false);
+  const [wizardModalVisible, setWizardModalVisible] = useState(false);
 
   const [selectedCity, setSelectedCity] = useState<typeof ALL_NEIGHBORHOODS[0] | null>(null);
   const [selectedDate, setSelectedDate] = useState<typeof DATE_OPTIONS[0] | null>(null);
@@ -1023,6 +1025,17 @@ export default function DiscoverScreen() {
     // Mock logic
   }, []);
 
+  const handleWizardSearch = useCallback((filters: {
+    city: typeof ALL_NEIGHBORHOODS[0] | null;
+    date: typeof DATE_OPTIONS[0] | null;
+    companion: typeof COMPANION_OPTIONS[0] | null;
+  }) => {
+    // Update individual selected values
+    setSelectedCity(filters.city);
+    setSelectedDate(filters.date);
+    setSelectedCompanion(filters.companion);
+  }, []);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
       {!isLoggedIn ? (
@@ -1056,7 +1069,7 @@ export default function DiscoverScreen() {
           </Pressable>
         </View>
         <Animated.View style={[styles.collapsedWizardContainer, collapsedWizardStyle]}>
-          <CollapsedSearchBar />
+          <CollapsedSearchBar onPress={() => setWizardModalVisible(true)} />
         </Animated.View>
         {currentSection ? (
           <Animated.View style={[styles.stickyTitleWrapper, stickyTitleStyle]}>
@@ -1310,6 +1323,20 @@ export default function DiscoverScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      {/* Wizard Search Modal - Airbnb Style */}
+      <WizardSearchModal
+        visible={wizardModalVisible}
+        onClose={() => setWizardModalVisible(false)}
+        onSearch={handleWizardSearch}
+        initialCity={selectedCity}
+        initialDate={selectedDate}
+        initialCompanion={selectedCompanion}
+        onMicPress={handleMicPress}
+        isRecording={isRecording}
+        isTranscribing={isTranscribing}
+        transcript={transcript}
+      />
     </View>
   );
 }
