@@ -1396,7 +1396,7 @@ const styles = StyleSheet.create({
   awardCategoryNumber: { fontSize: 12, color: Colors.dark.textSecondary, marginBottom: Spacing.xs },
   awardCategoryTitle: { fontSize: 15, color: Colors.dark.text, fontWeight: "600" },
   awardCategoryHighlight: { color: Colors.dark.brand, fontWeight: "700" },
-  awardCategoryThumbnail: { width: 70, height: 50, borderRadius: BorderRadius.md },
+  awardCategoryThumbnail: { width: 76, height: 56, borderRadius: BorderRadius.md },
   dicasDaSemanaSection: { paddingHorizontal: Spacing.lg, marginTop: Spacing.xl + Spacing.lg },
   dicasDaSemanaTitle: { fontSize: 18, color: Colors.dark.text, fontWeight: "600", marginBottom: Spacing.lg },
   dicasDaSemanaList: { gap: Spacing.xl },
