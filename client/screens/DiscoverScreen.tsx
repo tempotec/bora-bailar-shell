@@ -1468,7 +1468,7 @@ const styles = StyleSheet.create({
   dicaDayHeader: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.md },
   dicaDayName: { fontSize: 16, color: Colors.dark.brand, fontWeight: "600" },
   dicaDate: { fontSize: 14, color: Colors.dark.textSecondary, marginLeft: Spacing.xs },
-  dicasEventScrollContainer: { gap: Spacing.md, paddingRight: Spacing.lg, marginLeft: -Spacing.lg, paddingLeft: Spacing.lg },
+  dicasEventScrollContainer: { gap: Spacing.md, paddingRight: Spacing.lg },
   dicaEventCard: { width: DICA_EVENT_CARD_WIDTH },
   dicaEventImage: { width: DICA_EVENT_CARD_WIDTH, height: 84, borderRadius: BorderRadius.md, marginBottom: Spacing.xs }, // Height increased by 4px
   dicaEventTitle: { fontSize: 11, color: Colors.dark.text, fontWeight: "500", lineHeight: 14 },
