@@ -81,36 +81,57 @@ const getDicasDaSemanaData = () => {
       { title: "Café da manhã com música", price: "R$20" },
       { title: "Almoço gostoso na Lapa", price: "R$0" },
       { title: "Sarau no Centro da Cidade", price: "R$0" },
-    ],
-    [
-      { title: "Aula de forró", price: "R$30" },
-      { title: "Happy hour dançante", price: "R$25" },
-      { title: "Noite de samba", price: "R$15" },
-    ],
-    [
       { title: "Workshop de salsa", price: "R$40" },
       { title: "Tarde de bolero", price: "R$10" },
       { title: "Baile de quarta", price: "R$20" },
     ],
     [
+      { title: "Aula de forró", price: "R$30" },
+      { title: "Happy hour dançante", price: "R$25" },
+      { title: "Noite de samba", price: "R$15" },
       { title: "Zouk na praça", price: "R$0" },
       { title: "Jantar com show", price: "R$80" },
       { title: "Roda de samba", price: "R$15" },
     ],
     [
+      { title: "Workshop de salsa", price: "R$40" },
+      { title: "Tarde de bolero", price: "R$10" },
+      { title: "Baile de quarta", price: "R$20" },
       { title: "Sexta social", price: "R$35" },
       { title: "Balada latina", price: "R$50" },
       { title: "Forró pé de serra", price: "R$25" },
     ],
     [
+      { title: "Zouk na praça", price: "R$0" },
+      { title: "Jantar com show", price: "R$80" },
+      { title: "Roda de samba", price: "R$15" },
       { title: "Matinê dançante", price: "R$20" },
       { title: "Festival de dança", price: "R$60" },
       { title: "Noitada especial", price: "R$45" },
     ],
     [
+      { title: "Sexta social", price: "R$35" },
+      { title: "Balada latina", price: "R$50" },
+      { title: "Forró pé de serra", price: "R$25" },
+      { title: "Café da manhã com música", price: "R$20" },
+      { title: "Almoço gostoso na Lapa", price: "R$0" },
+      { title: "Sarau no Centro da Cidade", price: "R$0" },
+    ],
+    [
+      { title: "Matinê dançante", price: "R$20" },
+      { title: "Festival de dança", price: "R$60" },
+      { title: "Noitada especial", price: "R$45" },
+      { title: "Aula de forró", price: "R$30" },
+      { title: "Happy hour dançante", price: "R$25" },
+      { title: "Noite de samba", price: "R$15" },
+    ],
+    [
       { title: "Brunch com música", price: "R$55" },
       { title: "Tarde de tango", price: "R$30" },
       { title: "Sunset dance", price: "R$25" },
+      { title: "Workshop de salsa", price: "R$40" },
+      { title: "Tarde de bolero", price: "R$10" },
+      { title: "Sexta social", price: "R$35" },
     ],
   ];
 
@@ -352,45 +373,72 @@ const DICA_IMAGES_FALLBACK: ImageSourcePropType[] = [
   require("../../attached_assets/stock_images/ballroom_dancing_cou_83e25a1a.jpg"),
 ];
 
-// Real images organized by day of the week (Monday = 0, Saturday = 5)
+// Real images organized by day of the week with day-mixing pattern
+// Monday = 0, Saturday = 5, Sunday = 6
 const DICA_IMAGES_BY_DAY: ImageSourcePropType[][] = [
-  // Segunda-feira
+  // Segunda-feira: 3 seg + 3 qua
   [
     require("../attached_assets/dicas/seg_01.jpg"),
     require("../attached_assets/dicas/seg_02.jpg"),
     require("../attached_assets/dicas/seg_03.jpg"),
-  ],
-  // Terça-feira
-  [
-    require("../attached_assets/dicas/ter_01.jpg"),
-    require("../attached_assets/dicas/ter_02.jpg"),
-    require("../attached_assets/dicas/ter_03.jpg"),
-  ],
-  // Quarta-feira
-  [
     require("../attached_assets/dicas/qua_01.jpg"),
     require("../attached_assets/dicas/qua_02.jpg"),
     require("../attached_assets/dicas/qua_03.jpg"),
   ],
-  // Quinta-feira
+  // Terça-feira: 3 ter + 3 qui
   [
+    require("../attached_assets/dicas/ter_01.jpg"),
+    require("../attached_assets/dicas/ter_02.jpg"),
+    require("../attached_assets/dicas/ter_03.jpg"),
     require("../attached_assets/dicas/qui_01.jpg"),
     require("../attached_assets/dicas/qui_02.jpg"),
     require("../attached_assets/dicas/qui_03.jpg"),
   ],
-  // Sexta-feira
+  // Quarta-feira: 3 qua + 3 sex
   [
+    require("../attached_assets/dicas/qua_01.jpg"),
+    require("../attached_assets/dicas/qua_02.jpg"),
+    require("../attached_assets/dicas/qua_03.jpg"),
     require("../attached_assets/dicas/sex_01.jpg"),
     require("../attached_assets/dicas/sex_02.jpg"),
     require("../attached_assets/dicas/sex_03.jpg"),
   ],
-  // Sábado
+  // Quinta-feira: 3 qui + 3 sab
   [
+    require("../attached_assets/dicas/qui_01.jpg"),
+    require("../attached_assets/dicas/qui_02.jpg"),
+    require("../attached_assets/dicas/qui_03.jpg"),
     require("../attached_assets/dicas/sab_01.jpg"),
     require("../attached_assets/dicas/sab_02.jpg"),
     require("../attached_assets/dicas/sab_03.jpg"),
   ],
-  // Domingo: no specific images, will use fallback
+  // Sexta-feira: 3 sex + 3 seg
+  [
+    require("../attached_assets/dicas/sex_01.jpg"),
+    require("../attached_assets/dicas/sex_02.jpg"),
+    require("../attached_assets/dicas/sex_03.jpg"),
+    require("../attached_assets/dicas/seg_01.jpg"),
+    require("../attached_assets/dicas/seg_02.jpg"),
+    require("../attached_assets/dicas/seg_03.jpg"),
+  ],
+  // Sábado: 3 sab + 3 ter
+  [
+    require("../attached_assets/dicas/sab_01.jpg"),
+    require("../attached_assets/dicas/sab_02.jpg"),
+    require("../attached_assets/dicas/sab_03.jpg"),
+    require("../attached_assets/dicas/ter_01.jpg"),
+    require("../attached_assets/dicas/ter_02.jpg"),
+    require("../attached_assets/dicas/ter_03.jpg"),
+  ],
+  // Domingo: 3 qua + 3 sex (sem imagens mockadas)
+  [
+    require("../attached_assets/dicas/qua_01.jpg"),
+    require("../attached_assets/dicas/qua_02.jpg"),
+    require("../attached_assets/dicas/qua_03.jpg"),
+    require("../attached_assets/dicas/sex_01.jpg"),
+    require("../attached_assets/dicas/sex_02.jpg"),
+    require("../attached_assets/dicas/sex_03.jpg"),
+  ],
 ];
 
 const DICA_EVENT_CARD_WIDTH = 104; // Increased by 4px
