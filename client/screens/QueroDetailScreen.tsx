@@ -23,41 +23,35 @@ const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const VIDEO_STORIES_DATA = [
-  {
-    id: "1",
-    title: "Dançando com Julia",
-    username: "@Alanzinho",
-    location: "@BosqueBar",
-    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
   },
-  {
-    id: "2",
+{
+  id: "2",
     title: "Leve como uma folha",
-    username: "@Ivete22",
-    location: "@ParqueBar",
-    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
+      username: "@Ivete22",
+        location: "@ParqueBar",
+          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
   },
-  {
-    id: "3",
+{
+  id: "3",
     title: "Na rua é mais legal",
-    username: "@LuizaLulu",
-    location: "na Lapa",
-    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
+      username: "@LuizaLulu",
+        location: "na Lapa",
+          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
   },
-  {
-    id: "4",
+{
+  id: "4",
     title: "Ritmo do coração",
-    username: "@MarceloDance",
-    location: "@ClubeDance",
-    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
+      username: "@MarceloDance",
+        location: "@ClubeDance",
+          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
   },
-  {
-    id: "5",
+{
+  id: "5",
     title: "Noite de salsa",
-    username: "@AnaForró",
-    location: "@SalsaHouse",
-    thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
+      username: "@AnaForró",
+        location: "@SalsaHouse",
+          thumbnail: require("../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
   },
 ];
 

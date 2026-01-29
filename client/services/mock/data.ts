@@ -6,104 +6,167 @@ export const MOCK_DATA = {
             id: "1",
             title: "Dançando com Julia",
             username: "@Alanzinho",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+            thumbnail: require("../../attached_assets/dancando_com_julia_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/dancando_com_julia.mp4"),
         },
         {
             id: "2",
             title: "Leve como uma folha",
             username: "@Ivete22",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
+            thumbnail: require("../../attached_assets/leve_como_uma_folha_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/leve_como_uma_folha.mp4"),
         },
         {
             id: "3",
             title: "Na rua é mais legal",
             username: "@LuizaLulu",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
+            thumbnail: require("../../attached_assets/na_rua_e_mais_legal_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/na_rua_e_mais_legal.mp4"),
         },
         {
             id: "4",
             title: "Ritmo do coração",
             username: "@MarceloDance",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
+            thumbnail: require("../../attached_assets/ritmo_coracao_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/ritmo_coracao.mp4"),
         },
         {
             id: "5",
             title: "Noite de salsa",
             username: "@AnaForró",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
+            thumbnail: require("../../attached_assets/noite_de_salsa_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/noite_de_salsa.mp4"),
         },
         {
             id: "6",
             title: "Alegria pura",
             username: "@PedroSamba",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_dbae0db5.jpg"),
+            thumbnail: require("../../attached_assets/alegria_pura_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/alegria_pura.mp4"),
+        },
+        {
+            id: "7",
+            title: "Caminhando e dançando",
+            username: "@CarlaMove",
+            thumbnail: require("../../attached_assets/african_american_dancing_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-african-american-girl-dancing-while-walking-in-a-park-4886-hd-ready.mp4"),
+        },
+        {
+            id: "8",
+            title: "Luzes futuristas",
+            username: "@TechDancer",
+            thumbnail: require("../../attached_assets/blue_lasers_futuristic_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-blue-lasers-illuminate-a-man-wearing-futuristic-glasses-50498-hd-ready.mp4"),
+        },
+        {
+            id: "9",
+            title: "Dança colorida",
+            username: "@VibesDance",
+            thumbnail: require("../../attached_assets/colorful_young_dancer_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-colorful-dance-of-a-young-dancer-51277-hd-ready.mp4"),
+        },
+        {
+            id: "10",
+            title: "Coreografia noturna",
+            username: "@NightMoves",
+            thumbnail: require("../../attached_assets/dynamic_choreography_night_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-dynamic-choreography-by-a-girl-on-the-street-at-night-51304-hd-ready.mp4"),
+        },
+        {
+            id: "11",
+            title: "Fones e passos",
+            username: "@MusicFlow",
+            thumbnail: require("../../attached_assets/girl_headphones_walk_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-girl-dancing-with-her-headphones-while-taking-a-walk-4823-hd-ready.mp4"),
+        },
+        {
+            id: "12",
+            title: "Máscara misteriosa",
+            username: "@HalloweenVibes",
+            thumbnail: require("../../attached_assets/halloween_mask_dancing_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-girl-with-hallowween-mask-dancing-close-to-the-lens-42216-hd-ready.mp4"),
+        },
+        {
+            id: "13",
+            title: "Silhuetas na fumaça",
+            username: "@SmokeShow",
+            thumbnail: require("../../attached_assets/silhouettes_smoke_lights_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-silhouettes-of-two-dancers-under-smoke-and-colored-lights-33901-hd-ready.mp4"),
+        },
+        {
+            id: "14",
+            title: "Nuvem de movimento",
+            username: "@CloudDancer",
+            thumbnail: require("../../attached_assets/woman_smoke_cloud_thumb.jpg"),
+            videoUrl: require("../../attached_assets/videos/mixkit-young-woman-dancing-under-a-cloud-of-smoke-and-a-33899-hd-ready.mp4"),
         },
     ],
     destaqueMes: {
-        title: "Destaque do mês",
-        thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+        title: "MOMENTO DANÇA É MOMENTO FELIZ",
+        thumbnail: require("../../attached_assets/destaque_do_mes_thumb.jpg"),
+        videoUrl: require("../../attached_assets/videos/destaque do mes.mp4"),
     },
     awards: [
         {
             id: "1",
             category: "Categoria 1",
             title: "O que vale é animação",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_798bff4b.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_01.jpg"),
         },
         {
             id: "2",
             category: "Categoria 2",
             title: "Baladas badaladas",
-            thumbnail: require("../../../attached_assets/stock_images/ballroom_dancing_cou_a3f721af.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_02.jpg"),
         },
         {
             id: "3",
             category: "Categoria 3",
             title: "Aiquibão a dança de salão",
-            thumbnail: require("../../../attached_assets/stock_images/ballroom_dancing_cou_83e25a1a.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_03.jpg"),
         },
         {
             id: "4",
             category: "Categoria 4",
             title: "É samba no pé",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_214e72d0.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_04.jpg"),
         },
         {
             id: "5",
             category: "Categoria 5",
             title: "Famosos no BoraBailar",
             highlightWord: "BoraBailar",
-            thumbnail: require("../../../attached_assets/stock_images/ballroom_dancing_cou_4ebc2182.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_05.jpg"),
         },
         {
             id: "6",
             category: "Categoria 6",
             title: "Forró pé de serra",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_8c1c5cba.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_06.jpg"),
         },
         {
             id: "7",
             category: "Categoria 7",
             title: "Zouk love",
-            thumbnail: require("../../../attached_assets/stock_images/ballroom_dancing_cou_476ab99c.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_07.jpg"),
         },
         {
             id: "8",
             category: "Categoria 8",
             title: "Bachata sensual",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_08.jpg"),
         },
         {
             id: "9",
             category: "Categoria 9",
             title: "Tango argentino",
-            thumbnail: require("../../../attached_assets/stock_images/ballroom_dancing_cou_7a8e006d.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_09.jpg"),
         },
         {
             id: "10",
             category: "Categoria 10",
             title: "Danças urbanas",
-            thumbnail: require("../../../attached_assets/stock_images/person_dancing_happi_24afcbbe.jpg"),
+            thumbnail: require("../../attached_assets/awards/award_10.jpg"),
         },
     ],
     recommendations: [
@@ -201,3 +264,31 @@ export const MOCK_DATA = {
         },
     ]
 };
+
+// Helper functions for video rotation across different sections
+
+/**
+ * Get videos for EXPLORAR section (first 4 videos)
+ */
+export function getExplorarVideos() {
+    return MOCK_DATA.stories.slice(0, 4);
+}
+
+/**
+ * Get videos for specific Quero category with rotation
+ * Each category gets a different subset of 5 videos based on hash of category name
+ */
+export function getQueroVideos(queroTitle?: string) {
+    // Use simple hash to deterministically select videos based on title
+    // This ensures same Quero always shows same videos, but different Queros show different sets
+    const hash = (queroTitle || '').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const startIndex = hash % 10; // Start from different position based on title
+
+    // Get 5 consecutive videos (with wraparound)
+    const videos = [];
+    for (let i = 0; i < 5; i++) {
+        videos.push(MOCK_DATA.stories[(startIndex + i) % MOCK_DATA.stories.length]);
+    }
+
+    return videos;
+}

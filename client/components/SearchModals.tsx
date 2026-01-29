@@ -126,12 +126,13 @@ export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModa
                 pressed && styles.optionItemPressed,
               ]}
               onPress={() => {
-                // Seleciona primeiro bairro da zona como placeholder
-                const firstNeighborhood = ZONES_AND_NEIGHBORHOODS[
-                  zone.id === "zona_sul" ? "zonaSul" :
-                    zone.id === "sudoeste" ? "sudoeste" : "centro"
-                ].neighborhoods[0];
-                onSelect(firstNeighborhood);
+                // Seleciona a zona inteira, não um bairro
+                onSelect({
+                  id: zone.id,
+                  name: zone.name,
+                  zone: zone.name,
+                  isZone: true
+                } as any);
                 onClose();
               }}
             >

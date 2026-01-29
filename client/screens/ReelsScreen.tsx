@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -181,14 +181,14 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
           contentFit="cover"
         />
       ) : null}
-      
+
       <VideoView
         player={player}
         style={[styles.video, { opacity: isVideoLoaded ? 1 : 0 }]}
         contentFit="cover"
         nativeControls={false}
       />
-      
+
       <LinearGradient
         colors={["rgba(0,0,0,0.4)", "transparent", "transparent", "rgba(0,0,0,0.7)"]}
         locations={[0, 0.2, 0.5, 1]}
@@ -206,19 +206,19 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
 
       <View style={[styles.sideActions, { bottom: insets.bottom + 160 }]}>
         <Pressable style={styles.actionButton} onPress={handleLike}>
-          <Feather 
-            name="heart" 
-            size={28} 
+          <Feather
+            name="heart"
+            size={28}
             color={liked ? Colors.dark.brand : "#FFFFFF"}
           />
           <Text style={styles.actionText}>{formatNumber(likeCount)}</Text>
         </Pressable>
-        
+
         <Pressable style={styles.actionButton} onPress={onComment}>
           <Feather name="message-circle" size={28} color="#FFFFFF" />
           <Text style={styles.actionText}>{formatNumber(commentCount)}</Text>
         </Pressable>
-        
+
         <Pressable style={styles.actionButton} onPress={handleShare}>
           <Feather name="send" size={28} color="#FFFFFF" />
           <Text style={styles.actionText}>{formatNumber(shareCount)}</Text>
@@ -235,7 +235,7 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
           </Text>
           <Text style={styles.description}>{item.description}</Text>
         </View>
-        
+
         <View style={styles.sharePrompt}>
           <Text style={styles.sharePromptText}>
             Quer compartilhar o seu momento dança, mensagem ou depoimento?
@@ -256,6 +256,7 @@ export type ReelsScreenParams = {
     title: string;
     username: string;
     thumbnail: any;
+    videoUrl?: string;
   }>;
 };
 
@@ -268,6 +269,25 @@ export default function ReelsScreen() {
   const { isTabBarVisible } = useTabBar();
 
   const initialIndex = route.params?.initialIndex || 0;
+
+  // Convert stories from params to ReelItems, fallback to hardcoded data
+  const reelsData = useMemo(() => {
+    if (route.params?.stories && route.params.stories.length > 0) {
+      return route.params.stories.map((story, index): ReelItem => ({
+        id: story.id,
+        username: story.username,
+        displayName: story.username.replace('@', ''),
+        verified: false,
+        description: story.title,
+        thumbnail: story.thumbnail,
+        videoUrl: story.videoUrl || `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4`,
+        likes: Math.floor(Math.random() * 5000),
+        comments: Math.floor(Math.random() * 200),
+        shares: Math.floor(Math.random() * 100),
+      }));
+    }
+    return REELS_DATA;
+  }, [route.params?.stories]);
 
   useFocusEffect(
     useCallback(() => {
@@ -339,7 +359,7 @@ export default function ReelsScreen() {
 
       <FlatList
         ref={flatListRef}
-        data={REELS_DATA}
+        data={reelsData}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         pagingEnabled
