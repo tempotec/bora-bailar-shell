@@ -11,6 +11,7 @@ import {
   Alert,
   ScrollView,
   ImageSourcePropType,
+  Modal,
 } from "react-native";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 import * as FileSystem from "expo-file-system";
@@ -680,6 +681,12 @@ export default function DiscoverScreen() {
   const [selectedCity, setSelectedCity] = useState<typeof ALL_NEIGHBORHOODS[0] | null>(null);
   const [selectedDate, setSelectedDate] = useState<typeof DATE_OPTIONS[0] | null>(null);
   const [selectedCompanion, setSelectedCompanion] = useState<typeof COMPANION_OPTIONS[0] | null>(null);
+  const [selectedAwardCategory, setSelectedAwardCategory] = useState<{
+    id: string;
+    category: string;
+    title: string;
+    thumbnail: any;
+  } | null>(null);
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -961,6 +968,20 @@ export default function DiscoverScreen() {
     });
   }, [rootNavigation]);
 
+  const handleAwardCategoryPress = useCallback((category: { id: string; category: string; title: string; thumbnail: any }) => {
+    setSelectedAwardCategory(category);
+  }, []);
+
+  const handleAwardCategoryParticipate = useCallback(() => {
+    if (selectedAwardCategory) {
+      rootNavigation.navigate("AIChat", {
+        cardTitle: `BORABAILAR TOP DANCE AWARDS - ${selectedAwardCategory.title}`,
+        cardDescription: "Participe desta categoria do prêmio"
+      });
+      setSelectedAwardCategory(null);
+    }
+  }, [rootNavigation, selectedAwardCategory]);
+
   const handleDicaPress = useCallback((title: string, price: string, day: string, date: string) => {
     rootNavigation.navigate("AIChat", {
       cardTitle: `DICA_SEMANA:${title}`,
@@ -1173,6 +1194,7 @@ export default function DiscoverScreen() {
                 title={item.title}
                 thumbnail={item.thumbnail}
                 highlightWord={(item as any).highlightWord}
+                onPress={() => handleAwardCategoryPress(item)}
               />
             ))}
           </View>
@@ -1246,6 +1268,48 @@ export default function DiscoverScreen() {
         isTranscribing={isTranscribing}
         transcript={transcript}
       />
+
+      {/* Modal de Preview da Categoria do Top Dance Awards */}
+      <Modal
+        visible={!!selectedAwardCategory}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSelectedAwardCategory(null)}
+      >
+        <Pressable
+          style={styles.awardPreviewOverlay}
+          onPress={() => setSelectedAwardCategory(null)}
+        >
+          <Pressable style={styles.awardPreviewContainer} onPress={(e) => e.stopPropagation()}>
+            {selectedAwardCategory && (
+              <>
+                <Image
+                  source={selectedAwardCategory.thumbnail}
+                  style={styles.awardPreviewImage}
+                  resizeMode="cover"
+                />
+                <Text style={styles.awardPreviewCategory}>{selectedAwardCategory.category}</Text>
+                <Text style={styles.awardPreviewTitle}>{selectedAwardCategory.title}</Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.awardPreviewButton,
+                    pressed && { opacity: 0.9 },
+                  ]}
+                  onPress={handleAwardCategoryParticipate}
+                >
+                  <Text style={styles.awardPreviewButtonText}>Participar desta Categoria</Text>
+                </Pressable>
+                <Pressable
+                  style={styles.awardPreviewCloseButton}
+                  onPress={() => setSelectedAwardCategory(null)}
+                >
+                  <Feather name="x" size={24} color="#666" />
+                </Pressable>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -1420,4 +1484,13 @@ const styles = StyleSheet.create({
   ofertaHeartButton: { position: "absolute", top: Spacing.sm, right: Spacing.sm, width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.4)", alignItems: "center", justifyContent: "center" },
   ofertaTitle: { fontSize: 13, color: Colors.dark.text, fontWeight: "500", marginTop: Spacing.sm },
   ofertaPrice: { fontSize: 11, color: Colors.dark.textSecondary, marginTop: 2 },
+  // Award Category Preview Modal Styles
+  awardPreviewOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "center", alignItems: "center", padding: Spacing.xl },
+  awardPreviewContainer: { backgroundColor: "#FFFFFF", borderRadius: BorderRadius.xl, padding: Spacing.xl, width: "100%", maxWidth: 340, alignItems: "center", position: "relative" },
+  awardPreviewImage: { width: "100%" as any, height: 250, borderRadius: BorderRadius.lg, marginBottom: Spacing.lg, backgroundColor: "#F5F5F5" },
+  awardPreviewCategory: { fontSize: 12, color: Colors.dark.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: Spacing.xs },
+  awardPreviewTitle: { fontSize: 20, color: Colors.dark.brand, fontWeight: "700", textAlign: "center", marginBottom: Spacing.xl },
+  awardPreviewButton: { backgroundColor: Colors.dark.brand, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl + Spacing.lg, alignItems: "center" },
+  awardPreviewButtonText: { fontSize: 15, color: "#FFFFFF", fontWeight: "600" },
+  awardPreviewCloseButton: { position: "absolute", top: Spacing.md, right: Spacing.md, width: 36, height: 36, borderRadius: 18, backgroundColor: "#F0F0F0", alignItems: "center", justifyContent: "center" },
 });
