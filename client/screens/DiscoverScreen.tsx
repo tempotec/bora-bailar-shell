@@ -1040,11 +1040,18 @@ export default function DiscoverScreen() {
               />
             ))}
           </ScrollView>
+          <Text style={styles.uploadCallToAction}>
+            Quer compartilhar o seu momento dança, mensagem ou depoimento?{"\n"}
+            <Text style={styles.uploadCallToActionHighlight}>É AQUI!</Text>
+          </Text>
           <UploadButton onPress={handleUploadPress} />
           {destaqueMes && (
             <>
               <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
               <DestaqueDoMes thumbnail={destaqueMes.thumbnail} onPress={handleDestaquePress} />
+              <Text style={styles.destaqueMesDescription}>
+                veja aqui a <Text style={styles.destaqueMesUsername}>@aninha</Text> dando um show de dança e descontraçao na <Text style={styles.destaqueMesUsername}>@vitrinniloungerj</Text>
+              </Text>
             </>
           )}
         </View>
@@ -1265,6 +1272,10 @@ const styles = StyleSheet.create({
   uploadButton: { backgroundColor: Colors.dark.wizardBackground, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, marginTop: Spacing.xl, alignItems: "center", borderWidth: 1, borderColor: Colors.dark.brand },
   uploadButtonText: { fontSize: 14, color: Colors.dark.brand, fontWeight: "600" },
   destaqueMesTitle: { fontSize: 18, color: Colors.dark.text, marginTop: Spacing.xl + Spacing.lg, marginBottom: Spacing.lg },
+  destaqueMesDescription: { fontSize: 14, color: Colors.dark.textSecondary, marginTop: Spacing.sm, marginBottom: Spacing.md, lineHeight: 20, paddingHorizontal: Spacing.xs },
+  destaqueMesUsername: { color: Colors.dark.brand, fontWeight: '600' },
+  uploadCallToAction: { fontSize: 14, color: Colors.dark.text, textAlign: 'center', marginTop: Spacing.lg, marginBottom: Spacing.sm, lineHeight: 20 },
+  uploadCallToActionHighlight: { color: Colors.dark.brand, fontWeight: '700', fontSize: 16 },
   destaqueMesCard: { width: "100%", height: 200, borderRadius: BorderRadius.lg, overflow: "hidden", position: "relative" },
   destaqueMesImage: { width: "100%", height: "100%" },
   destaqueMesPlayOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center" },
