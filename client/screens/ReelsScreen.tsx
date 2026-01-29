@@ -278,7 +278,7 @@ export default function ReelsScreen() {
         verified: false,
         description: story.title,
         thumbnail: story.thumbnail,
-        videoUrl: story.videoUrl || `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4`,
+        videoUrl: story.videoUrl!,
         likes: Math.floor(Math.random() * 5000),
         comments: Math.floor(Math.random() * 200),
         shares: Math.floor(Math.random() * 100),

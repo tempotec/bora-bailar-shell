@@ -874,6 +874,21 @@ export default function DiscoverScreen() {
     });
   }, [rootNavigation, videoStories]);
 
+  const handleDestaquePress = useCallback(() => {
+    if (destaqueMes) {
+      rootNavigation.navigate("Reels", {
+        initialIndex: 0,
+        stories: [{
+          id: 'destaque',
+          title: destaqueMes.title,
+          username: '@BoraBailar',
+          thumbnail: destaqueMes.thumbnail,
+          videoUrl: destaqueMes.videoUrl,
+        }]
+      });
+    }
+  }, [rootNavigation, destaqueMes]);
+
   const handleRecomendacaoPress = useCallback((title: string, price: string, discount: string, image: string) => {
     rootNavigation.navigate("FaltaPouco", {
       eventName: title,
@@ -1029,7 +1044,7 @@ export default function DiscoverScreen() {
           {destaqueMes && (
             <>
               <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
-              <DestaqueDoMes thumbnail={destaqueMes.thumbnail} onPress={() => handleVideoStoryPress(0)} />
+              <DestaqueDoMes thumbnail={destaqueMes.thumbnail} onPress={handleDestaquePress} />
             </>
           )}
         </View>

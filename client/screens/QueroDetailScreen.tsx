@@ -286,7 +286,7 @@ export default function QueroDetailScreen() {
         console.error('Erro ao buscar eventos filtrados');
       }
     } catch (error) {
-      console.error('Erro na requisição:', error);
+      // Silently fail
     } finally {
       setIsLoadingEvents(false);
     }
@@ -306,7 +306,7 @@ export default function QueroDetailScreen() {
         console.error('Erro ao buscar eventos gerais');
       }
     } catch (error) {
-      console.error('Erro na requisição:', error);
+      // Silently fail
     } finally {
       setIsLoadingEvents(false);
     }
