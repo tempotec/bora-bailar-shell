@@ -28,6 +28,7 @@ export type RootStackParamList = {
       categoria: string;
       zona: string;
       bairro?: string;
+      quando?: string;
       tipoAcompanhamento: string;
     };
   };

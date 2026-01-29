@@ -735,6 +735,7 @@ export default function DiscoverScreen() {
           categoria: queroInfo.categoria,
           zona: selectedCity.zone,
           bairro: selectedCity.name,
+          quando: selectedDate?.label,
           tipoAcompanhamento: selectedCompanion.id === "solo" ? "sozinho" :
             selectedCompanion.id === "couple" ? "casal" :
               selectedCompanion.id === "friends" ? "amigos" : "grupo"

@@ -415,21 +415,26 @@ export default function QueroDetailScreen() {
           <View style={styles.appliedFiltersSection}>
             <Text style={styles.appliedFiltersTitle}>Filtros Aplicados:</Text>
             <View style={styles.appliedFiltersRow}>
-              {preSelectedFilters.zona && (
+              {/* Onde: Zona + Bairro combinados ou apenas um */}
+              {(preSelectedFilters.zona || preSelectedFilters.bairro) && (
                 <View style={styles.appliedFilterChip}>
-                  <Feather name="map-pin" size={14} color={Colors.dark.primary} />
-                  <Text style={styles.appliedFilterText}>{preSelectedFilters.zona}</Text>
+                  <Feather name="map-pin" size={14} color="#FFFFFF" />
+                  <Text style={styles.appliedFilterText}>
+                    {preSelectedFilters.bairro || preSelectedFilters.zona}
+                  </Text>
                 </View>
               )}
-              {preSelectedFilters.bairro && (
+              {/* Quando: Data selecionada */}
+              {preSelectedFilters.quando && (
                 <View style={styles.appliedFilterChip}>
-                  <Feather name="map" size={14} color={Colors.dark.primary} />
-                  <Text style={styles.appliedFilterText}>{preSelectedFilters.bairro}</Text>
+                  <Feather name="calendar" size={14} color="#FFFFFF" />
+                  <Text style={styles.appliedFilterText}>{preSelectedFilters.quando}</Text>
                 </View>
               )}
+              {/* Com quem: Tipo de acompanhamento */}
               {preSelectedFilters.tipoAcompanhamento && (
                 <View style={styles.appliedFilterChip}>
-                  <Feather name="users" size={14} color={Colors.dark.primary} />
+                  <Feather name="users" size={14} color="#FFFFFF" />
                   <Text style={styles.appliedFilterText}>
                     {preSelectedFilters.tipoAcompanhamento === "sozinho" ? "Sozinho(a)" :
                       preSelectedFilters.tipoAcompanhamento === "casal" ? "Em casal" :
