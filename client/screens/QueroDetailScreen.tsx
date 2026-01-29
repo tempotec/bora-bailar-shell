@@ -502,6 +502,11 @@ export default function QueroDetailScreen() {
           </View>
         ) : null}
 
+        {/* Mensagem introdutória quando vem do wizard search */}
+        {preSelectedFilters && (
+          <Text style={styles.searchResultsIntro}>Veja o que eu encontrei para você</Text>
+        )}
+
         <Text style={styles.sectionTitle}>{cleanTitle}</Text>
 
         <ScrollView
@@ -779,6 +784,13 @@ const styles = StyleSheet.create({
   locationOptionTextActive: {
     color: Colors.dark.brand,
     fontWeight: "600",
+  },
+  searchResultsIntro: {
+    fontSize: 15,
+    color: Colors.dark.textSecondary,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.sm,
+    fontStyle: "italic",
   },
   sectionTitle: {
     fontSize: 22,
