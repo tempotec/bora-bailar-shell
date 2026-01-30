@@ -10,9 +10,12 @@ import {
   Platform,
   Alert,
   ScrollView,
+  FlatList,
   ImageSourcePropType,
   Modal,
+  ViewToken,
 } from "react-native";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 import * as FileSystem from "expo-file-system";
 import { getApiUrl } from "@/lib/query-client";
@@ -250,13 +253,35 @@ function VideoStoryCard({
   title,
   username,
   thumbnail,
+  videoUrl,
+  isVisible,
   onPress,
 }: {
   title: string;
   username: string;
   thumbnail: any;
+  videoUrl?: any;
+  isVisible?: boolean;
   onPress?: () => void;
 }) {
+  // Create video player only when we have a videoUrl
+  const player = useVideoPlayer(videoUrl || null, (p) => {
+    p.loop = true;
+    p.muted = true;
+  });
+
+  // Auto-play/pause based on visibility
+  useEffect(() => {
+    if (!player) return;
+    if (isVisible && videoUrl) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [isVisible, player, videoUrl]);
+
+  const showVideo = isVisible && videoUrl && player;
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -266,10 +291,21 @@ function VideoStoryCard({
       onPress={onPress}
     >
       <View style={styles.videoStoryImageContainer}>
-        <Image source={thumbnail} style={styles.videoStoryImage} resizeMode="cover" />
-        <View style={styles.videoStoryPlayIcon}>
-          <Feather name="play" size={16} color="#FFFFFF" />
-        </View>
+        {showVideo ? (
+          <VideoView
+            player={player}
+            style={styles.videoStoryImage}
+            contentFit="cover"
+            nativeControls={false}
+          />
+        ) : (
+          <Image source={thumbnail} style={styles.videoStoryImage} resizeMode="cover" />
+        )}
+        {!showVideo && (
+          <View style={styles.videoStoryPlayIcon}>
+            <Feather name="play" size={16} color="#FFFFFF" />
+          </View>
+        )}
       </View>
       <Text style={styles.videoStoryTitle} numberOfLines={2}>{title}</Text>
       <Text style={styles.videoStoryUsername}>{username}</Text>
@@ -679,6 +715,7 @@ export default function DiscoverScreen() {
   const [quandoModalVisible, setQuandoModalVisible] = useState(false);
   const [comQuemModalVisible, setComQuemModalVisible] = useState(false);
   const [wizardModalVisible, setWizardModalVisible] = useState(false);
+  const [visibleVideoIndex, setVisibleVideoIndex] = useState<number | null>(0); // Autoplay first video by default
 
   const [selectedCity, setSelectedCity] = useState<typeof ALL_NEIGHBORHOODS[0] | null>(null);
   const [selectedDate, setSelectedDate] = useState<typeof DATE_OPTIONS[0] | null>(null);
@@ -998,6 +1035,17 @@ export default function DiscoverScreen() {
     });
   }, [rootNavigation, videoStories]);
 
+  // Viewability config for autoplay - detects which video card is most visible
+  const videoViewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 60,
+    minimumViewTime: 300,
+  }).current;
+
+  const onVideoViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const firstVisible = viewableItems.find(v => v.isViewable);
+    setVisibleVideoIndex(firstVisible?.index ?? null);
+  }).current;
+
   const handleDestaquePress = useCallback(() => {
     if (destaqueMes) {
       rootNavigation.navigate("Reels", {
@@ -1166,17 +1214,25 @@ export default function DiscoverScreen() {
             {" "}é momento{" "}
             <Text style={styles.sectionTitleHighlight}>feliz</Text>
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.videoStoriesContainer}>
-            {videoStories.map((story, index) => (
+          <FlatList
+            horizontal
+            data={videoStories}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.videoStoriesContainer}
+            viewabilityConfig={videoViewabilityConfig}
+            onViewableItemsChanged={onVideoViewableItemsChanged}
+            renderItem={({ item, index }) => (
               <VideoStoryCard
-                key={story.id}
-                title={story.title}
-                username={story.username}
-                thumbnail={story.thumbnail}
+                title={item.title}
+                username={item.username}
+                thumbnail={item.thumbnail}
+                videoUrl={item.videoUrl}
+                isVisible={index === visibleVideoIndex}
                 onPress={() => handleVideoStoryPress(index)}
               />
-            ))}
-          </ScrollView>
+            )}
+          />
           <Text style={styles.uploadCallToAction}>
             Quer compartilhar o seu momento dança, mensagem ou depoimento?{"\n"}
             <Text style={styles.uploadCallToActionHighlight}>É AQUI!</Text>

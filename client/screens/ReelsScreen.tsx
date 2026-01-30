@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
-  FlatList,
   Pressable,
-  ViewToken,
   StatusBar,
+  AppState,
+  useWindowDimensions,
 } from "react-native";
+import { FlashList, ViewToken } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from "@react-navigation/native";
@@ -20,8 +20,6 @@ import { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTabBar } from "@/contexts/TabBarContext";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const SCREEN_HEIGHT = Dimensions.get("screen").height;
 
 type ReelItem = {
   id: string;
@@ -262,16 +260,18 @@ export type ReelsScreenParams = {
 
 export default function ReelsScreen() {
   const insets = useSafeAreaInsets();
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<{ Reels: ReelsScreenParams }, "Reels">>();
-  const flatListRef = useRef<FlatList>(null);
-  const [visibleIndex, setVisibleIndex] = useState(route.params?.initialIndex || 0);
+  const listRef = useRef<any>(null);
+  const [visibleIndex, setVisibleIndex] = useState<number | null>(null);
   const { isTabBarVisible } = useTabBar();
+  const appState = useRef(AppState.currentState);
 
   // Convert stories from params to ReelItems, fallback to hardcoded data
   const reelsData = useMemo(() => {
     if (route.params?.stories && route.params.stories.length > 0) {
-      return route.params.stories.map((story, index): ReelItem => ({
+      return route.params.stories.map((story): ReelItem => ({
         id: story.id,
         username: story.username,
         displayName: story.username.replace('@', ''),
@@ -291,6 +291,27 @@ export default function ReelsScreen() {
   const rawInitialIndex = route.params?.initialIndex ?? 0;
   const initialIndex = Math.min(Math.max(rawInitialIndex, 0), reelsData.length - 1);
 
+  // ✅ Autoplay inicial (evita tela "morta")
+  useEffect(() => {
+    if (reelsData?.length && visibleIndex === null) {
+      setVisibleIndex(initialIndex);
+    }
+  }, [reelsData?.length, initialIndex]);
+
+  // ✅ Pausar no background (AppState)
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (appState.current === "active" && nextState.match(/inactive|background/)) {
+        setVisibleIndex(null); // pausa tudo
+      } else if (nextState === "active" && appState.current.match(/inactive|background/)) {
+        // Retomar quando volta pro app
+        setVisibleIndex(initialIndex);
+      }
+      appState.current = nextState;
+    });
+    return () => sub.remove();
+  }, [initialIndex]);
+
   useFocusEffect(
     useCallback(() => {
       StatusBar.setHidden(true, "fade");
@@ -298,58 +319,46 @@ export default function ReelsScreen() {
       return () => {
         StatusBar.setHidden(false, "fade");
         isTabBarVisible.value = true;
+        setVisibleIndex(null); // ✅ Pausar ao sair da tela
       };
     }, [isTabBarVisible])
   );
 
-  useEffect(() => {
-    if (initialIndex > 0 && flatListRef.current) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({ index: initialIndex, animated: false });
-      }, 100);
-    }
-  }, [initialIndex]);
-
+  // ✅ Viewability robusto com debounce
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
+    itemVisiblePercentThreshold: 80,
+    minimumViewTime: 150, // evita troca rápida
   }).current;
 
-  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-      setVisibleIndex(viewableItems[0].index);
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken<ReelItem>[] }) => {
+    if (!viewableItems?.length) return;
+    const visible = viewableItems.find((v) => v.isViewable);
+    if (visible?.index != null) {
+      setVisibleIndex(visible.index);
     }
-  }, []);
+  }).current;
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleLike = useCallback(() => {
-  }, []);
-
-  const handleComment = useCallback(() => {
-  }, []);
-
-  const handleShare = useCallback(() => {
-  }, []);
+  const handleLike = useCallback(() => { }, []);
+  const handleComment = useCallback(() => { }, []);
+  const handleShare = useCallback(() => { }, []);
 
   const renderItem = useCallback(({ item, index }: { item: ReelItem; index: number }) => {
     return (
-      <ReelCard
-        item={item}
-        isVisible={index === visibleIndex}
-        onLike={handleLike}
-        onComment={handleComment}
-        onShare={handleShare}
-      />
+      <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}>
+        <ReelCard
+          item={item}
+          isVisible={index === visibleIndex}
+          onLike={handleLike}
+          onComment={handleComment}
+          onShare={handleShare}
+        />
+      </View>
     );
-  }, [visibleIndex, handleLike, handleComment, handleShare]);
-
-  const getItemLayout = useCallback((_: any, index: number) => ({
-    length: SCREEN_HEIGHT,
-    offset: SCREEN_HEIGHT * index,
-    index,
-  }), []);
+  }, [visibleIndex, handleLike, handleComment, handleShare, SCREEN_WIDTH, SCREEN_HEIGHT]);
 
   return (
     <View style={styles.container}>
@@ -359,25 +368,18 @@ export default function ReelsScreen() {
         </Pressable>
       </View>
 
-      <FlatList
-        ref={flatListRef}
+      <FlashList
+        ref={listRef}
         data={reelsData}
+        extraData={visibleIndex}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         pagingEnabled
         showsVerticalScrollIndicator={false}
-        snapToAlignment="start"
-        snapToInterval={SCREEN_HEIGHT}
         decelerationRate="fast"
-        getItemLayout={getItemLayout}
         initialScrollIndex={initialIndex}
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={onViewableItemsChanged}
-        windowSize={3}
-        maxToRenderPerBatch={2}
-        removeClippedSubviews={true}
-        initialNumToRender={2}
-        style={styles.flatList}
       />
     </View>
   );
@@ -405,8 +407,8 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   reelContainer: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    width: "100%",
+    height: "100%",
     position: "relative",
     backgroundColor: "#000000",
   },
