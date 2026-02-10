@@ -1,0 +1,126 @@
+import React, { ReactNode } from "react";
+import { StyleSheet, Pressable, ViewStyle, StyleProp, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  WithSpringConfig,
+} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+
+import { ThemedText } from "@/components/ThemedText";
+import { BorderRadius, Spacing, Colors } from "@/constants/theme";
+
+interface ButtonProps {
+  onPress?: () => void;
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  disabled?: boolean;
+  variant?: "primary" | "secondary" | "outline";
+}
+
+const springConfig: WithSpringConfig = {
+  damping: 15,
+  mass: 0.3,
+  stiffness: 150,
+  overshootClamping: true,
+  energyThreshold: 0.001,
+};
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export function Button({
+  onPress,
+  children,
+  style,
+  disabled = false,
+  variant = "primary",
+}: ButtonProps) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (!disabled) {
+      scale.value = withSpring(0.96, springConfig);
+    }
+  };
+
+  const handlePressOut = () => {
+    if (!disabled) {
+      scale.value = withSpring(1, springConfig);
+    }
+  };
+
+  const getButtonStyle = () => {
+    switch (variant) {
+      case "outline":
+        return {
+          backgroundColor: "transparent",
+          borderWidth: 1,
+          borderColor: Colors.dark.primary,
+        };
+      case "secondary":
+        return {
+          backgroundColor: Colors.dark.backgroundSecondary,
+        };
+      default:
+        return {};
+    }
+  };
+
+  const getTextColor = () => {
+    switch (variant) {
+      case "outline":
+        return Colors.dark.primary;
+      default:
+        return Colors.dark.buttonText;
+    }
+  };
+
+  return (
+    <AnimatedPressable
+      onPress={disabled ? undefined : onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled}
+      style={[
+        styles.button,
+        getButtonStyle(),
+        { opacity: disabled ? 0.5 : 1 },
+        style,
+        animatedStyle,
+      ]}
+    >
+      {variant === "primary" ? (
+        <LinearGradient
+          colors={[Colors.dark.primary, Colors.dark.secondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
+      <ThemedText
+        type="body"
+        style={[styles.buttonText, { color: getTextColor() }]}
+      >
+        {children}
+      </ThemedText>
+    </AnimatedPressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: {
+    height: Spacing.buttonHeight,
+    borderRadius: BorderRadius.full,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  buttonText: {
+    fontWeight: "600",
+  },
+});
