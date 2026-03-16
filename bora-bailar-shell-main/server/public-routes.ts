@@ -107,6 +107,16 @@ export function registerPublicRoutes(app: Express) {
     // Dynamic: uses home_sections + home_section_items if configured, otherwise fallback
 
     app.get("/api/discover", async (req, res) => {
+        // Tenta primeiro o Flask admin (fonte principal de conteúdo)
+        const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+        try {
+            const r = await fetch(`${ADMIN_URL}/api/discover`, { signal: AbortSignal.timeout(2000) });
+            if (r.ok) {
+                const data = await r.json();
+                return res.json(data);
+            }
+        } catch (_) { /* Flask offline — usa banco local */ }
+
         try {
             const now = new Date();
 
@@ -331,4 +341,166 @@ export function registerPublicRoutes(app: Express) {
             res.status(500).json({ error: "Erro ao processar preview" });
         }
     });
+
+    // ===== /api/content/quero =====
+    // Lido direto do banco PostgreSQL local (gerenciado pelo admin Express)
+
+    app.get("/api/content/quero", async (req, res) => {
+        try {
+            const now = new Date();
+            const cards = await db.select().from(queroCards)
+                .where(and(
+                    eq(queroCards.isActive, true),
+                    or(isNull(queroCards.startsAt), lte(queroCards.startsAt, now)),
+                    or(isNull(queroCards.endsAt), gte(queroCards.endsAt, now))
+                ))
+                .orderBy(asc(queroCards.sortOrder));
+            res.json({ quero: cards });
+        } catch (error) {
+            console.error("Error in /api/content/quero:", error);
+            res.status(500).json({ error: "Erro ao buscar quero cards" });
+        }
+    });
+
+    // ===== /api/content/awards/active =====
+    // Lido direto do banco PostgreSQL local
+
+    app.get("/api/content/awards/active", async (req, res) => {
+        try {
+            const cats = await db.select().from(awardCategories)
+                .where(eq(awardCategories.isActive, true))
+                .orderBy(asc(awardCategories.sortOrder));
+            res.json({
+                editions: [{
+                    id: 1,
+                    year: new Date().getFullYear(),
+                    name: "BoraBailar TOP 10",
+                    categories: cats.map(c => ({
+                        id: c.id,
+                        name: c.title,
+                        category_label: c.categoryLabel,
+                        number: c.number,
+                        highlight_word: c.highlightWord,
+                        image_url: c.imageUrl,
+                    }))
+                }]
+            });
+        } catch (error) {
+            console.error("Error in /api/content/awards/active:", error);
+            res.status(500).json({ error: "Erro ao buscar awards" });
+        }
+    });
+
+    // ===== /api/content/tips/weekly-events =====
+    // Proxy para o admin Flask /api/weekly-tips, fallback no banco local
+
+    app.get("/api/content/tips/weekly-events", async (req, res) => {
+        const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+        try {
+            const r = await fetch(`${ADMIN_URL}/api/weekly-tips`);
+            if (r.ok) return res.json(await r.json());
+        } catch (_) { /* Flask offline — usa fallback */ }
+
+        // Fallback: published events como tips
+        try {
+            const dayNames = ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"];
+            const rows = await db.select({ event: events, venue: venues })
+                .from(events)
+                .leftJoin(venues, eq(events.venueId, venues.id))
+                .where(eq(events.status, "published"))
+                .orderBy(asc(events.startsAt))
+                .limit(28);
+            const tips = rows.map((r, idx) => ({
+                id: r.event.id,
+                dayOfWeek: idx % 7,
+                dayOfWeekName: dayNames[idx % 7],
+                title: r.event.title,
+                event: {
+                    id: r.event.id, title: r.event.title, description: r.event.description,
+                    price: r.event.priceLabel || "Grátis", cover_image: r.event.coverImageUrl, venue: r.venue
+                },
+                isActive: true,
+            }));
+            res.json({ tips });
+        } catch (error) {
+            console.error("Error in /api/content/tips/weekly-events:", error);
+            res.status(500).json({ error: "Erro ao buscar tips" });
+        }
+    });
+
+    // ===== /api/content/partner-cards =====
+    // Proxy para admin Flask /api/places (parceiros/locais)
+
+    app.get("/api/content/partner-cards", async (req, res) => {
+        const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+        try {
+            const r = await fetch(`${ADMIN_URL}/api/places`);
+            if (r.ok) {
+                const data: any = await r.json();
+                const cards = (data.places || data || []).map((p: any) => ({
+                    id: p.id, title: p.name || p.title, description: p.description,
+                    image_url: p.cover_image || p.image_url, cta_label: "Conhecer", cta_url: p.website,
+                }));
+                return res.json({ partner_cards: cards });
+            }
+        } catch (_) { /* Flask offline */ }
+        res.json({ partner_cards: [] });
+    });
+
+    // ===== /api/content/partner-brands =====
+    app.get("/api/content/partner-brands", async (_req, res) => {
+        res.json({ partner_brands: [] });
+    });
+
+    // ===== /api/content/home =====
+    // Public: Editable home texts (returns defaults if not configured)
+
+    app.get("/api/content/home", async (req, res) => {
+        res.json({
+            hero_tagline: "SAIR, DANÇAR E SE DIVERTIR!",
+            quero_section_title: "O seu querer faz acontecer",
+            momento_title: "Momento dança é momento feliz",
+            momento_cta: "Faça aqui o upload do seu momento dança",
+            awards_title: "BoraBailar\nTOP 10",
+            awards_subtitle: "Top Dance: assista, vote e participe",
+            dicas_title: "Dicas da semana",
+            search_hint: "É só falar que a gente te entende!",
+        });
+    });
+
+    // ===== /api/videos/feed =====
+    app.get("/api/videos/feed", async (req, res) => {
+        try {
+            const perPage = parseInt(req.query.per_page as string) || 10;
+            const page = parseInt(req.query.page as string) || 1;
+            const allVideos = await db.select().from(videos)
+                .where(eq(videos.status, "published"))
+                .orderBy(asc(videos.sortOrder), desc(videos.publishedAt))
+                .limit(perPage);
+            res.json({
+                videos: allVideos.map(v => ({
+                    id: v.id, video_url: v.videoUrl, thumbnail_url: v.thumbnailUrl,
+                    caption: v.title, user: { id: 0, name: v.displayName || v.username || "BoraBailar" }, status: v.status,
+                })),
+                page, total: allVideos.length, pages: 1,
+            });
+        } catch (error) {
+            console.error("Error in /api/videos/feed:", error);
+            res.status(500).json({ error: "Erro ao buscar videos" });
+        }
+    });
+
+    // ===== PROXY GENÉRICO para admin Flask =====
+    for (const route of ["/api/health", "/api/promotions", "/api/places", "/api/weekly-tips", "/api/weekly-tips/today"]) {
+        app.get(route, async (req, res) => {
+            const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+            try {
+                const qs = new URLSearchParams(req.query as any).toString();
+                const r = await fetch(`${ADMIN_URL}${route}${qs ? "?" + qs : ""}`);
+                res.status(r.status).json(await r.json());
+            } catch (error) {
+                res.status(503).json({ error: "Admin indisponível" });
+            }
+        });
+    }
 }

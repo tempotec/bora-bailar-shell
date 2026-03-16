@@ -183,7 +183,8 @@ function UploadButton({ onPress }: { onPress?: () => void }) {
       ]}
       onPress={onPress}
     >
-      <Text style={styles.uploadButtonText}>Faça upload do seu vídeo</Text>
+      <Feather name="upload" size={18} color={Colors.dark.textSecondary} style={{ marginRight: 8 }} />
+      <Text style={styles.uploadButtonText}>Faça aqui o upload do seu momento dança</Text>
     </Pressable>
   );
 }
@@ -520,7 +521,8 @@ function QuererCard({
         <Text style={styles.quererTitle}>{title}</Text>
         <Pressable style={styles.quererHeart} onPress={onFavorite}>
           <View style={styles.heartCircle}>
-            <Feather name="heart" size={16} color="#FFFFFF" />
+            {/* Coração filled vermelho */}
+            <Text style={{ fontSize: 16, color: Colors.dark.primary, lineHeight: 18 }}>♥</Text>
           </View>
         </Pressable>
       </View>
@@ -535,10 +537,10 @@ function QuererCard({
 }
 
 const SECTIONS = {
-  querer: { title: "O seu querer é que faz acontecer", highlightWords: ["querer", "acontecer"] },
+  querer: { title: "O seu querer faz acontecer", highlightWords: ["querer", "acontecer"] },
   momento: { title: "Momento dança é momento feliz", highlightWords: ["dança", "feliz"] },
   partners: { title: "Quer ser parceiro do BORABAILAR?", highlightWords: ["parceiro", "BORABAILAR"] },
-  awards: { title: "BORABAILAR TOP DANCE AWARDS", highlightWords: ["BORABAILAR"] },
+  awards: { title: "BoraBailar TOP 10", highlightWords: ["BoraBailar"] },
   dicas: { title: "Dicas da semana", highlightWords: ["semana"] },
   recomendacoes: { title: "Recomendações especiais", highlightWords: [] },
 } as const;
@@ -1135,12 +1137,13 @@ export default function DiscoverScreen() {
             <Text style={styles.brandRed}>B</Text>
             <Text style={styles.brandGray}>AILAR</Text>
           </Text>
-          <Text style={styles.tagline}>{homeTexts?.hero_tagline ?? 'PRA SAIR, DANÇAR E SE DIVERTIR!'}</Text>
+          <Text style={styles.tagline}>{homeTexts?.hero_tagline ?? 'SAIR, DANÇAR E SE DIVERTIR!'}</Text>
         </Animated.View>
 
         {/* Wizard */}
         <Animated.View style={[styles.wizardSection, expandedWizardStyle]}>
           <View style={styles.wizardContainer}>
+            {/* 3 boxes idênticos com chevron */}
             <WizardSearchField
               label={selectedCity ? selectedCity.name : "Onde"}
               type="chevron"
@@ -1155,16 +1158,25 @@ export default function DiscoverScreen() {
             />
             <WizardSearchField
               label={selectedCompanion ? selectedCompanion.label : "Com quem"}
-              type="mic"
+              type="chevron"
               onPress={() => setComQuemModalVisible(true)}
               hasValue={!!selectedCompanion}
             />
 
-            <Text style={styles.micCta}>Pressione Aqui e fale livremente</Text>
+            {/* Botão Buscar só aparece quando os 3 estão preenchidos */}
+            {selectedCity && selectedDate && selectedCompanion ? (
+              <View style={styles.helperTextContainer}>
+                <Text style={[styles.helperText, { color: Colors.dark.primary, fontWeight: '600' }]}>
+                  ✓ Pronto! Buscando para você...
+                </Text>
+              </View>
+            ) : null}
 
-            <View style={styles.helperTextContainer}>
-              <Text style={styles.helperText}>
-                {homeTexts?.search_hint ?? 'É só falar que a gente te entende!'}
+            {/* Campo AI — aparece sempre */}
+            <View style={styles.aiPromptContainer}>
+              <Feather name="message-circle" size={18} color={Colors.dark.textSecondary} style={{ marginRight: 8 }} />
+              <Text style={styles.aiPromptText}>
+                Se quiser, conta mais aqui sobre você e sobre o que você procura
               </Text>
             </View>
           </View>
@@ -1173,7 +1185,7 @@ export default function DiscoverScreen() {
         {/* Sections */}
         <View style={styles.quererSection} onLayout={handleQuererLayout}>
           <Text style={styles.sectionTitle}>
-            {homeTexts?.quero_section_title ?? 'O seu querer é que faz acontecer'}
+            {homeTexts?.quero_section_title ?? 'O seu querer faz acontecer'}
           </Text>
           <View style={styles.quererGrid}>
             {querer.map((item) => (
@@ -1214,10 +1226,6 @@ export default function DiscoverScreen() {
               />
             )}
           />
-          <Text style={styles.uploadCallToAction}>
-            {homeTexts?.momento_cta ?? 'Quer compartilhar o seu momento dança, mensagem ou depoimento?'}{"\n"}
-            <Text style={styles.uploadCallToActionHighlight}>É AQUI!</Text>
-          </Text>
           <UploadButton onPress={handleUploadPress} />
           {destaqueMes && (
             <>
@@ -1231,13 +1239,14 @@ export default function DiscoverScreen() {
         </View>
 
         <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
+          <Image source={logoImage} style={styles.awardsLogoHeader} resizeMode="contain" />
           <Text style={styles.topDanceAwardsTitle}>
-            {homeTexts?.awards_title ?? 'BORABAILAR\nTOP DANCE AWARDS'}
+            {homeTexts?.awards_title ?? 'BoraBailar\nTOP 10'}
           </Text>
-          {homeTexts?.awards_subtitle ? (
-            <Text style={styles.topDanceAwardsSubtitle}>{homeTexts.awards_subtitle}</Text>
-          ) : null}
-          <QueroParticiparButton onPress={handleDanceAwardsPress} />
+          <Text style={styles.topDanceAwardsSubtitle}>
+            {homeTexts?.awards_subtitle ?? 'Top Dance: assista, vote e participe'}
+          </Text>
+          <Text style={styles.awardsTagline}>para quem curte ver gente feliz em momentos felizes</Text>
           <View style={styles.awardCategoriesList}>
             {awards.map((item: any) => (
               <AwardCategoryCard
@@ -1245,11 +1254,13 @@ export default function DiscoverScreen() {
                 category={item.category_label || item.category || `Categoria ${item.id}`}
                 title={item.name || item.title}
                 thumbnail={item.image_url ? { uri: item.image_url } : item.thumbnail}
-                highlightWord={item.highlightWord}
+                highlightWord={item.highlight_word || item.highlightWord}
                 onPress={() => handleAwardCategoryPress(item)}
               />
             ))}
           </View>
+          {/* Botão Quero Participar APÓS as categorias */}
+          <QueroParticiparButton onPress={handleDanceAwardsPress} />
         </View>
 
         {groupedTipsByDay.length > 0 && (
@@ -1273,28 +1284,36 @@ export default function DiscoverScreen() {
           </View>
         )}
 
-        <View style={styles.recomendacoesSection} onLayout={handleRecomendacoesLayout}>
-          <Text style={styles.recomendacoesTitle}>Recomendações especiais</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recomendacoesContainer}>
-            {recommendations.map((item) => (
-              <OfertaEspecialCard
-                key={item.id}
-                title={item.title}
-                price={item.price}
-                discount={item.discount}
-                image={item.image}
-                onPress={() => handleRecomendacaoPress(item.title, item.price, item.discount, item.image)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Partners moved below recommendations as per previous instruction */}
+        {/* Parceiros / Marcas */}
         <View onLayout={handlePartnersLayout}>
           <PartnersCarousel partnerCards={partnerCards} homeTexts={homeTexts} />
         </View>
-
         <PartnerBrands partnerBrands={partnerBrands} homeTexts={homeTexts} />
+
+        {/* Destaques do Mês — penúltima seção */}
+        {(destaqueMes || true) && (
+          <View style={styles.destaquesMesSection}>
+            <Text style={styles.destaquesMesTitle}>Destaques do Mês</Text>
+            <Text style={styles.destaquesMesSubtitle}>para quem curte ver gente feliz em momentos felizes</Text>
+            {destaqueMes ? (
+              <DestaqueDoMes thumbnail={destaqueMes.thumbnail} onPress={handleDestaquePress} />
+            ) : (
+              <View style={styles.destaquesMesEmpty}>
+                <Feather name="film" size={40} color={Colors.dark.textSecondary} />
+                <Text style={styles.destaquesMesEmptyText}>Em breve</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Beneficência — última seção */}
+        <View style={styles.beneficenciaSection}>
+          <Text style={{ fontSize: 16, color: Colors.dark.primary, marginBottom: 4 }}>♥</Text>
+          <Text style={styles.beneficenciaTitle}>Apoiamos a Casa da Criança com Câncer</Text>
+          <Text style={styles.beneficenciaSubtitle}>
+            Parte da nossa receita é destinada à Casa da Criança com Câncer.{"\n"}Ao usar o BoraBailar, você também faz a diferença.
+          </Text>
+        </View>
 
         <View style={{ height: tabBarHeight + Spacing.xl }} />
       </Animated.ScrollView>
@@ -1507,8 +1526,8 @@ const styles = StyleSheet.create({
   videoStoryPlayIcon: { position: "absolute", bottom: Spacing.sm, left: Spacing.sm, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
   videoStoryTitle: { fontSize: 12, color: Colors.dark.text, fontWeight: "500", marginTop: Spacing.xs, lineHeight: 16 },
   videoStoryUsername: { fontSize: 11, color: Colors.dark.textSecondary, marginTop: 2 },
-  uploadButton: { backgroundColor: Colors.dark.wizardBackground, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, marginTop: Spacing.xl, alignItems: "center", borderWidth: 1, borderColor: Colors.dark.brand },
-  uploadButtonText: { fontSize: 14, color: Colors.dark.brand, fontWeight: "600" },
+  uploadButton: { flexDirection: "row", backgroundColor: Colors.dark.wizardBackground, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, marginTop: Spacing.xl, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" },
+  uploadButtonText: { fontSize: 14, color: Colors.dark.textSecondary, fontWeight: "500" },
   destaqueMesTitle: { fontSize: 18, color: Colors.dark.text, marginTop: Spacing.xl + Spacing.lg, marginBottom: Spacing.lg },
   destaqueMesDescription: { fontSize: 14, color: Colors.dark.textSecondary, marginTop: Spacing.sm, marginBottom: Spacing.md, lineHeight: 20, paddingHorizontal: Spacing.xs },
   destaqueMesUsername: { color: Colors.dark.brand, fontWeight: '600' },
@@ -1522,8 +1541,8 @@ const styles = StyleSheet.create({
   topDanceAwardsTitle: { fontSize: 18, color: Colors.dark.text, textAlign: "center", fontWeight: "600", lineHeight: 26 },
   topDanceAwardsSubtitle: { fontSize: 14, color: Colors.dark.textSecondary, textAlign: "center", marginTop: Spacing.xs },
   topDanceAwardsBrand: { color: Colors.dark.brand, fontWeight: "700", fontSize: 22, letterSpacing: 1 },
-  queroParticiparButton: { backgroundColor: "#4CAF50", borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, alignItems: "center", marginTop: Spacing.lg, marginBottom: Spacing.xl },
-  queroParticiparButtonText: { fontSize: 15, color: "#FFFFFF", fontWeight: "600" },
+  queroParticiparButton: { flexDirection: "row", backgroundColor: Colors.dark.wizardBackground, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, alignItems: "center", justifyContent: "center", marginTop: Spacing.xl, borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" },
+  queroParticiparButtonText: { fontSize: 15, color: Colors.dark.textSecondary, fontWeight: "600" },
   awardCategoriesList: { gap: Spacing.md },
   awardCategoryCard: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: Spacing.md, borderBottomWidth: 1, borderBottomColor: "#F0F0F0" },
   awardCategoryContent: { flex: 1, marginRight: Spacing.md },
@@ -1564,4 +1583,95 @@ const styles = StyleSheet.create({
   awardPreviewButton: { backgroundColor: Colors.dark.brand, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl + Spacing.lg, alignItems: "center" },
   awardPreviewButtonText: { fontSize: 15, color: "#FFFFFF", fontWeight: "600" },
   awardPreviewCloseButton: { position: "absolute", top: Spacing.md, right: Spacing.md, width: 36, height: 36, borderRadius: 18, backgroundColor: "#F0F0F0", alignItems: "center", justifyContent: "center" },
+
+  // Campo AI Prompt
+  aiPromptContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  aiPromptText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.dark.textSecondary,
+    fontStyle: "italic",
+  },
+
+  // Awards section extras
+  awardsLogoHeader: {
+    width: 120,
+    height: 40,
+    alignSelf: "center",
+    marginBottom: Spacing.sm,
+    tintColor: Colors.dark.brand,
+  },
+  awardsTagline: {
+    fontSize: 13,
+    color: Colors.dark.textSecondary,
+    textAlign: "center",
+    fontStyle: "italic",
+    marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+  },
+
+  // Destaques do Mês section
+  destaquesMesSection: {
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.xl + Spacing.lg,
+  },
+  destaquesMesTitle: {
+    fontSize: 20,
+    color: Colors.dark.text,
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
+  },
+  destaquesMesSubtitle: {
+    fontSize: 13,
+    color: Colors.dark.textSecondary,
+    fontStyle: "italic",
+    marginBottom: Spacing.lg,
+  },
+  destaquesMesEmpty: {
+    height: 160,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: Spacing.sm,
+  },
+  destaquesMesEmptyText: {
+    fontSize: 13,
+    color: Colors.dark.textSecondary,
+  },
+
+  // Beneficência section
+  beneficenciaSection: {
+    marginTop: Spacing.xl + Spacing.lg,
+    marginHorizontal: Spacing.lg,
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: Colors.dark.brand + "30",
+    alignItems: "center",
+    marginBottom: Spacing.lg,
+  },
+  beneficenciaTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.dark.text,
+    textAlign: "center",
+    marginBottom: Spacing.sm,
+  },
+  beneficenciaSubtitle: {
+    fontSize: 12,
+    color: Colors.dark.textSecondary,
+    textAlign: "center",
+    lineHeight: 18,
+  },
 });
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   View,
   Modal,
@@ -6,89 +6,56 @@ import {
   Pressable,
   Text,
   ScrollView,
-  Platform,
-  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  runOnJS,
-} from "react-native-reanimated";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 
-// Zonas e bairros do Rio de Janeiro
-export const ZONES_AND_NEIGHBORHOODS = {
-  zonaSul: {
-    id: "zona_sul",
-    name: "Zona Sul",
-    neighborhoods: [
-      { id: "leblon", name: "Leblon", zone: "Zona Sul" },
-      { id: "ipanema", name: "Ipanema", zone: "Zona Sul" },
-      { id: "copacabana", name: "Copacabana", zone: "Zona Sul" },
-      { id: "gavea", name: "Gávea", zone: "Zona Sul" },
-      { id: "botafogo", name: "Botafogo", zone: "Zona Sul" },
-    ]
-  },
-  sudoeste: {
-    id: "sudoeste",
-    name: "Sudoeste",
-    neighborhoods: [
-      { id: "barra", name: "Barra da Tijuca", zone: "Sudoeste" },
-      { id: "recreio", name: "Recreio", zone: "Sudoeste" },
-      { id: "jacarepagua", name: "Jacarepaguá", zone: "Sudoeste" },
-      { id: "freguesia", name: "Freguesia", zone: "Sudoeste" },
-    ]
-  },
-  centro: {
-    id: "centro",
-    name: "Centro",
-    neighborhoods: [
-      { id: "lapa", name: "Lapa", zone: "Centro" },
-      { id: "rio_comprido", name: "Rio Comprido", zone: "Centro" },
-      { id: "tijuca", name: "Tijuca", zone: "Centro" },
-      { id: "estacio", name: "Estácio", zone: "Centro" },
-    ]
-  }
-};
+// ── Zonas do Rio de Janeiro ───────────────────────────────────────────────────
 
-// Array flat de todos os bairros para seleção
-export const ALL_NEIGHBORHOODS = [
-  ...ZONES_AND_NEIGHBORHOODS.zonaSul.neighborhoods,
-  ...ZONES_AND_NEIGHBORHOODS.sudoeste.neighborhoods,
-  ...ZONES_AND_NEIGHBORHOODS.centro.neighborhoods,
+export const LOCATION_OPTIONS = [
+  { id: "tanto_faz", name: "Tanto faz (em qualquer lugar)", zone: "", icon: "globe" as const, isTantoFaz: true },
+  { id: "zona_sul", name: "Zona Sul", zone: "Zona Sul", icon: "map" as const },
+  { id: "zona_norte", name: "Zona Norte", zone: "Zona Norte", icon: "map" as const },
+  { id: "zona_oeste", name: "Zona Oeste / Barra", zone: "Zona Oeste", icon: "map" as const },
+  { id: "sudoeste", name: "Sudoeste", zone: "Sudoeste", icon: "map" as const },
+  { id: "centro", name: "Centro / Lapa", zone: "Centro", icon: "map-pin" as const },
 ];
 
-// Array de zonas
-export const ZONES = [
-  { id: "zona_sul", name: "Zona Sul" },
-  { id: "sudoeste", name: "Sudoeste" },
-  { id: "centro", name: "Centro" },
-];
+// Mantido para compatibilidade com código legado
+export const ALL_NEIGHBORHOODS = LOCATION_OPTIONS;
+export const ZONES = LOCATION_OPTIONS;
+export const ZONES_AND_NEIGHBORHOODS = {};
 
-const DATE_OPTIONS = [
+// ── Datas ─────────────────────────────────────────────────────────────────────
+
+export const DATE_OPTIONS = [
   { id: "today", label: "Hoje", icon: "sun" as const },
   { id: "tomorrow", label: "Amanhã", icon: "sunrise" as const },
-  { id: "weekend", label: "Fim de semana", icon: "calendar" as const },
   { id: "week", label: "Esta semana", icon: "calendar" as const },
-  { id: "month", label: "Este mês", icon: "calendar" as const },
+  { id: "specific", label: "Data específica", icon: "clock" as const },
 ];
 
-const COMPANION_OPTIONS = [
-  { id: "solo", label: "Sozinho(a)", icon: "user" as const },
-  { id: "couple", label: "Em casal", icon: "heart" as const },
-  { id: "friends", label: "Com amigos", icon: "users" as const },
-  { id: "group", label: "Em grupo", icon: "users" as const },
+// ── Acompanhantes ─────────────────────────────────────────────────────────────
+
+export const COMPANION_OPTIONS = [
+  { id: "solo", label: "Prefiro sair só", icon: "user" as const },
+  { id: "couple", label: "Prefiro sair com alguém", icon: "heart" as const },
+  { id: "group", label: "Prefiro sair em grupo", icon: "users" as const },
+  { id: "surprise", label: "Surpreenda-me", icon: "star" as const },
 ];
+
+// ── Modal shared styles ───────────────────────────────────────────────────────
+
+const SELECTED_BORDER = "#FFFFFF"; // borda branca quando selecionado
+
+// ── OndeModal ─────────────────────────────────────────────────────────────────
 
 interface OndeModalProps {
   visible: boolean;
   onClose: () => void;
-  onSelect: (location: typeof ALL_NEIGHBORHOODS[0]) => void;
-  selectedCity: typeof ALL_NEIGHBORHOODS[0] | null;
+  onSelect: (location: typeof LOCATION_OPTIONS[0]) => void;
+  selectedCity: typeof LOCATION_OPTIONS[0] | null;
 }
 
 export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModalProps) {
@@ -106,7 +73,10 @@ export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModa
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Feather name="x" size={24} color={Colors.dark.text} />
           </Pressable>
-          <Text style={styles.modalTitle}>Onde você quer sair para dançar?</Text>
+          <Text style={styles.modalTitle}>
+            Suas preferências de{" "}
+            <Text style={styles.modalTitleHighlight}>LUGAR</Text>
+          </Text>
           <View style={styles.closeButton} />
         </View>
 
@@ -115,71 +85,40 @@ export function OndeModal({ visible, onClose, onSelect, selectedCity }: OndeModa
           contentContainerStyle={styles.optionsContainer}
           showsVerticalScrollIndicator={false}
         >
-          {/* Zonas */}
-          <Text style={styles.sectionTitle}>Por Zona</Text>
-          {ZONES.map((zone) => (
-            <Pressable
-              key={zone.id}
-              style={({ pressed }) => [
-                styles.optionItem,
-                selectedCity?.zone === zone.name && styles.optionItemSelected,
-                pressed && styles.optionItemPressed,
-              ]}
-              onPress={() => {
-                // Seleciona a zona inteira, não um bairro
-                onSelect({
-                  id: zone.id,
-                  name: zone.name,
-                  zone: zone.name,
-                  isZone: true
-                } as any);
-                onClose();
-              }}
-            >
-              <View style={styles.optionIcon}>
-                <Feather name="map" size={20} color={Colors.dark.primary} />
-              </View>
-              <View style={styles.optionTextContainer}>
-                <Text style={styles.optionTitle}>{zone.name}</Text>
-              </View>
-              {selectedCity?.zone === zone.name ? (
-                <Feather name="check" size={20} color={Colors.dark.primary} />
-              ) : null}
-            </Pressable>
-          ))}
-
-          {/* Bairros */}
-          <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Por Bairro</Text>
-          {ALL_NEIGHBORHOODS.map((neighborhood) => (
-            <Pressable
-              key={neighborhood.id}
-              style={({ pressed }) => [
-                styles.optionItem,
-                selectedCity?.id === neighborhood.id && styles.optionItemSelected,
-                pressed && styles.optionItemPressed,
-              ]}
-              onPress={() => {
-                onSelect(neighborhood);
-                onClose();
-              }}
-            >
-              <View style={styles.optionIcon}>
-                <Feather name="map-pin" size={20} color={Colors.dark.primary} />
-              </View>
-              <View style={styles.optionTextContainer}>
-                <Text style={styles.optionTitle}>{neighborhood.name}</Text>
-                <Text style={styles.optionSubtitle}>{neighborhood.zone}</Text>
-              </View>
-              {selectedCity?.id === neighborhood.id ? (
-                <Feather name="check" size={20} color={Colors.dark.primary} />
-              ) : null}
-            </Pressable>
-          ))}
+          {LOCATION_OPTIONS.map((loc) => {
+            const isSelected = selectedCity?.id === loc.id;
+            return (
+              <Pressable
+                key={loc.id}
+                style={({ pressed }) => [
+                  styles.optionItem,
+                  isSelected && styles.optionItemSelected,
+                  pressed && styles.optionItemPressed,
+                ]}
+                onPress={() => {
+                  onSelect(loc);
+                  onClose();
+                }}
+              >
+                <View style={styles.optionIcon}>
+                  <Feather name={loc.icon} size={20} color={Colors.dark.primary} />
+                </View>
+                <View style={styles.optionTextContainer}>
+                  <Text style={[styles.optionTitle, loc.isTantoFaz && styles.optionTitleHighlight]}>
+                    {loc.name}
+                  </Text>
+                </View>
+                {isSelected && <Feather name="check" size={20} color={SELECTED_BORDER} />}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
     </Modal>
   );
 }
+
+// ── QuandoModal ───────────────────────────────────────────────────────────────
 
 interface QuandoModalProps {
   visible: boolean;
@@ -203,7 +142,10 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Feather name="x" size={24} color={Colors.dark.text} />
           </Pressable>
-          <Text style={styles.modalTitle}>Quando você quer sair pra dançar?</Text>
+          <Text style={styles.modalTitle}>
+            Suas preferências de{" "}
+            <Text style={styles.modalTitleHighlight}>DATA</Text>
+          </Text>
           <View style={styles.closeButton} />
         </View>
 
@@ -212,45 +154,49 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
           contentContainerStyle={styles.optionsContainer}
           showsVerticalScrollIndicator={false}
         >
-          {DATE_OPTIONS.map((option) => (
-            <Pressable
-              key={option.id}
-              style={({ pressed }) => [
-                styles.optionItem,
-                selectedOption?.id === option.id && styles.optionItemSelected,
-                pressed && styles.optionItemPressed,
-              ]}
-              onPress={() => {
-                onSelect(option);
-                onClose();
-              }}
-            >
-              <View style={styles.optionIcon}>
-                <Feather name={option.icon} size={20} color={Colors.dark.primary} />
-              </View>
-              <View style={styles.optionTextContainer}>
-                <Text style={styles.optionTitle}>{option.label}</Text>
-              </View>
-              {selectedOption?.id === option.id ? (
-                <Feather name="check" size={20} color={Colors.dark.primary} />
-              ) : null}
-            </Pressable>
-          ))}
+          {DATE_OPTIONS.map((opt) => {
+            const isSelected = selectedOption?.id === opt.id;
+            return (
+              <Pressable
+                key={opt.id}
+                style={({ pressed }) => [
+                  styles.optionItem,
+                  isSelected && styles.optionItemSelected,
+                  pressed && styles.optionItemPressed,
+                ]}
+                onPress={() => {
+                  onSelect(opt);
+                  onClose();
+                }}
+              >
+                <View style={styles.optionIcon}>
+                  <Feather name={opt.icon} size={20} color={Colors.dark.primary} />
+                </View>
+                <View style={styles.optionTextContainer}>
+                  <Text style={styles.optionTitle}>{opt.label}</Text>
+                </View>
+                {isSelected && <Feather name="check" size={20} color={SELECTED_BORDER} />}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
     </Modal>
   );
 }
 
+// ── ComQuemModal ──────────────────────────────────────────────────────────────
+
 interface ComQuemModalProps {
   visible: boolean;
   onClose: () => void;
   onSelect: (option: typeof COMPANION_OPTIONS[0]) => void;
   selectedOption: typeof COMPANION_OPTIONS[0] | null;
-  onMicPress: () => void;
-  isRecording: boolean;
+  // Props do microfone mantidas por compatibilidade (não renderizadas)
+  onMicPress?: () => void;
+  isRecording?: boolean;
   isTranscribing?: boolean;
-  transcript: string;
+  transcript?: string;
 }
 
 export function ComQuemModal({
@@ -258,31 +204,8 @@ export function ComQuemModal({
   onClose,
   onSelect,
   selectedOption,
-  onMicPress,
-  isRecording,
-  isTranscribing = false,
-  transcript,
 }: ComQuemModalProps) {
   const insets = useSafeAreaInsets();
-  const pulseScale = useSharedValue(1);
-
-  useEffect(() => {
-    if (isRecording) {
-      const pulse = () => {
-        pulseScale.value = withSpring(1.2, { damping: 10 }, () => {
-          pulseScale.value = withSpring(1, { damping: 10 });
-        });
-      };
-      const interval = setInterval(pulse, 1000);
-      return () => clearInterval(interval);
-    } else {
-      pulseScale.value = withTiming(1);
-    }
-  }, [isRecording]);
-
-  const micButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-  }));
 
   return (
     <Modal
@@ -296,81 +219,50 @@ export function ComQuemModal({
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Feather name="x" size={24} color={Colors.dark.text} />
           </Pressable>
-          <Text style={styles.modalTitle}>Com quem você quer sair pra dançar?</Text>
+          <Text style={styles.modalTitle}>
+            Suas preferências de{" "}
+            <Text style={styles.modalTitleHighlight}>PESSOA</Text>
+          </Text>
           <View style={styles.closeButton} />
         </View>
-
-        <View style={styles.voiceSection}>
-          <Text style={styles.voiceHint}>
-            {isRecording
-              ? "Gravando... Toque para parar"
-              : isTranscribing
-                ? "Transcrevendo..."
-                : "Toque no microfone e fale o que você procura"}
-          </Text>
-
-          <Animated.View style={micButtonStyle}>
-            <Pressable
-              style={[
-                styles.micButton,
-                isRecording && styles.micButtonRecording,
-                isTranscribing && styles.micButtonTranscribing,
-              ]}
-              onPress={onMicPress}
-              disabled={isTranscribing}
-            >
-              {isRecording || isTranscribing ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Feather name="mic" size={32} color="#FFFFFF" />
-              )}
-            </Pressable>
-          </Animated.View>
-
-          {transcript ? (
-            <View style={styles.transcriptContainer}>
-              <Text style={styles.transcriptLabel}>Você disse:</Text>
-              <Text style={styles.transcriptText}>"{transcript}"</Text>
-            </View>
-          ) : null}
-        </View>
-
-        <Text style={styles.orDivider}>ou Escolha uma opção abaixo:</Text>
 
         <ScrollView
           style={styles.modalContent}
           contentContainerStyle={styles.optionsContainer}
           showsVerticalScrollIndicator={false}
         >
-          {COMPANION_OPTIONS.map((option) => (
-            <Pressable
-              key={option.id}
-              style={({ pressed }) => [
-                styles.optionItem,
-                selectedOption?.id === option.id && styles.optionItemSelected,
-                pressed && styles.optionItemPressed,
-              ]}
-              onPress={() => {
-                onSelect(option);
-                onClose();
-              }}
-            >
-              <View style={styles.optionIcon}>
-                <Feather name={option.icon} size={20} color={Colors.dark.primary} />
-              </View>
-              <View style={styles.optionTextContainer}>
-                <Text style={styles.optionTitle}>{option.label}</Text>
-              </View>
-              {selectedOption?.id === option.id ? (
-                <Feather name="check" size={20} color={Colors.dark.primary} />
-              ) : null}
-            </Pressable>
-          ))}
+          {COMPANION_OPTIONS.map((opt) => {
+            const isSelected = selectedOption?.id === opt.id;
+            return (
+              <Pressable
+                key={opt.id}
+                style={({ pressed }) => [
+                  styles.optionItem,
+                  isSelected && styles.optionItemSelected,
+                  pressed && styles.optionItemPressed,
+                ]}
+                onPress={() => {
+                  onSelect(opt);
+                  onClose();
+                }}
+              >
+                <View style={styles.optionIcon}>
+                  <Feather name={opt.icon} size={20} color={Colors.dark.primary} />
+                </View>
+                <View style={styles.optionTextContainer}>
+                  <Text style={styles.optionTitle}>{opt.label}</Text>
+                </View>
+                {isSelected && <Feather name="check" size={20} color={SELECTED_BORDER} />}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       </View>
     </Modal>
   );
 }
+
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   modalContainer: {
@@ -393,9 +285,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: Colors.dark.text,
+    fontSize: 16,
+    fontWeight: "500",
+    color: Colors.dark.textSecondary,
+    textAlign: "center",
+    flex: 1,
+  },
+  modalTitleHighlight: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.dark.primary,
+    textTransform: "uppercase",
   },
   modalContent: {
     flex: 1,
@@ -407,23 +307,24 @@ const styles = StyleSheet.create({
   optionItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: Spacing.lg,
+    padding: Spacing.md,
     backgroundColor: Colors.dark.backgroundDefault,
     borderRadius: BorderRadius.lg,
     gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   optionItemSelected: {
-    backgroundColor: Colors.dark.primary + "15",
-    borderWidth: 1,
-    borderColor: Colors.dark.primary,
+    borderColor: SELECTED_BORDER,
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
   optionItemPressed: {
     opacity: 0.8,
   },
   optionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Colors.dark.primary + "20",
     alignItems: "center",
     justifyContent: "center",
@@ -432,83 +333,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "500",
     color: Colors.dark.text,
   },
+  optionTitleHighlight: {
+    color: Colors.dark.primary,
+    fontWeight: "600",
+  },
   optionSubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.dark.textSecondary,
     marginTop: 2,
   },
-  voiceSection: {
-    alignItems: "center",
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.lg,
-  },
-  voiceHint: {
-    fontSize: 16,
-    color: Colors.dark.textSecondary,
-    textAlign: "center",
-  },
-  micButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.dark.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.dark.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  micButtonRecording: {
-    backgroundColor: Colors.dark.error,
-  },
-  micButtonTranscribing: {
-    backgroundColor: Colors.dark.secondary,
-    opacity: 0.8,
-  },
-  transcriptContainer: {
-    backgroundColor: Colors.dark.backgroundDefault,
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    width: "100%",
-    alignItems: "center",
-  },
-  transcriptLabel: {
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-  transcriptText: {
-    fontSize: 16,
-    color: Colors.dark.text,
-    fontStyle: "italic",
-    textAlign: "center",
-  },
-  orDivider: {
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
-    textAlign: "center",
-    paddingVertical: Spacing.md,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: Colors.dark.text,
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
 });
-
-export { DATE_OPTIONS, COMPANION_OPTIONS };

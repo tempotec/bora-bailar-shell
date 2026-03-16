@@ -40,6 +40,18 @@
     ],
     "experiments": {
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "346756f0-000f-416b-90f6-dbe1cadc7b79"
+      }
+    },
+    "owner": "rxnn",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/346756f0-000f-416b-90f6-dbe1cadc7b79"
     }
   }
 }
