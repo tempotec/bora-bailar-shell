@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { db } from "./db";
-import { events, videos, awardCategories, queroCards, venues, previewCodes, homeSections, homeSectionItems } from "@shared/schema";
+import { events, videos, awardCategories, queroCards, venues, previewCodes, homeSections, homeSectionItems, pushTokens, notificationLogs } from "@shared/schema";
 import { eq, and, gte, lte, or, sql, desc, asc, isNull, inArray } from "drizzle-orm";
 
 // Helper to resolve item by type and id
@@ -505,4 +505,179 @@ export function registerPublicRoutes(app: Express) {
             }
         });
     }
+
+    // ===== PUSH NOTIFICATIONS =====
+
+    // Register push token (called by the mobile app on startup)
+    app.post("/api/push-tokens/register", async (req, res) => {
+        try {
+            const { token, platform, userId } = req.body;
+
+            if (!token) {
+                return res.status(400).json({ error: "Token é obrigatório" });
+            }
+
+            // Validate Expo push token format
+            if (!token.startsWith("ExponentPushToken[") && !token.startsWith("ExpoPushToken[")) {
+                return res.status(400).json({ error: "Token inválido. Use Expo Push Token." });
+            }
+
+            // Upsert: insert or update if token already exists
+            const existing = await db.select().from(pushTokens)
+                .where(eq(pushTokens.token, token))
+                .limit(1);
+
+            if (existing.length > 0) {
+                // Re-activate if it was deactivated
+                await db.update(pushTokens)
+                    .set({ isActive: true, platform: platform || existing[0].platform, userId: userId || existing[0].userId, updatedAt: new Date() })
+                    .where(eq(pushTokens.token, token));
+                return res.json({ success: true, message: "Token atualizado" });
+            }
+
+            await db.insert(pushTokens).values({
+                token,
+                platform: platform || null,
+                userId: userId || null,
+            });
+
+            res.json({ success: true, message: "Token registrado" });
+        } catch (error) {
+            console.error("Error in /api/push-tokens/register:", error);
+            res.status(500).json({ error: "Erro ao registrar token" });
+        }
+    });
+
+    // Send push notification to all registered devices
+    app.post("/api/notifications/send", async (req, res) => {
+        try {
+            const { title, body, data } = req.body;
+
+            if (!title || !body) {
+                return res.status(400).json({ error: "title e body são obrigatórios" });
+            }
+
+            // Get all active tokens
+            const tokens = await db.select().from(pushTokens)
+                .where(eq(pushTokens.isActive, true));
+
+            if (tokens.length === 0) {
+                // Log the attempt even with no tokens
+                await db.insert(notificationLogs).values({
+                    title, body,
+                    data: data || {},
+                    totalTokens: 0,
+                    successCount: 0,
+                    failureCount: 0,
+                });
+                return res.json({
+                    success: true,
+                    message: "Nenhum dispositivo registrado para receber push",
+                    totalTokens: 0,
+                    successCount: 0,
+                    failureCount: 0,
+                });
+            }
+
+            // Build Expo push messages
+            const messages = tokens.map(t => ({
+                to: t.token,
+                sound: "default" as const,
+                title,
+                body,
+                data: data || {},
+            }));
+
+            // Send via Expo Push API (HTTP, no SDK needed)
+            const chunks: typeof messages[] = [];
+            const CHUNK_SIZE = 100; // Expo recommends max 100 per request
+            for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
+                chunks.push(messages.slice(i, i + CHUNK_SIZE));
+            }
+
+            let successCount = 0;
+            let failureCount = 0;
+            const invalidTokens: string[] = [];
+
+            for (const chunk of chunks) {
+                try {
+                    const response = await fetch("https://exp.host/--/api/v2/push/send", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(chunk),
+                    });
+                    const result: any = await response.json();
+                    const tickets = result.data || [];
+
+                    for (let i = 0; i < tickets.length; i++) {
+                        if (tickets[i].status === "ok") {
+                            successCount++;
+                        } else {
+                            failureCount++;
+                            // Mark invalid tokens for cleanup
+                            if (tickets[i].details?.error === "DeviceNotRegistered") {
+                                invalidTokens.push(chunk[i].to);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error("Expo push chunk error:", err);
+                    failureCount += chunk.length;
+                }
+            }
+
+            // Deactivate invalid tokens
+            if (invalidTokens.length > 0) {
+                await db.update(pushTokens)
+                    .set({ isActive: false, updatedAt: new Date() })
+                    .where(inArray(pushTokens.token, invalidTokens));
+            }
+
+            // Log the send
+            await db.insert(notificationLogs).values({
+                title, body,
+                data: data || {},
+                totalTokens: tokens.length,
+                successCount,
+                failureCount,
+            });
+
+            res.json({
+                success: true,
+                message: `Notificação enviada para ${successCount} dispositivo(s)`,
+                totalTokens: tokens.length,
+                successCount,
+                failureCount,
+                invalidTokensRemoved: invalidTokens.length,
+            });
+        } catch (error) {
+            console.error("Error in /api/notifications/send:", error);
+            res.status(500).json({ error: "Erro ao enviar notificação" });
+        }
+    });
+
+    // List notification logs (for admin)
+    app.get("/api/notifications/logs", async (_req, res) => {
+        try {
+            const logs = await db.select().from(notificationLogs)
+                .orderBy(desc(notificationLogs.sentAt))
+                .limit(50);
+            res.json({ logs });
+        } catch (error) {
+            console.error("Error in /api/notifications/logs:", error);
+            res.status(500).json({ error: "Erro ao buscar logs" });
+        }
+    });
+
+    // Get token count (for admin dashboard)
+    app.get("/api/push-tokens/count", async (_req, res) => {
+        try {
+            const [result] = await db.select({ count: sql<number>`count(*)` })
+                .from(pushTokens)
+                .where(eq(pushTokens.isActive, true));
+            res.json({ count: Number(result.count) });
+        } catch (error) {
+            res.status(500).json({ error: "Erro ao contar tokens" });
+        }
+    });
 }

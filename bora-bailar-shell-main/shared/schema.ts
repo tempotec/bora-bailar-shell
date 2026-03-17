@@ -247,6 +247,32 @@ export const appSettings = pgTable("app_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 
+// ===== PUSH NOTIFICATIONS =====
+
+export const pushTokens = pgTable("push_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  token: text("token").notNull().unique(),  // ExponentPushToken[xxx]
+  platform: text("platform"),               // 'ios' | 'android'
+  userId: varchar("user_id"),               // optional link to user
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index("idx_push_tokens_active").on(table.isActive),
+]);
+
+export const notificationLogs = pgTable("notification_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  data: jsonb("data").$type<Record<string, any>>().default(sql`'{}'::jsonb`),
+  totalTokens: integer("total_tokens").default(0),
+  successCount: integer("success_count").default(0),
+  failureCount: integer("failure_count").default(0),
+  sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
 // ===== INSERT SCHEMAS =====
 
 export const insertUserSchema = createInsertSchema(users).omit({
@@ -324,6 +350,17 @@ export const insertAppSettingsSchema = createInsertSchema(appSettings).omit({
   updatedAt: true,
 });
 
+export const insertPushTokenSchema = createInsertSchema(pushTokens).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertNotificationLogSchema = createInsertSchema(notificationLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // ===== TYPES =====
 
 export type User = typeof users.$inferSelect;
@@ -352,4 +389,8 @@ export type HomeSectionItem = typeof homeSectionItems.$inferSelect;
 export type InsertHomeSectionItem = z.infer<typeof insertHomeSectionItemSchema>;
 export type AppSettings = typeof appSettings.$inferSelect;
 export type InsertAppSettings = z.infer<typeof insertAppSettingsSchema>;
+export type PushToken = typeof pushTokens.$inferSelect;
+export type InsertPushToken = z.infer<typeof insertPushTokenSchema>;
+export type NotificationLog = typeof notificationLogs.$inferSelect;
+export type InsertNotificationLog = z.infer<typeof insertNotificationLogSchema>;
 
