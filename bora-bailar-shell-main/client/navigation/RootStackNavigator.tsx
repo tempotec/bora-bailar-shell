@@ -17,7 +17,7 @@ export type RootStackParamList = {
   Main: undefined;
   SignUp: undefined;
   Login: undefined;
-  AIChat: { cardTitle: string; cardDescription: string };
+  AIChat: { cardTitle: string; cardDescription: string; initialMessage?: string };
   RegisterStep1: undefined;
   RegisterStep2: { userName: string };
   CadastreSe: undefined;

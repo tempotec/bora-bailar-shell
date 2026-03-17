@@ -129,43 +129,6 @@ interface QuandoModalProps {
 
 export function QuandoModal({ visible, onClose, onSelect, selectedOption }: QuandoModalProps) {
   const insets = useSafeAreaInsets();
-  const [showPicker, setShowPicker] = useState(false);
-  const [tempDate, setTempDate] = useState(new Date());
-
-  const onDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowPicker(false);
-      if (event.type === 'set' && selectedDate) {
-        setTempDate(selectedDate);
-        const day = selectedDate.getDate().toString().padStart(2, '0');
-        const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-        const label = `${day} ${monthNames[selectedDate.getMonth()]}`;
-
-        onSelect({
-          id: "specific",
-          label: label,
-          icon: "clock",
-        });
-        onClose();
-      }
-    } else if (Platform.OS === 'ios') {
-      if (selectedDate) setTempDate(selectedDate);
-    }
-  };
-
-  const confirmIosDate = () => {
-    const day = tempDate.getDate().toString().padStart(2, '0');
-    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-    const label = `${day} ${monthNames[tempDate.getMonth()]}`;
-
-    onSelect({
-      id: "specific",
-      label: label,
-      icon: "clock",
-    });
-    setShowPicker(false);
-    onClose();
-  };
 
   return (
     <Modal
@@ -194,102 +157,30 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
           {DATE_OPTIONS.map((opt) => {
             const isSelected = selectedOption?.id === opt.id;
             return (
-              <View key={opt.id}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.optionItem,
-                    isSelected && styles.optionItemSelected,
-                    pressed && styles.optionItemPressed,
-                  ]}
-                  onPress={() => {
-                    if (opt.id === "specific") {
-                      setShowPicker(true);
-                    } else {
-                      onSelect(opt);
-                      onClose();
-                    }
-                  }}
-                >
-                  <View style={styles.optionIcon}>
-                    <Feather name={opt.icon} size={20} color={Colors.dark.primary} />
-                  </View>
-                  <View style={styles.optionTextContainer}>
-                    <Text style={styles.optionTitle}>
-                      {isSelected && opt.id === "specific" ? selectedOption.label : opt.label}
-                    </Text>
-                  </View>
-                  {isSelected && <Feather name="check" size={20} color={SELECTED_BORDER} />}
-                </Pressable>
-
-                {showPicker && Platform.OS === 'ios' && opt.id === "specific" && (
-                  <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: BorderRadius.lg, padding: Spacing.md, marginTop: Spacing.sm }}>
-                    <DateTimePicker
-                      value={tempDate}
-                      mode="date"
-                      display="inline"
-                      onChange={onDateChange}
-                      themeVariant="light"
-                      minimumDate={new Date()}
-                    />
-                    <Pressable
-                      style={{ backgroundColor: Colors.dark.primary, padding: Spacing.md, borderRadius: BorderRadius.md, alignItems: 'center', marginTop: Spacing.md }}
-                      onPress={confirmIosDate}
-                    >
-                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>Confirmar Data</Text>
-                    </Pressable>
-                  </View>
-                )}
-
-                {showPicker && Platform.OS === 'web' && opt.id === "specific" && (
-                  <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: BorderRadius.lg, padding: Spacing.md, marginTop: Spacing.sm }}>
-                    <input
-                      type="date"
-                      min={new Date().toISOString().split('T')[0]}
-                      style={{
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: `1px solid #E0E0E0`,
-                        backgroundColor: '#fff',
-                        width: '100%',
-                        color: Colors.dark.text,
-                        fontSize: '16px',
-                        outline: 'none',
-                        fontFamily: 'inherit'
-                      }}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          const date = new Date(e.target.value + 'T12:00:00');
-                          setTempDate(date);
-                          const day = date.getDate().toString().padStart(2, '0');
-                          const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-                          const label = `${day} ${monthNames[date.getMonth()]}`;
-
-                          onSelect({
-                            id: "specific",
-                            label: label,
-                            icon: "clock",
-                          });
-                          setShowPicker(false);
-                          setTimeout(() => onClose(), 100);
-                        }
-                      }}
-                    />
-                  </View>
-                )}
-              </View>
+              <Pressable
+                key={opt.id}
+                style={({ pressed }) => [
+                  styles.optionItem,
+                  isSelected && styles.optionItemSelected,
+                  pressed && styles.optionItemPressed,
+                ]}
+                onPress={() => {
+                  onSelect(opt);
+                  onClose();
+                }}
+              >
+                <View style={styles.optionIcon}>
+                  <Feather name={opt.icon} size={20} color={Colors.dark.primary} />
+                </View>
+                <View style={styles.optionTextContainer}>
+                  <Text style={styles.optionTitle}>{opt.label}</Text>
+                </View>
+                {isSelected && <Feather name="check" size={20} color={SELECTED_BORDER} />}
+              </Pressable>
             );
           })}
         </ScrollView>
       </View>
-      {showPicker && Platform.OS === 'android' && (
-        <DateTimePicker
-          value={tempDate}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-          minimumDate={new Date()}
-        />
-      )}
     </Modal>
   );
 }

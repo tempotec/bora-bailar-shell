@@ -196,7 +196,7 @@ export const realApi = {
         // Fetch weekly tips from the new dedicated endpoint
         let weeklyTipsData: any[] = [];
         try {
-            const tipsResponse = await fetchJson<any>("/content/tips/weekly-events");
+            const tipsResponse = await fetchJson<any>("/weekly-tips");
             if (__DEV__) {
                 console.log("[realApi] Weekly tips response:", JSON.stringify(tipsResponse, null, 2));
             }
@@ -209,9 +209,9 @@ export const realApi = {
                     // Try multiple possible field names for title
                     title: event.title || event.name || event.titulo || t.title || "Dica especial",
                     content: event.description || event.descricao || "",
-                    // Priority: thumbnail > coverImage for faster loading
-                    thumbnailUrl: event.thumbnailUrl || event.thumbnail_url || event.thumbnail,
-                    imageUrl: event.coverImage || event.cover_image || event.image_url || event.imageUrl,
+                    // Priority: thumbnail > cover_image_thumb > coverImage for faster loading
+                    thumbnailUrl: event.cover_image_thumb || event.thumbnailUrl || event.thumbnail_url || event.thumbnail,
+                    imageUrl: event.cover_image || event.coverImage || event.image_url || event.imageUrl,
                     event: event,
                     isActive: t.isActive ?? t.is_active ?? true,
                 };
@@ -224,12 +224,13 @@ export const realApi = {
         }
 
         // Ensure all fields exist (even if empty)
+        // Flask returns snake_case keys, map them to camelCase
         return {
             stories: data.stories || [],
             featured: data.featured || null,
-            queroCards: data.queroCards || data.quero || [],
-            weeklyTip: data.weeklyTip || data.todayTip || null,
-            weeklyTips: weeklyTipsData.length > 0 ? weeklyTipsData : (data.weeklyTips || []),
+            queroCards: data.queroCards || data.quero_cards || data.quero || [],
+            weeklyTip: data.weeklyTip || data.weekly_tip || data.todayTip || data.today_tip || null,
+            weeklyTips: weeklyTipsData.length > 0 ? weeklyTipsData : (data.weeklyTips || data.weekly_tips || []),
             promotions: data.promotions || [],
             recommendations: data.recommendations || [],
             awards: data.awards || [],
@@ -277,7 +278,7 @@ export const realApi = {
     partnerCards: {
         list: async (): Promise<PartnerCard[]> => {
             try {
-                const response = await fetchJson<any>("/content/partner-cards");
+                const response = await fetchJson<any>("/places");
                 const cards = response.partner_cards || response.partnerCards || response || [];
 
                 // Filter active cards and sort by order
@@ -334,11 +335,11 @@ export const realApi = {
         },
     },
 
-    // Quero Cards — GET /content/quero
+    // Quero Cards — GET /quero-cards (Flask)
     queroCards: {
         list: async (): Promise<any[]> => {
             try {
-                const data = await fetchJson<any>("/content/quero");
+                const data = await fetchJson<any>("/quero-cards");
                 const cards = data.quero || data.queroCards || data || [];
                 return (cards as any[])
                     .filter((c: any) => c.is_active !== false && c.isActive !== false)
@@ -383,11 +384,11 @@ export const realApi = {
         },
     },
 
-    // Awards — GET /content/awards/active
+    // Awards — GET /awards (Flask)
     awards: {
         active: async (): Promise<AwardEdition[]> => {
             try {
-                const data = await fetchJson<any>("/content/awards/active");
+                const data = await fetchJson<any>("/awards");
                 const editions = data.editions || [];
                 return (editions as any[]).map((ed: any) => ({
                     id: ed.id,
@@ -407,11 +408,11 @@ export const realApi = {
         },
     },
 
-    // Tips — GET /content/tips
+    // Tips — GET /weekly-tips (Flask)
     tips: {
         weekly: async (): Promise<any[]> => {
             try {
-                const data = await fetchJson<any>("/content/tips/weekly-events");
+                const data = await fetchJson<any>("/weekly-tips");
                 return (data.tips || []).map((t: any) => {
                     const event = t.event || {};
                     return {
@@ -433,7 +434,7 @@ export const realApi = {
         },
         today: async (): Promise<any> => {
             try {
-                return await fetchJson<any>("/content/tips/today-event");
+                return await fetchJson<any>("/weekly-tips/today");
             } catch (error) {
                 console.warn("[realApi] Failed to fetch today tip:", error);
                 return null;

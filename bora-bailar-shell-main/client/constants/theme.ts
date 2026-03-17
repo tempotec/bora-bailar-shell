@@ -102,24 +102,32 @@ export const Typography = {
   },
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    sans: "system-ui",
-    serif: "Didot",
-    rounded: "ui-rounded",
-    mono: "ui-monospace",
-  },
-  default: {
-    sans: "normal",
-    serif: "serif",
-    rounded: "normal",
-    mono: "monospace",
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "'Didot', 'Bodoni MT', 'Playfair Display', Georgia, 'Times New Roman', serif",
-    rounded:
-      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
+export const Fonts = {
+  // Montserrat font family — primary brand font
+  regular: "Montserrat_400Regular",
+  medium: "Montserrat_500Medium",
+  semiBold: "Montserrat_600SemiBold",
+  bold: "Montserrat_700Bold",
+  italic: "Montserrat_400Regular_Italic",
+  // Legacy aliases for backward compat
+  ...Platform.select({
+    ios: {
+      sans: "Montserrat_400Regular",
+      serif: "Montserrat_600SemiBold",
+      rounded: "Montserrat_500Medium",
+      mono: "ui-monospace",
+    },
+    default: {
+      sans: "Montserrat_400Regular",
+      serif: "Montserrat_600SemiBold",
+      rounded: "Montserrat_500Medium",
+      mono: "monospace",
+    },
+    web: {
+      sans: "'Montserrat', system-ui, -apple-system, sans-serif",
+      serif: "'Montserrat', Georgia, serif",
+      rounded: "'Montserrat', sans-serif",
+      mono: "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    },
+  }),
+};

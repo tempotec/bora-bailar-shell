@@ -115,18 +115,18 @@ export const api = USE_MOCK ? {
                     title: p.name || p.title || "Evento",
                     price: p.price ? `R$${p.price}` : "Grátis",
                     discount: p.discountLabel || p.discount_label || "",
-                    image: buildImageUrl(p.coverImage || p.cover_image) ||
+                    image: buildImageUrl(p.cover_image_thumb || p.coverImageThumb || p.coverImage || p.cover_image) ||
                         "https://images.unsplash.com/photo-1504196606672-aef5c9cefc92?w=300&h=200&fit=crop",
                 })),
 
-                // Querer - map from quero_cards
+                // Querer - map from quero_cards (Flask returns snake_case)
                 querer: (data.queroCards || []).map((q: any) => ({
                     id: String(q.id),
                     title: (q.title || "").toUpperCase().replace(/\n/g, "\n"),
                     description: q.description || "",
-                    image: buildImageUrl(q.imageUrl) ||
+                    image: buildImageUrl(q.image_url || q.imageUrl || q.cover_image) ||
                         "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=300&fit=crop",
-                    eventsCount: q.eventsCount || 0,
+                    eventsCount: q.events_count || q.eventsCount || 0,
                     events: q.events || [],
                 })),
 
@@ -134,9 +134,9 @@ export const api = USE_MOCK ? {
                 events: (data.recommendations || []).map((e: any) => ({
                     id: String(e.id),
                     title: e.name || e.title || "Evento",
-                    startsAt: e.startDate || e.start_date,
-                    venueName: e.venueName || e.venue_name,
-                    coverImage: buildImageUrl(e.coverImage || e.cover_image),
+                    startsAt: e.start_date || e.startDate,
+                    venueName: e.venue_name || e.venueName,
+                    coverImage: buildImageUrl(e.cover_image_thumb || e.cover_image || e.coverImage),
                 })),
 
                 featuredEvents: data.featured || [],

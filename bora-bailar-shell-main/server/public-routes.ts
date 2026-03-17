@@ -112,8 +112,10 @@ export function registerPublicRoutes(app: Express) {
         try {
             const r = await fetch(`${ADMIN_URL}/api/discover`, { signal: AbortSignal.timeout(2000) });
             if (r.ok) {
-                const data = await r.json();
-                return res.json(data);
+                const json = await r.json();
+                // Flask retorna { success: true, data: {...} } — extrair o payload interno
+                const payload = json.data || json;
+                return res.json(payload);
             }
         } catch (_) { /* Flask offline — usa banco local */ }
 

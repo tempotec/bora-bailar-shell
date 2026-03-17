@@ -15,23 +15,23 @@ function metroHost(): string | null {
 function getDevBaseUrl(): string {
     // Android emulator uses 10.0.2.2 to reach host machine
     if (Platform.OS === "android") {
-        return "http://10.0.2.2:5001/api";
+        return "http://10.0.2.2:5000/api";
     }
 
     // Physical device or iOS: try to get Metro host IP
     const host = metroHost();
     if (host) {
-        return `http://${host}:5001/api`;
+        return `http://${host}:5000/api`;
     }
 
     // Fallback for iOS simulator
-    return "http://localhost:5001/api";
+    return "http://localhost:5000/api";
 }
 
 export const API_CONFIG = {
     // Production server:
     // BASE_URL: "http://34.162.38.179/api",
-    // Local development server (porta 5001):
+    // Local development server (Flask na porta 5000):
     BASE_URL: __DEV__ ? getDevBaseUrl() : "http://34.162.38.179/api",
     TIMEOUT: 10000,
 };

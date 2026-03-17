@@ -17,12 +17,12 @@ import {
 } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { getApiUrl } from "@/lib/query-client";
 import { videoService } from "@/services/videoService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -513,17 +513,30 @@ function QuererCard({
   onPress?: () => void;
   onFavorite?: () => void;
 }) {
+  const [liked, setLiked] = useState(false);
+
+  const handleFavorite = () => {
+    setLiked((prev) => !prev);
+    onFavorite?.();
+  };
+
   return (
     <Pressable style={styles.quererCard} onPress={onPress}>
       <View style={styles.quererImageContainer}>
         <Image source={typeof image === 'string' ? { uri: image } : image} style={styles.quererImage} />
         <View style={styles.quererOverlay} />
         <Text style={styles.quererTitle}>{title}</Text>
-        <Pressable style={styles.quererHeart} onPress={onFavorite}>
-          <View style={styles.heartCircle}>
-            {/* Coração filled vermelho */}
-            <Text style={{ fontSize: 16, color: Colors.dark.primary, lineHeight: 18 }}>♥</Text>
-          </View>
+        <Pressable
+          style={styles.quererHeart}
+          onPress={handleFavorite}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons
+            name={liked ? "heart" : "heart-outline"}
+            size={24}
+            color={liked ? Colors.dark.brand : "#FFFFFF"}
+            style={{ textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 }}
+          />
         </Pressable>
       </View>
       <View style={styles.quererContent}>
@@ -766,7 +779,17 @@ export default function DiscoverScreen() {
       }
 
       const data = await response.json();
-      setTranscript(data.text || "");
+      const transcribedText = data.text || "";
+      setTranscript(transcribedText);
+
+      // Navigate to AI Chat with the transcribed text
+      if (transcribedText.trim()) {
+        rootNavigation.navigate("AIChat", {
+          cardTitle: "ASSISTENTE DE VOZ",
+          cardDescription: "Busca por voz",
+          initialMessage: transcribedText,
+        });
+      }
     } catch (error: any) {
       console.error("Transcription error:", error);
       const message = error.name === "AbortError"
@@ -775,8 +798,9 @@ export default function DiscoverScreen() {
       Alert.alert("Erro na transcrição", message, [{ text: "OK" }]);
     } finally {
       setIsTranscribing(false);
+      setIsRecording(false);
     }
-  }, []);
+  }, [rootNavigation]);
 
   useEffect(() => {
     if (pendingTranscription && !audioRecorder.isRecording && audioRecorder.uri) {
@@ -787,9 +811,12 @@ export default function DiscoverScreen() {
 
 
 
-  const handleMicPress = useCallback(async () => {
-    // ... removed for brevity, keep logic if possible or assume basic implementation
-  }, []);
+  const handleMicPress = useCallback(() => {
+    rootNavigation.navigate("AIChat", {
+      cardTitle: "ASSISTENTE DE VOZ",
+      cardDescription: "Busca por voz",
+    });
+  }, [rootNavigation]);
 
   // Simplified Scroll Handler
   const updateCurrentSection = useCallback((scrollPosition: number) => {
@@ -854,16 +881,30 @@ export default function DiscoverScreen() {
   // Animations
   const heroAnimatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [1, 0], Extrapolation.CLAMP),
+      opacity: interpolate(scrollY.value, [0, SCROLL_THRESHOLD * 0.6], [1, 0], Extrapolation.CLAMP),
       transform: [
-        { scale: interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [1, 0.8], Extrapolation.CLAMP) },
-        { translateY: interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [0, -50], Extrapolation.CLAMP) },
+        { scale: interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [1, 0.85], Extrapolation.CLAMP) },
+        { translateY: interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [0, -80], Extrapolation.CLAMP) },
       ],
     };
   });
 
   const expandedWizardStyle = useAnimatedStyle(() => {
-    return { opacity: interpolate(scrollY.value, [0, SCROLL_THRESHOLD * 0.5], [1, 0], Extrapolation.CLAMP) };
+    return {
+      opacity: interpolate(scrollY.value, [0, SCROLL_THRESHOLD * 0.5], [1, 0], Extrapolation.CLAMP),
+      transform: [
+        { translateY: interpolate(scrollY.value, [0, SCROLL_THRESHOLD], [0, -120], Extrapolation.CLAMP) },
+      ],
+    };
+  });
+
+  // Pulls the content below hero+wizard UP to fill the gap smoothly
+  const contentSlideUpStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateY: interpolate(scrollY.value, [0, SCROLL_THRESHOLD * 1.5], [0, -350], Extrapolation.CLAMP) },
+      ],
+    };
   });
 
   const collapsedWizardStyle = useAnimatedStyle(() => {
@@ -1163,157 +1204,220 @@ export default function DiscoverScreen() {
               hasValue={!!selectedCompanion}
             />
 
-            {/* Botão Buscar só aparece quando os 3 estão preenchidos */}
-            {selectedCity && selectedDate && selectedCompanion ? (
-              <View style={styles.helperTextContainer}>
-                <Text style={[styles.helperText, { color: Colors.dark.primary, fontWeight: '600' }]}>
-                  ✓ Pronto! Buscando para você...
-                </Text>
-              </View>
-            ) : null}
-
-            {/* Campo AI — aparece sempre */}
-            <View style={styles.aiPromptContainer}>
-              <Feather name="message-circle" size={18} color={Colors.dark.textSecondary} style={{ marginRight: 8 }} />
-              <Text style={styles.aiPromptText}>
-                Se quiser, conta mais aqui sobre você e sobre o que você procura
-              </Text>
-            </View>
+            {/* Botão Buscar (lupa) — compacto */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.wizardSearchButton,
+                (selectedCity || selectedDate || selectedCompanion)
+                  ? styles.wizardSearchButtonActive
+                  : styles.wizardSearchButtonInactive,
+                pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] },
+              ]}
+              onPress={() => {
+                if (selectedCity && selectedDate && selectedCompanion) {
+                  const city = selectedCity;
+                  const date = selectedDate;
+                  const companion = selectedCompanion;
+                  setSelectedCity(null);
+                  setSelectedDate(null);
+                  setSelectedCompanion(null);
+                  setTimeout(() => {
+                    setSelectedCity(city);
+                    setSelectedDate(date);
+                    setSelectedCompanion(companion);
+                  }, 50);
+                } else {
+                  if (!selectedCity) setOndeModalVisible(true);
+                  else if (!selectedDate) setQuandoModalVisible(true);
+                  else if (!selectedCompanion) setComQuemModalVisible(true);
+                }
+              }}
+            >
+              <Feather name="search" size={18} color="#FFFFFF" />
+              <Text style={styles.wizardSearchButtonText}>Buscar</Text>
+            </Pressable>
           </View>
         </Animated.View>
 
-        {/* Sections */}
-        <View style={styles.quererSection} onLayout={handleQuererLayout}>
-          <Text style={styles.sectionTitle}>
-            {homeTexts?.quero_section_title ?? 'O seu querer faz acontecer'}
-          </Text>
-          <View style={styles.quererGrid}>
-            {querer.map((item) => (
-              <QuererCard
-                key={item.id}
-                title={item.title}
-                description={item.description}
-                image={item.image}
-                onPress={() => handleQuererCardPress(item.title, item.description)}
-              />
-            ))}
-          </View>
-        </View>
+        {/* Conteúdo abaixo do wizard — sobe suavemente com scroll */}
+        <Animated.View style={contentSlideUpStyle}>
 
-        <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
-          <Text style={styles.momentoTitle}>
-            {homeTexts?.momento_title ?? 'Momento dança é momento feliz'}
-          </Text>
-          {homeTexts?.momento_subtitle ? (
-            <Text style={styles.momentoSubtitle}>{homeTexts.momento_subtitle}</Text>
-          ) : null}
-          <FlatList
-            horizontal
-            data={videoStories}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.videoStoriesContainer}
-            viewabilityConfig={videoViewabilityConfig}
-            onViewableItemsChanged={onVideoViewableItemsChanged}
-            renderItem={({ item, index }) => (
-              <VideoStoryCard
-                title={item.title}
-                username={item.username}
-                thumbnail={item.thumbnail}
-                videoUrl={item.videoUrl}
-                isVisible={index === visibleVideoIndex}
-                onPress={() => handleVideoStoryPress(index)}
+          {/* Seção Mic — fora do wizard, em div própria cinza */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.micStandaloneContainer,
+              isRecording && { borderWidth: 2, borderColor: Colors.dark.brand },
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={handleMicPress}
+            disabled={isTranscribing}
+          >
+            <View style={[
+              styles.aiMicButton,
+              isRecording && { backgroundColor: '#FF3B30' },
+              isTranscribing && { backgroundColor: Colors.dark.textSecondary },
+            ]}>
+              <Feather
+                name={isTranscribing ? "loader" : "mic"}
+                size={20}
+                color="#FFFFFF"
               />
-            )}
-          />
-          <UploadButton onPress={handleUploadPress} />
-          {destaqueMes && (
-            <>
-              <Text style={styles.destaqueMesTitle}>Destaque do mês</Text>
-              <DestaqueDoMes thumbnail={destaqueMes.thumbnail} onPress={handleDestaquePress} />
-              <Text style={styles.destaqueMesDescription}>
-                veja aqui a <Text style={styles.destaqueMesUsername}>@aninha</Text> dando um show de dança e descontraçao na <Text style={styles.destaqueMesUsername}>@vitrinniloungerj</Text>
-              </Text>
-            </>
-          )}
-        </View>
+            </View>
+            <Text style={styles.micStandaloneText}>
+              {isRecording
+                ? "Gravando... Toque para parar e enviar"
+                : isTranscribing
+                  ? "Transcrevendo seu áudio..."
+                  : "Se quiser, conta mais aqui sobre você e sobre o que você procura"
+              }
+            </Text>
+          </Pressable>
 
-        <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
-          <Image source={logoImage} style={styles.awardsLogoHeader} resizeMode="contain" />
-          <Text style={styles.topDanceAwardsTitle}>
-            {homeTexts?.awards_title ?? 'BoraBailar\nTOP 10'}
-          </Text>
-          <Text style={styles.topDanceAwardsSubtitle}>
-            {homeTexts?.awards_subtitle ?? 'Top Dance: assista, vote e participe'}
-          </Text>
-          <Text style={styles.awardsTagline}>para quem curte ver gente feliz em momentos felizes</Text>
-          <View style={styles.awardCategoriesList}>
-            {awards.map((item: any) => (
-              <AwardCategoryCard
-                key={item.id}
-                category={item.category_label || item.category || `Categoria ${item.id}`}
-                title={item.name || item.title}
-                thumbnail={item.image_url ? { uri: item.image_url } : item.thumbnail}
-                highlightWord={item.highlight_word || item.highlightWord}
-                onPress={() => handleAwardCategoryPress(item)}
-              />
-            ))}
-          </View>
-          {/* Botão Quero Participar APÓS as categorias */}
-          <QueroParticiparButton onPress={handleDanceAwardsPress} />
-        </View>
-
-        {groupedTipsByDay.length > 0 && (
-          <View style={styles.dicasDaSemanaSection} onLayout={handleDicasLayout}>
-            <Text style={styles.dicasDaSemanaTitle}>{homeTexts?.dicas_title ?? 'Dicas da semana'}</Text>
-            {homeTexts?.dicas_subtitle ? (
-              <Text style={styles.dicasDaSemanaSubtitle}>{homeTexts.dicas_subtitle}</Text>
-            ) : null}
-            <View style={styles.dicasDaSemanaList}>
-              {groupedTipsByDay.map((dayGroup) => (
-                <DicaDaSemanaRow
-                  key={dayGroup.dayIndex}
-                  day={dayGroup.dayName}
-                  date=""
-                  dayIndex={dayGroup.dayIndex}
-                  dicas={dayGroup.events}
-                  onDicaPress={handleDicaPress}
+          {/* Sections */}
+          <View style={styles.quererSection} onLayout={handleQuererLayout}>
+            <Text style={styles.sectionTitle}>
+              {homeTexts?.quero_section_title ?? 'O seu querer faz acontecer'}
+            </Text>
+            <View style={styles.quererGrid}>
+              {querer.map((item) => (
+                <QuererCard
+                  key={item.id}
+                  title={item.title}
+                  description={item.description}
+                  image={item.image}
+                  onPress={() => handleQuererCardPress(item.title, item.description)}
                 />
               ))}
             </View>
           </View>
-        )}
 
-        {/* Parceiros / Marcas */}
-        <View onLayout={handlePartnersLayout}>
-          <PartnersCarousel partnerCards={partnerCards} homeTexts={homeTexts} />
-        </View>
-        <PartnerBrands partnerBrands={partnerBrands} homeTexts={homeTexts} />
+          <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
+            <Text style={styles.momentoTitle}>
+              {homeTexts?.momento_title ?? 'Momento dança é momento feliz'}
+            </Text>
+            {homeTexts?.momento_subtitle ? (
+              <Text style={styles.momentoSubtitle}>{homeTexts.momento_subtitle}</Text>
+            ) : null}
+            <FlatList
+              horizontal
+              data={videoStories}
+              keyExtractor={(item) => item.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.videoStoriesContainer}
+              viewabilityConfig={videoViewabilityConfig}
+              onViewableItemsChanged={onVideoViewableItemsChanged}
+              renderItem={({ item, index }) => (
+                <VideoStoryCard
+                  title={item.title}
+                  username={item.username}
+                  thumbnail={item.thumbnail}
+                  videoUrl={item.videoUrl}
+                  isVisible={index === visibleVideoIndex}
+                  onPress={() => handleVideoStoryPress(index)}
+                />
+              )}
+            />
+            <UploadButton onPress={handleUploadPress} />
 
-        {/* Destaques do Mês — penúltima seção */}
-        {(destaqueMes || true) && (
+          </View>
+
+          <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
+            <Image source={logoImage} style={styles.awardsLogoHeader} resizeMode="contain" />
+            <Text style={styles.topDanceAwardsTitle}>
+              {homeTexts?.awards_title ?? 'BoraBailar\nTOP 10'}
+            </Text>
+            <Text style={styles.topDanceAwardsSubtitle}>
+              {homeTexts?.awards_subtitle ?? 'Top Dance: assista, vote e participe'}
+            </Text>
+            <Text style={styles.awardsTagline}>para quem curte ver gente feliz em momentos felizes</Text>
+            <View style={styles.awardCategoriesList}>
+              {awards.map((item: any) => (
+                <AwardCategoryCard
+                  key={item.id}
+                  category={item.category_label || item.category || `Categoria ${item.id}`}
+                  title={item.name || item.title}
+                  thumbnail={item.image_url ? { uri: item.image_url } : item.thumbnail}
+                  highlightWord={item.highlight_word || item.highlightWord}
+                  onPress={() => handleAwardCategoryPress(item)}
+                />
+              ))}
+            </View>
+            {/* Botão Quero Participar APÓS as categorias */}
+            <QueroParticiparButton onPress={handleDanceAwardsPress} />
+          </View>
+
+          {groupedTipsByDay.length > 0 && (
+            <View style={styles.dicasDaSemanaSection} onLayout={handleDicasLayout}>
+              <Text style={styles.dicasDaSemanaTitle}>{homeTexts?.dicas_title ?? 'Dicas da semana'}</Text>
+              {homeTexts?.dicas_subtitle ? (
+                <Text style={styles.dicasDaSemanaSubtitle}>{homeTexts.dicas_subtitle}</Text>
+              ) : null}
+              <View style={styles.dicasDaSemanaList}>
+                {groupedTipsByDay.map((dayGroup) => (
+                  <DicaDaSemanaRow
+                    key={dayGroup.dayIndex}
+                    day={dayGroup.dayName}
+                    date=""
+                    dayIndex={dayGroup.dayIndex}
+                    dicas={dayGroup.events}
+                    onDicaPress={handleDicaPress}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Destaques do Mês — após dicas, antes de parceiros (tripa horizontal) */}
           <View style={styles.destaquesMesSection}>
             <Text style={styles.destaquesMesTitle}>Destaques do Mês</Text>
             <Text style={styles.destaquesMesSubtitle}>para quem curte ver gente feliz em momentos felizes</Text>
-            {destaqueMes ? (
-              <DestaqueDoMes thumbnail={destaqueMes.thumbnail} onPress={handleDestaquePress} />
-            ) : (
-              <View style={styles.destaquesMesEmpty}>
-                <Feather name="film" size={40} color={Colors.dark.textSecondary} />
-                <Text style={styles.destaquesMesEmptyText}>Em breve</Text>
-              </View>
-            )}
+            <FlatList
+              horizontal
+              data={destaqueMes
+                ? [destaqueMes, ...videoStories.slice(0, 4)]
+                : videoStories.slice(0, 5)
+              }
+              keyExtractor={(item, index) => `destaque-${index}`}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
+              renderItem={({ item }) => (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.destaqueStripCard,
+                    pressed && { opacity: 0.85 },
+                  ]}
+                  onPress={handleDestaquePress}
+                >
+                  <Image source={item.thumbnail} style={styles.destaqueStripImage} resizeMode="cover" />
+                  <View style={styles.destaqueStripOverlay}>
+                    <View style={styles.destaqueStripPlay}>
+                      <Feather name="play" size={16} color="#FFFFFF" />
+                    </View>
+                  </View>
+                  <Text style={styles.destaqueStripTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                </Pressable>
+              )}
+            />
           </View>
-        )}
 
-        {/* Beneficência — última seção */}
-        <View style={styles.beneficenciaSection}>
-          <Text style={{ fontSize: 16, color: Colors.dark.primary, marginBottom: 4 }}>♥</Text>
-          <Text style={styles.beneficenciaTitle}>Apoiamos a Casa da Criança com Câncer</Text>
-          <Text style={styles.beneficenciaSubtitle}>
-            Parte da nossa receita é destinada à Casa da Criança com Câncer.{"\n"}Ao usar o BoraBailar, você também faz a diferença.
-          </Text>
-        </View>
+          {/* Parceiros / Marcas */}
+          <View onLayout={handlePartnersLayout}>
+            <PartnersCarousel partnerCards={partnerCards} homeTexts={homeTexts} />
+          </View>
+          <PartnerBrands partnerBrands={partnerBrands} homeTexts={homeTexts} />
+
+          {/* Beneficência — última seção */}
+          <View style={styles.beneficenciaSection}>
+            <Text style={{ fontSize: 16, color: Colors.dark.primary, marginBottom: 4 }}>♥</Text>
+            <Text style={styles.beneficenciaTitle}>Apoiamos a Casa da Criança com Câncer</Text>
+            <Text style={styles.beneficenciaSubtitle}>
+              Parte da nossa receita é destinada à Casa da Criança com Câncer.{"\n"}Ao usar o BoraBailar, você também faz a diferença.
+            </Text>
+          </View>
+
+        </Animated.View>{/* Close contentSlideUpStyle wrapper */}
 
         <View style={{ height: tabBarHeight + Spacing.xl }} />
       </Animated.ScrollView>
@@ -1397,7 +1501,7 @@ export default function DiscoverScreen() {
         isTranscribing={isTranscribing}
         transcript={transcript}
       />
-    </View>
+    </View >
   );
 }
 
@@ -1499,6 +1603,53 @@ const styles = StyleSheet.create({
   chevronIconContainer: { alignItems: "center", justifyContent: "center" },
   micIconContainer: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.dark.brand, alignItems: "center", justifyContent: "center" },
   micCta: { fontSize: 14, color: Colors.dark.brand, textAlign: "center", fontWeight: "500", marginTop: Spacing.sm },
+  wizardSearchButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    borderRadius: 25,
+    gap: Spacing.xs,
+    alignSelf: "center",
+  },
+  wizardSearchButtonActive: {
+    backgroundColor: Colors.dark.brand,
+  },
+  wizardSearchButtonInactive: {
+    backgroundColor: Colors.dark.textSecondary,
+  },
+  wizardSearchButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  aiMicButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.dark.brand,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.sm,
+  },
+  micStandaloneContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.dark.wizardBackground,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.lg,
+  },
+  micStandaloneText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.dark.textSecondary,
+    fontStyle: "italic",
+  },
   helperTextContainer: { alignItems: "center", marginTop: Spacing.md, paddingBottom: Spacing.sm },
   helperText: { fontSize: 15, color: Colors.dark.text, textAlign: "center" },
   helperHighlight: { color: Colors.dark.brand, fontWeight: "700" },
@@ -1512,7 +1663,7 @@ const styles = StyleSheet.create({
   quererOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.3)" },
   quererTitle: { position: "absolute", bottom: Spacing.md, left: Spacing.md, right: Spacing.md, fontSize: 16, fontWeight: "800", color: "#FFFFFF", textShadowColor: "rgba(0,0,0,0.5)", textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
   quererHeart: { position: "absolute", top: Spacing.sm, right: Spacing.sm },
-  heartCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.dark.brand, alignItems: "center", justifyContent: "center" },
+  heartCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: "transparent", alignItems: "center", justifyContent: "center" },
   quererContent: { paddingTop: Spacing.sm },
   quererDescription: { fontSize: 13, color: Colors.dark.text, lineHeight: 18 },
   queroPrefix: { color: Colors.dark.brand, fontWeight: "700" },
@@ -1634,6 +1785,38 @@ const styles = StyleSheet.create({
     color: Colors.dark.textSecondary,
     fontStyle: "italic",
     marginBottom: Spacing.lg,
+  },
+  destaqueStripCard: {
+    width: 130,
+  },
+  destaqueStripImage: {
+    width: 130,
+    height: 170,
+    borderRadius: BorderRadius.lg,
+  },
+  destaqueStripOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    top: 0,
+    width: 130,
+    height: 170,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: "rgba(0,0,0,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  destaqueStripPlay: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  destaqueStripTitle: {
+    fontSize: 12,
+    color: Colors.dark.text,
+    fontWeight: "600",
+    marginTop: Spacing.xs,
   },
   destaquesMesEmpty: {
     height: 160,

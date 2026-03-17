@@ -129,9 +129,12 @@ type Message = {
 
 type ChatStep = "initial" | "awaiting_confirmation" | "asked_name" | "asked_email" | "complete";
 
-type AIChatMode = "reservation" | "dance_awards" | "dicas_semana";
+type AIChatMode = "reservation" | "dance_awards" | "dicas_semana" | "voice_search";
 
-const getInitialAIMessage = (mode: AIChatMode, cardTitle: string, cardDescription: string) => {
+const getInitialAIMessage = (mode: AIChatMode, cardTitle: string, cardDescription: string, initialMessage?: string) => {
+  if (mode === "voice_search") {
+    return `Olá! Sou seu concierge digital do BoraBailar \u{1F483}\n\nMe conta o que você procura — um lugar pra dançar, um evento especial, ou só quer sair e se divertir?\n\nEstou aqui pra te ajudar!`;
+  }
   if (mode === "dance_awards") {
     return `Olá, sou a IA do BORABAILAR. Você gostaria de participar do BORABAILAR TOP DANCE AWARDS?`;
   }
@@ -158,10 +161,12 @@ export default function AIChatScreen() {
 
   const cardTitle = route.params?.cardTitle || "SEXTANEJA NO PADANO";
   const cardDescription = route.params?.cardDescription || "";
+  const initialMessage = route.params?.initialMessage || "";
 
   const isDanceAwards = cardTitle.includes("DANCE AWARDS") || cardTitle.includes("TOP DANCE");
   const isDicasSemana = cardTitle.startsWith("DICA_SEMANA:");
-  const chatMode: AIChatMode = isDanceAwards ? "dance_awards" : isDicasSemana ? "dicas_semana" : "reservation";
+  const isVoiceSearch = cardTitle === "ASSISTENTE DE VOZ";
+  const chatMode: AIChatMode = isVoiceSearch ? "voice_search" : isDanceAwards ? "dance_awards" : isDicasSemana ? "dicas_semana" : "reservation";
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -171,7 +176,23 @@ export default function AIChatScreen() {
   const [showDevModal, setShowDevModal] = useState(false);
 
   useEffect(() => {
-    if (chatMode === "reservation") {
+    if (chatMode === "voice_search") {
+      // Voice/concierge mode: AI greets first
+      setIsTyping(true);
+
+      const timer = setTimeout(() => {
+        setIsTyping(false);
+        const aiMessage: Message = {
+          id: "1",
+          text: getInitialAIMessage(chatMode, cardTitle, cardDescription),
+          isUser: false,
+        };
+        setMessages([aiMessage]);
+        setChatStep("awaiting_confirmation");
+      }, 1200);
+
+      return () => clearTimeout(timer);
+    } else if (chatMode === "reservation") {
       const queroMessage: Message = {
         id: "0",
         text: `QUERO ir no ${cardTitle.toUpperCase()}`,
@@ -209,7 +230,7 @@ export default function AIChatScreen() {
 
       return () => clearTimeout(timer);
     }
-  }, [cardTitle, chatMode, cardDescription]);
+  }, [cardTitle, chatMode, cardDescription, initialMessage]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
