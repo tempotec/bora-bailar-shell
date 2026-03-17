@@ -14,8 +14,10 @@ import RootStackNavigator from "@/navigation/RootStackNavigator";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { TabBarProvider } from "@/contexts/TabBarContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export default function App() {
+  useNotifications();
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular: require("../assets/fonts/Montserrat_400Regular.ttf"),
     Montserrat_500Medium: require("../assets/fonts/Montserrat_500Medium.ttf"),

@@ -6,6 +6,11 @@ import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { Expo, type ExpoPushMessage } from "expo-server-sdk";
+
+// In-memory push token store (persists as long as server runs)
+const pushTokenStore = new Set<string>();
+const expo = new Expo();
 
 // OpenAI integration for audio transcription (lazy initialization)
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
@@ -329,6 +334,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error attending event:", error);
       res.status(500).json({ error: "Failed to attend event" });
     }
+  });
+
+  // ===== PUSH NOTIFICATIONS =====
+
+  // Register a push token
+  app.post("/api/push-token", async (req, res) => {
+    try {
+      const { token, userId } = req.body;
+      if (!token || !Expo.isExpoPushToken(token)) {
+        return res.status(400).json({ error: "Invalid Expo push token" });
+      }
+      pushTokenStore.add(token);
+      console.log(`[PUSH] Token registered: ${token.substring(0, 20)}... (total: ${pushTokenStore.size})`);
+      res.json({ success: true, totalTokens: pushTokenStore.size });
+    } catch (error) {
+      console.error("[PUSH] Error registering token:", error);
+      res.status(500).json({ error: "Failed to register push token" });
+    }
+  });
+
+  // Send push notification to all registered devices
+  app.post("/api/notifications/send", async (req, res) => {
+    try {
+      const { title, body, data } = req.body;
+      if (!title || !body) {
+        return res.status(400).json({ error: "title and body are required" });
+      }
+
+      const tokens = Array.from(pushTokenStore);
+      if (tokens.length === 0) {
+        return res.json({ success: true, sent: 0, message: "No tokens registered" });
+      }
+
+      // Build messages for all tokens
+      const messages: ExpoPushMessage[] = tokens
+        .filter(token => Expo.isExpoPushToken(token))
+        .map(token => ({
+          to: token,
+          sound: "default" as const,
+          title,
+          body,
+          data: data || {},
+        }));
+
+      // Send in chunks (Expo API limit)
+      const chunks = expo.chunkPushNotifications(messages);
+      let sent = 0;
+      const errors: string[] = [];
+
+      for (const chunk of chunks) {
+        try {
+          const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+          sent += ticketChunk.length;
+          ticketChunk.forEach((ticket, i) => {
+            if (ticket.status === "error") {
+              errors.push(`${ticket.message}`);
+              // Remove invalid tokens
+              if (ticket.details?.error === "DeviceNotRegistered") {
+                pushTokenStore.delete(tokens[i]);
+              }
+            }
+          });
+        } catch (err) {
+          console.error("[PUSH] Chunk send error:", err);
+          errors.push(String(err));
+        }
+      }
+
+      console.log(`[PUSH] Sent ${sent} notifications (${errors.length} errors)`);
+      res.json({ success: true, sent, errors: errors.length > 0 ? errors : undefined });
+    } catch (error) {
+      console.error("[PUSH] Error sending notifications:", error);
+      res.status(500).json({ error: "Failed to send notifications" });
+    }
+  });
+
+  // Get push stats
+  app.get("/api/notifications/stats", async (req, res) => {
+    res.json({ registeredTokens: pushTokenStore.size });
   });
 
   const httpServer = createServer(app);
