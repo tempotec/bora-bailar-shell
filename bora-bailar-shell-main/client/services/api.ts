@@ -57,10 +57,10 @@ export const api = USE_MOCK ? {
                     },
                     {
                         id: "2",
-                        title: "NOITE DE SALSA",
-                        username: "@salsa_rio",
+                        title: "VAMBORA DANÇAR",
+                        username: "@vambora",
                         thumbnail: require("../attached_assets/noite_de_salsa_thumb.jpg"),
-                        videoUrl: require("../attached_assets/videos/noite_de_salsa.mp4"),
+                        videoUrl: require("../attached_assets/videos/mixkit-group-of-friends-partying-happily-4640-hd-ready.mp4"),
                     },
                     {
                         id: "3",
@@ -85,12 +85,8 @@ export const api = USE_MOCK ? {
                     },
                 ],
 
-                // Destaque do mês - fallback to local video
-                destaqueMes: {
-                    title: "MOMENTO DANÇA É MOMENTO FELIZ",
-                    thumbnail: require("../attached_assets/destaque_do_mes_thumb.jpg"),
-                    videoUrl: require("../attached_assets/videos/destaque do mes.mp4"),
-                },
+                // Destaque do mês - removed sensual video
+                destaqueMes: null,
 
                 // Awards - mapped from backend data
                 awards: ((data as any).awards || []).map((a: any) => {
@@ -120,15 +116,37 @@ export const api = USE_MOCK ? {
                 })),
 
                 // Querer - map from quero_cards (Flask returns snake_case)
-                querer: (data.queroCards || []).map((q: any) => ({
-                    id: String(q.id),
-                    title: (q.title || "").toUpperCase().replace(/\n/g, "\n"),
-                    description: q.description || "",
-                    image: buildImageUrl(q.image_url || q.imageUrl || q.cover_image) ||
-                        "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=300&fit=crop",
-                    eventsCount: q.events_count || q.eventsCount || 0,
-                    events: q.events || [],
-                })),
+                querer: (data.queroCards || []).map((q: any) => {
+                    let title = (q.title || "").toUpperCase().replace(/\n/g, "\n");
+                    let description = q.description || "";
+                    
+                    if (title.includes("BALADAS") || title.includes("MELHORES")) {
+                        title = "BALADAS\nBADALADAS";
+                        description = "Quero conhecer lugares animados e bem recomendados para dança e diversão aqui por perto.";
+                    } else if (title.includes("PROFISSA") || title.includes("GENTE")) {
+                        title = "GENTE\nPROFISSA";
+                        description = "conhecer profissionais de dança que sejam boa companhia e me levem para dançar.";
+                    } else if (title.includes("ESCOLAS") || title.includes("ESCOLA")) {
+                        title = "ESCOLAS\nDE DANÇA";
+                        description = "Quero me inscrever em escolas recomendadas para desenvolver os meus estilos de dança favoritos.";
+                    } else if (title.includes("TRIBO") || title.includes("JANTAR")) {
+                        title = "JANTAR\nMUSICAL";
+                        description = "Quero sair pra jantar com alguém legal e curtir uma boa música ao vivo.";
+                    } else if (title.includes("EXPERIENCE") || title.includes("ESPETÁCULO") || title.includes("ESPETACUL")) {
+                        title = "ESPETÁCULOS\nESPETACULARES";
+                        description = "Quero conhecer novos shows e artistas que tenham a ver comigo.";
+                    }
+
+                    return {
+                        id: String(q.id),
+                        title,
+                        description,
+                        image: buildImageUrl(q.image_url || q.imageUrl || q.cover_image) ||
+                            "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=300&fit=crop",
+                        eventsCount: q.events_count || q.eventsCount || 0,
+                        events: q.events || [],
+                    };
+                }),
 
                 // Extra data from Admin
                 events: (data.recommendations || []).map((e: any) => ({

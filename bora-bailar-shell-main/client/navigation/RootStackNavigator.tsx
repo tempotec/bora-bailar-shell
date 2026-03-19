@@ -11,6 +11,7 @@ import FaltaPoucoScreen from "@/screens/FaltaPoucoScreen";
 import QueroDetailScreen from "@/screens/QueroDetailScreen";
 import ReelsScreen, { ReelsScreenParams } from "@/screens/ReelsScreen";
 import EventDetailsScreen from "@/screens/EventDetailsScreen";
+import UploadPostScreen from "@/screens/UploadPostScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -35,6 +36,7 @@ export type RootStackParamList = {
   };
   Reels: ReelsScreenParams;
   EventDetails: { eventId: string };
+  UploadPost: { videoUri: string; thumbnailUri: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -121,6 +123,14 @@ export default function RootStackNavigator() {
         name="EventDetails"
         component={EventDetailsScreen}
         options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="UploadPost"
+        component={UploadPostScreen}
+        options={{
+          presentation: "modal",
           headerShown: false,
         }}
       />

@@ -9,6 +9,7 @@ import {
     Platform,
     ActivityIndicator,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
@@ -61,6 +62,8 @@ export function WizardSearchModal({
     const [selectedCity, setSelectedCity] = useState<typeof ALL_NEIGHBORHOODS[0] | null>(initialCity);
     const [selectedDate, setSelectedDate] = useState<typeof DATE_OPTIONS[0] | null>(initialDate);
     const [selectedCompanion, setSelectedCompanion] = useState<typeof COMPANION_OPTIONS[0] | null>(initialCompanion);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [dateValue, setDateValue] = useState(new Date());
 
     // Sync with initial values when modal opens
     useEffect(() => {
@@ -87,8 +90,12 @@ export function WizardSearchModal({
     };
 
     const handleDateSelect = (date: typeof DATE_OPTIONS[0]) => {
-        setSelectedDate(date);
-        setCurrentStep("comquem");
+        if (date.id === "specific") {
+            setShowDatePicker(true);
+        } else {
+            setSelectedDate(date);
+            setCurrentStep("comquem");
+        }
     };
 
     const handleCompanionSelect = (companion: typeof COMPANION_OPTIONS[0]) => {
@@ -387,6 +394,30 @@ export function WizardSearchModal({
                     </Pressable>
                 </View>
             </View>
+            {showDatePicker && (
+                <DateTimePicker
+                    value={dateValue}
+                    mode="date"
+                    display="default"
+                    onChange={(event, date) => {
+                        if (Platform.OS !== "ios") {
+                            setShowDatePicker(false);
+                        }
+                        if (event.type === "set" && date) {
+                            setDateValue(date);
+                            const formatted = date.toLocaleDateString("pt-BR");
+                            setSelectedDate({
+                                id: "specific",
+                                label: formatted,
+                                icon: "clock"
+                            });
+                            setCurrentStep("comquem");
+                        } else if (event.type === "dismissed") {
+                            setShowDatePicker(false);
+                        }
+                    }}
+                />
+            )}
         </Modal>
     );
 }

@@ -28,7 +28,7 @@ import Animated, {
 import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
-const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
+const logoImage = require("../../assets/images/novo_logo.png");
 
 function TypingIndicator() {
   const dot1 = useSharedValue(0);
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   },
   headerBrandName: {
     fontSize: 18,
-    fontFamily: Fonts?.serif,
+    fontFamily: "Montserrat_700Bold",
     letterSpacing: 1,
   },
   brandRed: {

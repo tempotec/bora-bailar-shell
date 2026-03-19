@@ -19,7 +19,7 @@ import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/services/api";
 
-const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
+const logoImage = require("../../assets/images/novo_logo.png");
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 

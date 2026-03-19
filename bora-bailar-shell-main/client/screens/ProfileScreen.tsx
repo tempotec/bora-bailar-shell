@@ -121,8 +121,8 @@ export default function ProfileScreen() {
       {/* Fixed Header */}
       <View style={[styles.header, { paddingTop: insets.top + Spacing.md }]}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>
-            <Text style={styles.logoRed}>33 </Text>
+          <Image source={require("../../assets/images/novo_logo.png")} style={{ width: 32, height: 24, marginRight: 6 }} resizeMode="contain" />
+          <Text style={[styles.logoText, { fontFamily: "Montserrat_700Bold", letterSpacing: 1.5 }]}>
             <Text style={styles.logoGray}>BORABAILAR</Text>
           </Text>
         </View>

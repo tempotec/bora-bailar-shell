@@ -133,7 +133,8 @@ function getExtension(uri: string): string {
 export async function uploadVideo(
     videoUri: string,
     thumbnailUri: string,
-    caption?: string
+    caption?: string,
+    extraData?: { title?: string; rating?: number; location?: string }
 ): Promise<VideoUploadResult> {
     // Validate size
     await validateVideoSize(videoUri);
@@ -161,6 +162,12 @@ export async function uploadVideo(
 
     if (caption) {
         formData.append("caption", caption);
+    }
+
+    if (extraData) {
+        if (extraData.title) formData.append("title", extraData.title);
+        if (extraData.rating) formData.append("rating", extraData.rating.toString());
+        if (extraData.location) formData.append("location", extraData.location);
     }
 
     // Upload

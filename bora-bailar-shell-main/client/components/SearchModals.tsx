@@ -6,7 +6,10 @@ import {
   Pressable,
   Text,
   ScrollView,
+  Platform,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
@@ -17,9 +20,9 @@ export const LOCATION_OPTIONS = [
   { id: "tanto_faz", name: "Tanto faz (em qualquer lugar)", zone: "", icon: "globe" as const, isTantoFaz: true },
   { id: "zona_sul", name: "Zona Sul", zone: "Zona Sul", icon: "map" as const },
   { id: "zona_norte", name: "Zona Norte", zone: "Zona Norte", icon: "map" as const },
-  { id: "zona_oeste", name: "Zona Oeste / Barra", zone: "Zona Oeste", icon: "map" as const },
+  { id: "zona_oeste", name: "Zona Oeste", zone: "Zona Oeste", icon: "map" as const },
   { id: "sudoeste", name: "Sudoeste", zone: "Sudoeste", icon: "map" as const },
-  { id: "centro", name: "Centro / Lapa", zone: "Centro", icon: "map-pin" as const },
+  { id: "centro", name: "Centro", zone: "Centro", icon: "map-pin" as const },
 ];
 
 // Mantido para compatibilidade com código legado
@@ -129,6 +132,8 @@ interface QuandoModalProps {
 
 export function QuandoModal({ visible, onClose, onSelect, selectedOption }: QuandoModalProps) {
   const insets = useSafeAreaInsets();
+  const [showPicker, setShowPicker] = useState(false);
+  const [dateValue, setDateValue] = useState(new Date());
 
   return (
     <Modal
@@ -165,8 +170,12 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
                   pressed && styles.optionItemPressed,
                 ]}
                 onPress={() => {
-                  onSelect(opt);
-                  onClose();
+                  if (opt.id === "specific") {
+                    setShowPicker(true);
+                  } else {
+                    onSelect(opt);
+                    onClose();
+                  }
                 }}
               >
                 <View style={styles.optionIcon}>
@@ -180,6 +189,28 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
             );
           })}
         </ScrollView>
+        {showPicker && (
+          <DateTimePicker
+            value={dateValue}
+            mode="date"
+            display="default"
+            onChange={(event, date) => {
+              if (Platform.OS !== "ios") {
+                setShowPicker(false);
+              }
+              if (event.type === "set" && date) {
+                setDateValue(date);
+                const formatted = date.toLocaleDateString("pt-BR");
+                onSelect({ id: "specific", label: formatted, icon: "clock" });
+                if (Platform.OS !== "ios") {
+                  onClose();
+                }
+              } else if (event.type === "dismissed") {
+                setShowPicker(false);
+              }
+            }}
+          />
+        )}
       </View>
     </Modal>
   );

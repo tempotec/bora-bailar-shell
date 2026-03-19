@@ -133,6 +133,11 @@ function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             >
               <View style={styles.iconContainer}>
                 <Feather name={iconName} size={24} color={color} />
+                {route.name === "ChatTab" && !isFocused && (
+                  <View style={styles.tabBadge}>
+                    <View style={styles.tabBadgeDot} />
+                  </View>
+                )}
               </View>
             </Pressable>
           );
@@ -224,5 +229,18 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: "center",
     justifyContent: "center",
+  },
+  tabBadge: {
+    position: "absolute",
+    top: -4,
+    right: -8,
+  },
+  tabBadgeDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.dark.primary,
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
   },
 });

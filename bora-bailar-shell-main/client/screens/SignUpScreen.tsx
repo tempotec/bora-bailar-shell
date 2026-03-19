@@ -14,7 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
-const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
+const logoImage = require("../../assets/images/novo_logo.png");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   headerBrandName: {
     fontSize: 18,
-    fontFamily: Fonts?.serif,
+    fontFamily: "Montserrat_700Bold",
     letterSpacing: 1,
   },
   brandRed: {

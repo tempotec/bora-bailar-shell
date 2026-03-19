@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     View,
     Text,
@@ -6,10 +6,17 @@ import {
     ScrollView,
     Pressable,
     Image,
+    Alert,
+    Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
+import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
+import { API_CONFIG } from "@/config";
+
+const logoImage = require("../../assets/images/novo_logo.png");
 
 const MOCK_CONVERSATIONS = [
     {
@@ -45,6 +52,98 @@ const MOCK_CONVERSATIONS = [
         image: require("../../attached_assets/stock_images/person_dancing_happi_0e460040.jpg"),
     },
 ];
+
+function ConciergeCard() {
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+    const handleActivateNotifications = async () => {
+        try {
+            if (Platform.OS === "android") {
+                await Notifications.setNotificationChannelAsync("default", {
+                    name: "default",
+                    importance: Notifications.AndroidImportance.MAX,
+                    vibrationPattern: [0, 250, 250, 250],
+                    lightColor: "#FF231F7C",
+                });
+            }
+
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
+            let finalStatus = existingStatus;
+
+            if (existingStatus !== "granted") {
+                const { status } = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+            }
+
+            if (finalStatus !== "granted") {
+                Alert.alert("Aviso", "Precisamos de permissão para te avisar das novidades!");
+                return;
+            }
+
+            const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? (Constants as any).easConfig?.projectId;
+            const pushTokenString = (
+                await Notifications.getExpoPushTokenAsync({ projectId })
+            ).data;
+
+            // Register token on server
+            fetch(`${API_CONFIG.BASE_URL}/push-tokens/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token: pushTokenString, platform: Platform.OS }),
+            }).catch((err) => console.error("Error registering token", err));
+
+            setNotificationsEnabled(true);
+            Alert.alert(
+                "Notificações Ativadas! 🎉",
+                "Agora vamos te avisar sempre que tiver algo bombando no BoraBailar."
+            );
+        } catch (e: any) {
+            console.log("Error push token:", e);
+            setNotificationsEnabled(true);
+            Alert.alert(
+                "Notificações Ativadas! 🎉",
+                "Agora vamos te avisar sempre que tiver algo bombando no BoraBailar."
+            );
+        }
+    };
+
+    return (
+        <View style={styles.conciergeCard}>
+            <View style={styles.conciergeHeader}>
+                <Image source={logoImage} style={styles.conciergeLogo} resizeMode="contain" />
+                <View style={styles.conciergeHeaderText}>
+                    <Text style={styles.conciergeName}>Concierge BoraBailar</Text>
+                    <View style={styles.conciergeAiBadge}>
+                        <Feather name="zap" size={10} color="#FFFFFF" />
+                        <Text style={styles.conciergeAiBadgeText}>IA</Text>
+                    </View>
+                </View>
+            </View>
+            <Text style={styles.conciergeMessage}>
+                Olá! 👋 Eu sou o Concierge do BoraBailar. Ative as notificações para ficar por dentro de tudo que está bombando — eventos, promoções e novidades da dança!
+            </Text>
+            <Pressable
+                style={({ pressed }) => [
+                    styles.conciergeButton,
+                    notificationsEnabled && styles.conciergeButtonActive,
+                    pressed && { opacity: 0.85 },
+                ]}
+                onPress={notificationsEnabled ? undefined : handleActivateNotifications}
+            >
+                <Feather
+                    name={notificationsEnabled ? "check-circle" : "bell"}
+                    size={18}
+                    color="#FFFFFF"
+                />
+                <Text style={styles.conciergeButtonText}>
+                    {notificationsEnabled
+                        ? "Notificações ativadas!"
+                        : "Ativar notificações"}
+                </Text>
+            </Pressable>
+        </View>
+    );
+}
 
 function ConversationItem({
     conversation
@@ -103,6 +202,9 @@ export default function ChatScreen() {
 
             {/* Conversations List */}
             <ScrollView style={styles.conversationsList}>
+                {/* Concierge BoraBailar — pinned at top */}
+                <ConciergeCard />
+
                 {MOCK_CONVERSATIONS.map((conversation) => (
                     <ConversationItem key={conversation.id} conversation={conversation} />
                 ))}
@@ -211,6 +313,81 @@ const styles = StyleSheet.create({
     unreadText: {
         fontSize: 12,
         fontWeight: "700",
+        color: "#FFFFFF",
+    },
+
+    // Concierge BoraBailar
+    conciergeCard: {
+        marginHorizontal: Spacing.lg,
+        marginTop: Spacing.md,
+        marginBottom: Spacing.sm,
+        padding: Spacing.lg,
+        backgroundColor: "#FFFFFF",
+        borderRadius: BorderRadius.xl,
+        borderWidth: 1,
+        borderColor: Colors.dark.brand + "30",
+        shadowColor: Colors.dark.brand,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    conciergeHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: Spacing.md,
+        gap: Spacing.sm,
+    },
+    conciergeLogo: {
+        width: 40,
+        height: 30,
+    },
+    conciergeHeaderText: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.xs,
+    },
+    conciergeName: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: Colors.dark.text,
+    },
+    conciergeAiBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: Colors.dark.brand,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 8,
+        gap: 2,
+    },
+    conciergeAiBadgeText: {
+        fontSize: 9,
+        fontWeight: "700",
+        color: "#FFFFFF",
+        letterSpacing: 0.5,
+    },
+    conciergeMessage: {
+        fontSize: 13,
+        color: Colors.dark.textSecondary,
+        lineHeight: 20,
+        marginBottom: Spacing.md,
+    },
+    conciergeButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: Colors.dark.brand,
+        paddingVertical: Spacing.md,
+        borderRadius: BorderRadius.xl,
+        gap: Spacing.xs,
+    },
+    conciergeButtonActive: {
+        backgroundColor: "#4CAF50",
+    },
+    conciergeButtonText: {
+        fontSize: 14,
+        fontWeight: "600",
         color: "#FFFFFF",
     },
 });

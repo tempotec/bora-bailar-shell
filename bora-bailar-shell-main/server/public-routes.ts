@@ -462,9 +462,10 @@ export function registerPublicRoutes(app: Express) {
             hero_tagline: "SAIR, DANÇAR E SE DIVERTIR!",
             quero_section_title: "O seu querer faz acontecer",
             momento_title: "Momento dança é momento feliz",
+            momento_subtitle: "Para quem curte ver gente feliz em momentos felizes. Compartilhe aqui os seus passos.",
             momento_cta: "Faça aqui o upload do seu momento dança",
-            awards_title: "BoraBailar\nTOP 10",
-            awards_subtitle: "Top Dance: assista, vote e participe",
+            awards_title: "BoraBailar Top Dance Awards",
+            awards_subtitle: "Os melhores da dança, eleitos por você",
             dicas_title: "Dicas da semana",
             search_hint: "É só falar que a gente te entende!",
         });

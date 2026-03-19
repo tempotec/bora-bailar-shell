@@ -23,6 +23,9 @@ import { videoService } from "@/services/videoService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
+import { API_CONFIG } from "@/config";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -55,7 +58,8 @@ import { api } from "@/services/api";
 import { realApi, type PartnerCard, type PartnerBrand } from "@/services/realApi";
 import { AuthContext } from "@/contexts/AuthContext";
 
-const logoImage = require("../../attached_assets/WhatsApp_Image_2025-12-09_at_11.41.04-removebg-preview_1765394422474.png");
+const logoImage = require("../../assets/images/novo_logo.png");
+const topDanceAwardsLogo = require("../../assets/images/top_dance_awards_logo.png");
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 3) / 2;
@@ -827,7 +831,7 @@ export default function DiscoverScreen() {
       newSection = null;
     } else {
       const offsets = sectionOffsetsRef.current;
-      const orderedSections: SectionKey[] = ["querer", "momento", "awards", "dicas", "recomendacoes", "partners"];
+      const orderedSections: SectionKey[] = ["querer", "momento", "dicas", "awards", "recomendacoes", "partners"];
 
       for (let i = orderedSections.length - 1; i >= 0; i--) {
         const sectionKey = orderedSections[i];
@@ -926,6 +930,57 @@ export default function DiscoverScreen() {
   const handleSignUp = useCallback(() => {
     rootNavigation.navigate("CadastreSe");
   }, [rootNavigation]);
+
+  const handleBellPress = useCallback(async () => {
+    try {
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: 'default',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+        });
+      }
+
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        Alert.alert("Aviso", "Precisamos de permissão para te avisar das novidades!");
+        return;
+      }
+
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+      const pushTokenString = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId,
+        })
+      ).data;
+
+      Alert.alert(
+        "Notificações Ativadas!",
+        "Agora vamos te avisar sempre que tiver algo bombando no BoraBailar."
+      );
+      
+      fetch(`${API_CONFIG.BASE_URL}/push-tokens/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: pushTokenString, platform: Platform.OS }),
+      }).catch(err => console.error("Error registering token", err));
+
+    } catch (e: any) {
+      console.log('Error push token:', e);
+      Alert.alert(
+        "Notificações Ativadas!",
+        "Agora vamos te avisar sempre que tiver algo bombando no BoraBailar."
+      );
+    }
+  }, []);
 
 
   // Mapeamento de filtros padrão por tipo de "Quero"
@@ -1065,31 +1120,11 @@ export default function DiscoverScreen() {
                 const thumbnail = await videoService.pickThumbnail();
                 if (!thumbnail) return;
 
-                // 4. Pedir legenda
-                Alert.prompt?.(
-                  "Legenda",
-                  "Adicione uma legenda (opcional)",
-                  async (caption) => {
-                    try {
-                      Alert.alert("Enviando...", "Seu vídeo está sendo enviado");
-                      await videoService.uploadVideo(video.uri, thumbnail.uri, caption || "");
-                      Alert.alert("Sucesso!", "Vídeo enviado para moderação.");
-                    } catch (err: any) {
-                      Alert.alert("Erro", err.message);
-                    }
-                  }
-                ) ?? (
-                    // Alert.prompt não existe no Android - upload direto
-                    (async () => {
-                      try {
-                        Alert.alert("Enviando...", "Seu vídeo está sendo enviado");
-                        await videoService.uploadVideo(video.uri, thumbnail.uri, "");
-                        Alert.alert("Sucesso!", "Vídeo enviado para moderação.");
-                      } catch (err: any) {
-                        Alert.alert("Erro", err.message);
-                      }
-                    })()
-                  );
+                // Navigate to the post creation screen
+                rootNavigation.navigate("UploadPost", {
+                  videoUri: video.uri,
+                  thumbnailUri: thumbnail.uri
+                });
               } catch (err: any) {
                 Alert.alert("Erro", err.message);
               }
@@ -1112,7 +1147,12 @@ export default function DiscoverScreen() {
     setSelectedCity(filters.city);
     setSelectedDate(filters.date);
     setSelectedCompanion(filters.companion);
-  }, []);
+    (navigation as any).navigate("Explorar", {
+      city: filters.city?.id,
+      date: filters.date?.id,
+      companion: filters.companion?.id
+    });
+  }, [navigation]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundRoot }]}>
@@ -1136,13 +1176,16 @@ export default function DiscoverScreen() {
           <View style={styles.stickyHeaderContent}>
             <Image source={logoImage} style={styles.stickyLogo} resizeMode="contain" />
             <Text style={styles.stickyBrandName}>
-              <Text style={styles.brandRed}>B</Text>
-              <Text style={styles.brandGray}>ORA</Text>
-              <Text style={styles.brandRed}>B</Text>
-              <Text style={styles.brandGray}>AILAR</Text>
+              <Text style={styles.brandGray}>BORABAILAR</Text>
             </Text>
           </View>
-          <Pressable style={styles.stickyBellButton}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.stickyBellButton,
+              pressed && { opacity: 0.7 }
+            ]}
+            onPress={handleBellPress}
+          >
             <Feather name="bell" size={22} color={Colors.dark.textSecondary} />
           </Pressable>
         </View>
@@ -1173,10 +1216,7 @@ export default function DiscoverScreen() {
         <Animated.View style={[styles.heroSection, heroAnimatedStyle]}>
           <Image source={logoImage} style={styles.logo} resizeMode="contain" />
           <Text style={styles.brandName}>
-            <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>ORA</Text>
-            <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>AILAR</Text>
+            <Text style={styles.brandGray}>BORABAILAR</Text>
           </Text>
           <Text style={styles.tagline}>{homeTexts?.hero_tagline ?? 'SAIR, DANÇAR E SE DIVERTIR!'}</Text>
         </Animated.View>
@@ -1214,18 +1254,12 @@ export default function DiscoverScreen() {
                 pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] },
               ]}
               onPress={() => {
-                if (selectedCity && selectedDate && selectedCompanion) {
-                  const city = selectedCity;
-                  const date = selectedDate;
-                  const companion = selectedCompanion;
-                  setSelectedCity(null);
-                  setSelectedDate(null);
-                  setSelectedCompanion(null);
-                  setTimeout(() => {
-                    setSelectedCity(city);
-                    setSelectedDate(date);
-                    setSelectedCompanion(companion);
-                  }, 50);
+                if (selectedCity || selectedDate || selectedCompanion) {
+                  (navigation as any).navigate("Explorar", {
+                    city: selectedCity?.id,
+                    date: selectedDate?.id,
+                    companion: selectedCompanion?.id
+                  });
                 } else {
                   if (!selectedCity) setOndeModalVisible(true);
                   else if (!selectedDate) setQuandoModalVisible(true);
@@ -1252,6 +1286,21 @@ export default function DiscoverScreen() {
             onPress={handleMicPress}
             disabled={isTranscribing}
           >
+            <Text style={styles.micStandaloneText}>
+              {isRecording
+                ? "Gravando... Toque para parar e enviar"
+                : isTranscribing
+                  ? "Transcrevendo seu áudio..."
+                  : (
+                    <>
+                      <Text>Se quiser, conta mais </Text>
+                      <Text style={{ fontSize: 22, fontWeight: '800', color: Colors.dark.brand }}>AQUI</Text>
+                      <Text> sobre você e sobre o que você procura</Text>
+                    </>
+                  )
+              }
+            </Text>
+            <Feather name="chevron-right" size={18} color={Colors.dark.brand} style={{ marginRight: -4 }} />
             <View style={[
               styles.aiMicButton,
               isRecording && { backgroundColor: '#FF3B30' },
@@ -1263,14 +1312,6 @@ export default function DiscoverScreen() {
                 color="#FFFFFF"
               />
             </View>
-            <Text style={styles.micStandaloneText}>
-              {isRecording
-                ? "Gravando... Toque para parar e enviar"
-                : isTranscribing
-                  ? "Transcrevendo seu áudio..."
-                  : "Se quiser, conta mais aqui sobre você e sobre o que você procura"
-              }
-            </Text>
           </Pressable>
 
           {/* Sections */}
@@ -1293,11 +1334,11 @@ export default function DiscoverScreen() {
 
           <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
             <Text style={styles.momentoTitle}>
-              {homeTexts?.momento_title ?? 'Momento dança é momento feliz'}
+              {homeTexts?.momento_title ?? 'Momento dança é Momento feliz'}
             </Text>
-            {homeTexts?.momento_subtitle ? (
-              <Text style={styles.momentoSubtitle}>{homeTexts.momento_subtitle}</Text>
-            ) : null}
+            <Text style={styles.momentoSubtitle}>
+              {homeTexts?.momento_subtitle ?? 'Para quem curte ver gente feliz em momentos felizes. Compartilhe aqui os seus passos.'}
+            </Text>
             <FlatList
               horizontal
               data={videoStories}
@@ -1321,31 +1362,6 @@ export default function DiscoverScreen() {
 
           </View>
 
-          <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
-            <Image source={logoImage} style={styles.awardsLogoHeader} resizeMode="contain" />
-            <Text style={styles.topDanceAwardsTitle}>
-              {homeTexts?.awards_title ?? 'BoraBailar\nTOP 10'}
-            </Text>
-            <Text style={styles.topDanceAwardsSubtitle}>
-              {homeTexts?.awards_subtitle ?? 'Top Dance: assista, vote e participe'}
-            </Text>
-            <Text style={styles.awardsTagline}>para quem curte ver gente feliz em momentos felizes</Text>
-            <View style={styles.awardCategoriesList}>
-              {awards.map((item: any) => (
-                <AwardCategoryCard
-                  key={item.id}
-                  category={item.category_label || item.category || `Categoria ${item.id}`}
-                  title={item.name || item.title}
-                  thumbnail={item.image_url ? { uri: item.image_url } : item.thumbnail}
-                  highlightWord={item.highlight_word || item.highlightWord}
-                  onPress={() => handleAwardCategoryPress(item)}
-                />
-              ))}
-            </View>
-            {/* Botão Quero Participar APÓS as categorias */}
-            <QueroParticiparButton onPress={handleDanceAwardsPress} />
-          </View>
-
           {groupedTipsByDay.length > 0 && (
             <View style={styles.dicasDaSemanaSection} onLayout={handleDicasLayout}>
               <Text style={styles.dicasDaSemanaTitle}>{homeTexts?.dicas_title ?? 'Dicas da semana'}</Text>
@@ -1367,37 +1383,47 @@ export default function DiscoverScreen() {
             </View>
           )}
 
-          {/* Destaques do Mês — após dicas, antes de parceiros (tripa horizontal) */}
+          <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
+            <Image source={topDanceAwardsLogo} style={styles.topDanceAwardsLogoImage} resizeMode="contain" />
+            <Text style={styles.topDanceAwardsSubtitle}>
+              {homeTexts?.awards_subtitle ?? 'assista, vote e participe'}
+            </Text>
+            <Text style={styles.awardsTagline}>Os melhores da dança, eleitos por você</Text>
+            <View style={styles.awardCategoriesList}>
+              {awards.map((item: any) => (
+                <AwardCategoryCard
+                  key={item.id}
+                  category={item.category_label || item.category || `Categoria ${item.id}`}
+                  title={item.name || item.title}
+                  thumbnail={item.image_url ? { uri: item.image_url } : item.thumbnail}
+                  highlightWord={item.highlight_word || item.highlightWord}
+                  onPress={() => handleAwardCategoryPress(item)}
+                />
+              ))}
+            </View>
+            {/* Botão Quero Participar APÓS as categorias */}
+            <QueroParticiparButton onPress={handleDanceAwardsPress} />
+          </View>
+
+          {/* Destaques do Mês — carrossel horizontal igual Momento dança */}
           <View style={styles.destaquesMesSection}>
             <Text style={styles.destaquesMesTitle}>Destaques do Mês</Text>
             <Text style={styles.destaquesMesSubtitle}>para quem curte ver gente feliz em momentos felizes</Text>
             <FlatList
               horizontal
-              data={destaqueMes
-                ? [destaqueMes, ...videoStories.slice(0, 4)]
-                : videoStories.slice(0, 5)
-              }
-              keyExtractor={(item, index) => `destaque-${index}`}
+              data={videoStories}
+              keyExtractor={(item) => `destaque-${item.id}`}
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: Spacing.lg, gap: Spacing.md }}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.destaqueStripCard,
-                    pressed && { opacity: 0.85 },
-                  ]}
-                  onPress={handleDestaquePress}
-                >
-                  <Image source={item.thumbnail} style={styles.destaqueStripImage} resizeMode="cover" />
-                  <View style={styles.destaqueStripOverlay}>
-                    <View style={styles.destaqueStripPlay}>
-                      <Feather name="play" size={16} color="#FFFFFF" />
-                    </View>
-                  </View>
-                  <Text style={styles.destaqueStripTitle} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                </Pressable>
+              contentContainerStyle={styles.videoStoriesContainer}
+              renderItem={({ item, index }) => (
+                <VideoStoryCard
+                  title={item.title}
+                  username={item.username}
+                  thumbnail={item.thumbnail}
+                  videoUrl={item.videoUrl}
+                  isVisible={false}
+                  onPress={() => handleVideoStoryPress(index)}
+                />
               )}
             />
           </View>
@@ -1553,7 +1579,7 @@ const styles = StyleSheet.create({
   },
   stickyBellButton: { padding: Spacing.xs, position: "absolute", right: 0 },
   stickyLogo: { width: 48, height: 36 },
-  stickyBrandName: { fontSize: 24, fontFamily: Fonts?.serif, letterSpacing: 1.5 },
+  stickyBrandName: { fontSize: 24, fontFamily: "Montserrat_700Bold", letterSpacing: 1.5 },
   collapsedWizardContainer: { marginTop: Spacing.xs },
   collapsedSearchBar: {
     backgroundColor: "#F5F5F5",
@@ -1575,7 +1601,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   logo: { width: 140, height: 100, marginBottom: Spacing.sm },
-  brandName: { fontSize: 32, fontFamily: Fonts?.serif, letterSpacing: 2, marginBottom: Spacing.sm },
+  brandName: { fontSize: 32, fontFamily: "Montserrat_700Bold", letterSpacing: 2, marginBottom: Spacing.sm },
   brandRed: { color: Colors.dark.brand, fontWeight: "700" },
   brandGray: { color: Colors.dark.textSecondary, fontWeight: "400" },
   tagline: { fontSize: 15, fontWeight: "700", color: Colors.dark.brand, textAlign: "center", letterSpacing: 0.5 },
@@ -1598,8 +1624,8 @@ const styles = StyleSheet.create({
   },
   wizardFieldPressed: { backgroundColor: "#F9FAFB" },
   wizardFieldLabel: { fontSize: 16, color: Colors.dark.textSecondary, fontWeight: "400" },
-  wizardFieldSelected: { borderWidth: 1, borderColor: Colors.dark.primary, backgroundColor: Colors.dark.primary + "10" },
-  wizardFieldLabelSelected: { color: Colors.dark.primary, fontWeight: "500" },
+  wizardFieldSelected: { borderWidth: 2, borderColor: "#1F2937", backgroundColor: "#FFFFFF" },
+  wizardFieldLabelSelected: { color: "#1F2937", fontWeight: "600" },
   chevronIconContainer: { alignItems: "center", justifyContent: "center" },
   micIconContainer: { width: 42, height: 42, borderRadius: 21, backgroundColor: Colors.dark.brand, alignItems: "center", justifyContent: "center" },
   micCta: { fontSize: 14, color: Colors.dark.brand, textAlign: "center", fontWeight: "500", marginTop: Spacing.sm },
@@ -1643,6 +1669,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.lg,
+    gap: Spacing.md,
   },
   micStandaloneText: {
     flex: 1,
@@ -1759,6 +1786,12 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: Spacing.sm,
     tintColor: Colors.dark.brand,
+  },
+  topDanceAwardsLogoImage: {
+    width: "100%" as any,
+    height: 80,
+    alignSelf: "center",
+    marginBottom: Spacing.md,
   },
   awardsTagline: {
     fontSize: 13,
