@@ -18,6 +18,7 @@ import {
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useAudioRecorder, AudioModule, RecordingPresets } from "expo-audio";
 import * as FileSystem from "expo-file-system/legacy";
+import * as Linking from "expo-linking";
 import { getApiUrl } from "@/lib/query-client";
 import { videoService } from "@/services/videoService";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -1448,8 +1449,14 @@ export default function DiscoverScreen() {
           <View style={styles.beneficenciaSection}>
             <Text style={{ fontSize: 16, color: Colors.dark.primary, marginBottom: 4 }}>♥</Text>
             <Text style={styles.beneficenciaTitle}>Dançando por Uma Causa</Text>
+            <View style={{ gap: 8, marginBottom: 12 }}>
+              <Text style={styles.beneficenciaSubtitle}>• Projeto Emanuel</Text>
+              <Pressable onPress={() => Linking.openURL('https://casaapoiocancer.org.br/')}>
+                <Text style={[styles.beneficenciaSubtitle, { color: Colors.dark.brand, textDecorationLine: 'underline' }]}>• Casa da Criança com Câncer</Text>
+              </Pressable>
+            </View>
             <Text style={styles.beneficenciaSubtitle}>
-              {'• Projeto Emanuel\n• Casa da Criança com Câncer\n\nParte da nossa receita é destinada a causas sociais.\nAo usar o BoraBailar, você também faz a diferença.'}
+              Parte da nossa receita é destinada a causas sociais.{"\n"}Ao usar o BoraBailar, você também faz a diferença.
             </Text>
           </View>
 
