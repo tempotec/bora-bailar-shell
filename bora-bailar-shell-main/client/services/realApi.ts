@@ -200,12 +200,15 @@ export const realApi = {
             if (__DEV__) {
                 console.log("[realApi] Weekly tips response:", JSON.stringify(tipsResponse, null, 2));
             }
-            weeklyTipsData = (tipsResponse.tips || []).map((t: any) => {
+            // Flask returns { success: true, data: [...], count: N }
+            // Each item has: { day, day_name, event: { id, title, ... } }
+            const tipsArray = tipsResponse.data || tipsResponse.tips || tipsResponse || [];
+            weeklyTipsData = (Array.isArray(tipsArray) ? tipsArray : []).map((t: any) => {
                 const event = t.event || {};
                 return {
                     id: t.id || event.id,
-                    dayOfWeek: t.dayOfWeek ?? t.day_of_week,
-                    dayOfWeekName: t.dayOfWeekName || t.day_of_week_name,
+                    dayOfWeek: t.day ?? t.dayOfWeek ?? t.day_of_week,
+                    dayOfWeekName: t.day_name || t.dayOfWeekName || t.day_of_week_name,
                     // Try multiple possible field names for title
                     title: event.title || event.name || event.titulo || t.title || "Dica especial",
                     content: event.description || event.descricao || "",

@@ -553,16 +553,8 @@ function QuererCard({
   );
 }
 
-const SECTIONS = {
-  querer: { title: "O seu querer faz acontecer", highlightWords: ["querer", "acontecer"] },
-  momento: { title: "Momento dança é momento feliz", highlightWords: ["dança", "feliz"] },
-  partners: { title: "Quer ser parceiro do BORABAILAR?", highlightWords: ["parceiro", "BORABAILAR"] },
-  awards: { title: "BoraBailar TOP 10", highlightWords: ["BoraBailar"] },
-  dicas: { title: "Dicas da semana", highlightWords: ["semana"] },
-  recomendacoes: { title: "Recomendações especiais", highlightWords: [] },
-} as const;
-
-type SectionKey = keyof typeof SECTIONS;
+const SECTIONS_KEYS = ["querer", "momento", "partners", "awards", "dicas", "recomendacoes"] as const;
+type SectionKey = typeof SECTIONS_KEYS[number];
 
 export default function DiscoverScreen() {
   const insets = useSafeAreaInsets();
@@ -573,7 +565,7 @@ export default function DiscoverScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const { data: discoverData, isLoading, error } = useQuery({
+  const { data: discoverData, isLoading, error } = useQuery<any>({
     queryKey: ["discover"],
     queryFn: api.events.getDiscoverData,
   });
@@ -822,6 +814,17 @@ export default function DiscoverScreen() {
     });
   }, [rootNavigation]);
 
+  const SECTIONS_DYNAMIC = useMemo(() => ({
+    querer: { title: homeTexts?.quero_section_title ?? "O seu querer faz acontecer", highlightWords: ["querer", "acontecer", "dança", "feliz"] },
+    momento: { title: homeTexts?.momento_title ?? "Momento dança é momento feliz", highlightWords: ["dança", "feliz", "Momento"] },
+    partners: { title: homeTexts?.brands_section_title ?? "Quer ser parceiro do BORABAILAR?", highlightWords: ["parceiro", "BORABAILAR"] },
+    awards: { title: "BoraBailar TOP 10", highlightWords: ["BoraBailar"] },
+    dicas: { title: homeTexts?.dicas_title ?? "Dicas da semana", highlightWords: ["semana"] },
+    recomendacoes: { title: "Recomendações especiais", highlightWords: [] },
+  }), [homeTexts]);
+
+  const currentSection = currentSectionKey ? SECTIONS_DYNAMIC[currentSectionKey] : null;
+
   // Simplified Scroll Handler
   const updateCurrentSection = useCallback((scrollPosition: number) => {
     const headerOffset = stickyHeaderHeightRef.current || 150;
@@ -836,7 +839,8 @@ export default function DiscoverScreen() {
       for (let i = orderedSections.length - 1; i >= 0; i--) {
         const sectionKey = orderedSections[i];
         const sectionY = offsets[sectionKey];
-        if (sectionY > 0 && scrollPosition >= sectionY - headerOffset) {
+        // Adding +250 to offset accounts for the content Slide Up transform
+        if (sectionY > 0 && scrollPosition >= sectionY - headerOffset + 250) {
           newSection = sectionKey;
           break;
         }
@@ -880,7 +884,7 @@ export default function DiscoverScreen() {
   const handleDicasLayout = useMemo(() => createSectionLayoutHandler("dicas"), [createSectionLayoutHandler]);
   const handleRecomendacoesLayout = useMemo(() => createSectionLayoutHandler("recomendacoes"), [createSectionLayoutHandler]);
 
-  const currentSection = currentSectionKey ? SECTIONS[currentSectionKey] : null;
+  // currentSection computation moved above updateCurrentSection
 
   // Animations
   const heroAnimatedStyle = useAnimatedStyle(() => {
@@ -1320,7 +1324,7 @@ export default function DiscoverScreen() {
               {homeTexts?.quero_section_title ?? 'O seu querer faz acontecer'}
             </Text>
             <View style={styles.quererGrid}>
-              {querer.map((item) => (
+              {querer.map((item: any) => (
                 <QuererCard
                   key={item.id}
                   title={item.title}
@@ -1337,7 +1341,7 @@ export default function DiscoverScreen() {
               {homeTexts?.momento_title ?? 'Momento dança é Momento feliz'}
             </Text>
             <Text style={styles.momentoSubtitle}>
-              {homeTexts?.momento_subtitle ?? 'Para quem curte ver gente feliz em momentos felizes. Compartilhe aqui os seus passos.'}
+              Para quem curte ver gente feliz em momentos felizes. Compartilhe aqui os seus passos.
             </Text>
             <FlatList
               horizontal
@@ -1384,11 +1388,17 @@ export default function DiscoverScreen() {
           )}
 
           <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
-            <Image source={topDanceAwardsLogo} style={styles.topDanceAwardsLogoImage} resizeMode="contain" />
-            <Text style={styles.topDanceAwardsSubtitle}>
-              {homeTexts?.awards_subtitle ?? 'assista, vote e participe'}
-            </Text>
-            <Text style={styles.awardsTagline}>Os melhores da dança, eleitos por você</Text>
+            <View style={styles.topDanceAwardsHeader}>
+              <Image source={topDanceAwardsLogo} style={styles.topDanceAwardsLogoImage} resizeMode="contain" />
+              <View style={styles.topDanceAwardsTextContent}>
+                <Text style={styles.topDanceAwardsBrandText}>
+                  assista, vote e participe.
+                </Text>
+                <Text style={styles.topDanceAwardsSubtitle}>
+                  Os melhores da dança, eleitos por você
+                </Text>
+              </View>
+            </View>
             <View style={styles.awardCategoriesList}>
               {awards.map((item: any) => (
                 <AwardCategoryCard
@@ -1716,9 +1726,11 @@ const styles = StyleSheet.create({
   destaqueMesPlayOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.2)", alignItems: "center", justifyContent: "center" },
   destaqueMesPlayButton: { width: 64, height: 64, borderRadius: 32, backgroundColor: "rgba(0,0,0,0.6)", alignItems: "center", justifyContent: "center" },
   topDanceAwardsSection: { paddingHorizontal: Spacing.lg, marginTop: Spacing.xl + Spacing.lg },
-  topDanceAwardsTitle: { fontSize: 18, color: Colors.dark.text, textAlign: "center", fontWeight: "600", lineHeight: 26 },
-  topDanceAwardsSubtitle: { fontSize: 14, color: Colors.dark.textSecondary, textAlign: "center", marginTop: Spacing.xs },
-  topDanceAwardsBrand: { color: Colors.dark.brand, fontWeight: "700", fontSize: 22, letterSpacing: 1 },
+  topDanceAwardsHeader: { marginBottom: Spacing.lg },
+  topDanceAwardsTextContent: { marginTop: Spacing.xs },
+  topDanceAwardsBrandText: { fontSize: 13, color: Colors.dark.brand, fontWeight: "700", textTransform: "uppercase" },
+  topDanceAwardsTitle: { fontSize: 18, color: Colors.dark.text, textAlign: "left", fontWeight: "600", lineHeight: 26 },
+  topDanceAwardsSubtitle: { fontSize: 13, color: Colors.dark.textSecondary, textAlign: "left", marginTop: 4 },
   queroParticiparButton: { flexDirection: "row", backgroundColor: Colors.dark.wizardBackground, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, alignItems: "center", justifyContent: "center", marginTop: Spacing.xl, borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" },
   queroParticiparButtonText: { fontSize: 15, color: Colors.dark.textSecondary, fontWeight: "600" },
   awardCategoriesList: { gap: Spacing.md },
@@ -1788,10 +1800,10 @@ const styles = StyleSheet.create({
     tintColor: Colors.dark.brand,
   },
   topDanceAwardsLogoImage: {
-    width: "100%" as any,
-    height: 80,
-    alignSelf: "center",
-    marginBottom: Spacing.md,
+    width: 300,
+    height: 72,
+    alignSelf: "flex-start",
+    marginBottom: Spacing.xs,
   },
   awardsTagline: {
     fontSize: 13,

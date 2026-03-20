@@ -1,7 +1,44 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { db } from "./db";
 import { events, videos, awardCategories, queroCards, venues, previewCodes, homeSections, homeSectionItems, pushTokens, notificationLogs } from "@shared/schema";
 import { eq, and, gte, lte, or, sql, desc, asc, isNull, inArray } from "drizzle-orm";
+
+// ─── Auth Proxy Helper ────────────────────────────────────────────────────────
+// Forwards auth requests to the Flask admin, which owns user accounts + JWT.
+const ADMIN_BASE = process.env.ADMIN_API_URL || "http://localhost:5000";
+console.log(`[Express Shell] ADMIN_API_URL → ${ADMIN_BASE}`);
+
+async function proxyToFlask(
+    req: Request,
+    res: Response,
+    flaskPath: string,
+    method: "GET" | "POST" | "PUT" | "PATCH" = "POST"
+) {
+    try {
+        const url = `${ADMIN_BASE}${flaskPath}`;
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+        };
+
+        // Forward Authorization header if present
+        const auth = req.headers["authorization"];
+        if (auth) headers["Authorization"] = auth as string;
+
+        const fetchOpts: RequestInit = { method, headers };
+        if (method !== "GET" && req.body) {
+            fetchOpts.body = JSON.stringify(req.body);
+        }
+
+        const flaskRes = await fetch(url, fetchOpts);
+        const data = await flaskRes.json().catch(() => ({}));
+
+        // Forward the same status code Flask returned
+        res.status(flaskRes.status).json(data);
+    } catch (err: any) {
+        console.error(`[Auth Proxy] Error forwarding to ${flaskPath}:`, err.message);
+        res.status(503).json({ error: "Serviço de autenticação indisponível. Tente novamente." });
+    }
+}
 
 // Helper to resolve item by type and id
 async function resolveItem(itemType: string, itemId: string, now: Date) {
@@ -103,12 +140,32 @@ async function legacyDiscover(now: Date) {
 
 export function registerPublicRoutes(app: Express) {
 
+    // ===== AUTH — proxy to Flask admin =======================================
+    // Flask owns user accounts + JWT tokens. Express just forwards the calls.
+    // Routes use /api/auth/* to match the client's BASE_URL (which includes /api).
+
+    // POST /api/auth/login → Flask /api/auth/login
+    app.post("/api/auth/login", (req, res) => proxyToFlask(req, res, "/api/auth/login", "POST"));
+
+    // POST /api/auth/register → Flask /api/auth/register
+    app.post("/api/auth/register", (req, res) => proxyToFlask(req, res, "/api/auth/register", "POST"));
+
+    // GET /api/auth/me → Flask /api/auth/me (requires Authorization: Bearer token)
+    app.get("/api/auth/me", (req, res) => proxyToFlask(req, res, "/api/auth/me", "GET"));
+
+    // PUT /api/auth/me → Flask /api/auth/me (update profile)
+    app.put("/api/auth/me", (req, res) => proxyToFlask(req, res, "/api/auth/me", "PUT"));
+
+    // POST /api/auth/change-password → Flask /api/auth/change-password
+    app.post("/api/auth/change-password", (req, res) => proxyToFlask(req, res, "/api/auth/change-password", "POST"));
+
     // ===== /api/discover =====
     // Dynamic: uses home_sections + home_section_items if configured, otherwise fallback
 
     app.get("/api/discover", async (req, res) => {
+
         // Tenta primeiro o Flask admin (fonte principal de conteúdo)
-        const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+        const ADMIN_URL = ADMIN_BASE;
         try {
             const r = await fetch(`${ADMIN_URL}/api/discover`, { signal: AbortSignal.timeout(2000) });
             if (r.ok) {
@@ -397,7 +454,7 @@ export function registerPublicRoutes(app: Express) {
     // Proxy para o admin Flask /api/weekly-tips, fallback no banco local
 
     app.get("/api/content/tips/weekly-events", async (req, res) => {
-        const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+        const ADMIN_URL = ADMIN_BASE;
         try {
             const r = await fetch(`${ADMIN_URL}/api/weekly-tips`);
             if (r.ok) return res.json(await r.json());
@@ -434,7 +491,7 @@ export function registerPublicRoutes(app: Express) {
     // Proxy para admin Flask /api/places (parceiros/locais)
 
     app.get("/api/content/partner-cards", async (req, res) => {
-        const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+        const ADMIN_URL = ADMIN_BASE;
         try {
             const r = await fetch(`${ADMIN_URL}/api/places`);
             if (r.ok) {
@@ -496,7 +553,7 @@ export function registerPublicRoutes(app: Express) {
     // ===== PROXY GENÉRICO para admin Flask =====
     for (const route of ["/api/health", "/api/promotions", "/api/places", "/api/weekly-tips", "/api/weekly-tips/today"]) {
         app.get(route, async (req, res) => {
-            const ADMIN_URL = process.env.ADMIN_API_URL || "http://localhost:5000";
+            const ADMIN_URL = ADMIN_BASE;
             try {
                 const qs = new URLSearchParams(req.query as any).toString();
                 const r = await fetch(`${ADMIN_URL}${route}${qs ? "?" + qs : ""}`);

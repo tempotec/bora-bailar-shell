@@ -99,7 +99,17 @@ export function WizardSearchModal({
     };
 
     const handleCompanionSelect = (companion: typeof COMPANION_OPTIONS[0]) => {
-        setSelectedCompanion(companion);
+        const newCompanion = companion;
+        setSelectedCompanion(newCompanion);
+        // Auto-search when all 3 fields are complete
+        if (selectedCity && selectedDate) {
+            onSearch({
+                city: selectedCity,
+                date: selectedDate,
+                companion: newCompanion,
+            });
+            onClose();
+        }
     };
 
     const handleSearch = () => {
@@ -254,6 +264,17 @@ export function WizardSearchModal({
         return (
             <View style={styles.stepContainer}>
                 <Text style={styles.stepTitle}>Quando?</Text>
+
+                {/* Show selected specific date chip at top */}
+                {selectedDate?.id === "specific" && (
+                    <View style={styles.selectedDateChip}>
+                        <Feather name="calendar" size={14} color={Colors.dark.brand} />
+                        <Text style={styles.selectedDateChipText}>{selectedDate.label}</Text>
+                        <Pressable onPress={() => setSelectedDate(null)} hitSlop={8}>
+                            <Feather name="x" size={14} color={Colors.dark.brand} />
+                        </Pressable>
+                    </View>
+                )}
 
                 {DATE_OPTIONS.map((option) => (
                     <Pressable
@@ -630,6 +651,24 @@ const styles = StyleSheet.create({
     searchButtonText: {
         fontSize: 15,
         color: "#FFFFFF",
+        fontWeight: "600",
+    },
+    selectedDateChip: {
+        flexDirection: "row",
+        alignItems: "center",
+        alignSelf: "flex-start",
+        backgroundColor: Colors.dark.brand + "15",
+        borderRadius: 20,
+        paddingHorizontal: Spacing.md,
+        paddingVertical: Spacing.xs,
+        marginBottom: Spacing.md,
+        gap: Spacing.xs,
+        borderWidth: 1,
+        borderColor: Colors.dark.brand + "30",
+    },
+    selectedDateChipText: {
+        fontSize: 13,
+        color: Colors.dark.brand,
         fontWeight: "600",
     },
 });

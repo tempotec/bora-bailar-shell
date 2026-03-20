@@ -13,30 +13,41 @@ function metroHost(): string | null {
 }
 
 function getDevBaseUrl(): string {
+    // If EXPO_PUBLIC_DOMAIN is set (e.g. in .env), use it directly
+    const domain = process.env.EXPO_PUBLIC_DOMAIN;
+    if (domain) {
+        return `http://${domain}/api`;
+    }
+
     // Android emulator uses 10.0.2.2 to reach host machine
     if (Platform.OS === "android") {
-        return "http://10.0.2.2:5000/api";
+        return "http://10.0.2.2:5001/api";
     }
 
     // Physical device or iOS: try to get Metro host IP
     const host = metroHost();
     if (host) {
-        return `http://${host}:5000/api`;
+        return `http://${host}:5001/api`;
     }
 
     // Fallback for iOS simulator
-    return "http://localhost:5000/api";
+    return "http://localhost:5001/api";
 }
 
 export const API_CONFIG = {
-    // Production server:
-    // BASE_URL: "http://34.162.38.179/api",
-    // Local development server (Flask na porta 5000):
-    BASE_URL: __DEV__ ? getDevBaseUrl() : "http://34.162.38.179/api",
+    // Em dev: auto-detecta IP da máquina local (via EXPO_PUBLIC_DOMAIN ou Metro)
+    // Em prod: usa EXPO_PUBLIC_DOMAIN do .env.production
+    BASE_URL: __DEV__
+        ? getDevBaseUrl()
+        : `http://${process.env.EXPO_PUBLIC_DOMAIN || "34.162.38.179:5001"}/api`,
     TIMEOUT: 10000,
 };
 
-// Debug: log the BASE_URL on startup
+// Log de startup — mostra qual API está sendo usada
 if (__DEV__) {
     console.log("[API] BASE_URL:", API_CONFIG.BASE_URL);
+    console.log("[API] Ambiente: DESENVOLVIMENTO");
+} else {
+    console.log("[API] BASE_URL:", API_CONFIG.BASE_URL);
+    console.log("[API] Ambiente: PRODUÇÃO");
 }
