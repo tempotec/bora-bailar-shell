@@ -96,9 +96,7 @@ export default function LoginScreen() {
                 <View style={styles.headerCenter}>
                     <Text style={styles.headerBrandName}>
                         <Text style={styles.brandRed}>B</Text>
-                        <Text style={styles.brandGray}>ORA</Text>
-                        <Text style={styles.brandRed}>B</Text>
-                        <Text style={styles.brandGray}>AILAR</Text>
+                        <Text style={styles.brandGray}>ORABAILAR</Text>
                     </Text>
                 </View>
 

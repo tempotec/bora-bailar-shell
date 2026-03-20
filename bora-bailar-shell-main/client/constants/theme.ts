@@ -19,6 +19,8 @@ export const Colors = {
     backgroundTertiary: "#E5E7EB",
     wizardBackground: "#EDEDED",
     brand: "#C41E3A",
+    titleRed: "#C41E3A",
+    titleGray: "#1F2937",
   },
   dark: {
     text: "#1F2937",
@@ -38,6 +40,8 @@ export const Colors = {
     backgroundTertiary: "#E5E7EB",
     wizardBackground: "#EDEDED",
     brand: "#C41E3A",
+    titleRed: "#C41E3A",
+    titleGray: "#1F2937",
   },
 };
 

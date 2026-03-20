@@ -1181,7 +1181,7 @@ export default function DiscoverScreen() {
           <View style={styles.stickyHeaderContent}>
             <Image source={logoImage} style={styles.stickyLogo} resizeMode="contain" />
             <Text style={styles.stickyBrandName}>
-              <Text style={styles.brandGray}>BORABAILAR</Text>
+              <Text style={{color: Colors.dark.brand}}>B</Text><Text style={styles.brandGray}>ORABAILAR</Text>
             </Text>
           </View>
           <Pressable
@@ -1221,7 +1221,7 @@ export default function DiscoverScreen() {
         <Animated.View style={[styles.heroSection, heroAnimatedStyle]}>
           <Image source={logoImage} style={styles.logo} resizeMode="contain" />
           <Text style={styles.brandName}>
-            <Text style={styles.brandGray}>BORABAILAR</Text>
+            <Text style={{color: Colors.dark.brand}}>B</Text><Text style={styles.brandGray}>ORABAILAR</Text>
           </Text>
           <Text style={styles.tagline}>{homeTexts?.hero_tagline ?? 'SAIR, DANÇAR E SE DIVERTIR!'}</Text>
         </Animated.View>
@@ -1299,7 +1299,7 @@ export default function DiscoverScreen() {
                   : (
                     <>
                       <Text>Se quiser, conta mais </Text>
-                      <Text style={{ fontSize: 22, fontWeight: '800', color: Colors.dark.brand }}>AQUI</Text>
+                      <Text style={{ fontSize: 16, fontWeight: '800', color: Colors.dark.brand }}>AQUI</Text>
                       <Text> sobre você e sobre o que você procura</Text>
                     </>
                   )
@@ -1389,12 +1389,11 @@ export default function DiscoverScreen() {
             </View>
           )}
 
-          <View style={styles.topDanceAwardsSection} onLayout={handleAwardsLayout}>
+          <View style={[styles.topDanceAwardsSection, { backgroundColor: '#F8F8F8', borderRadius: BorderRadius.xl, padding: Spacing.xl }]} onLayout={handleAwardsLayout}>
             <View style={styles.topDanceAwardsHeader}>
-              <Image source={topDanceAwardsLogo} style={styles.topDanceAwardsLogoImage} resizeMode="contain" />
               <View style={styles.topDanceAwardsTextContent}>
-                <Text style={styles.topDanceAwardsBrandText}>
-                  assista, vote e participe.
+                <Text style={[styles.topDanceAwardsBrandText, { fontSize: 20, fontWeight: '800', color: Colors.dark.text, textTransform: 'uppercase' }]}>
+                  <Text style={{ color: Colors.dark.brand }}>B</Text>oraBailar TOP 10 DANCE AWARDS
                 </Text>
                 <Text style={styles.topDanceAwardsSubtitle}>
                   Os melhores da dança, eleitos por você

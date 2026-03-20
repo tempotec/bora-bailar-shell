@@ -155,9 +155,7 @@ export default function SignUpScreen() {
           <Image source={logoImage} style={styles.headerLogo} resizeMode="contain" />
           <Text style={styles.headerBrandName}>
             <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>ORA</Text>
-            <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>AILAR</Text>
+            <Text style={styles.brandGray}>ORABAILAR</Text>
           </Text>
         </View>
         
