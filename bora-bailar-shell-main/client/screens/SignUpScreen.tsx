@@ -1,3 +1,6 @@
+/**
+ * SignUpScreen - Social login + email signup with premium stage background
+ */
 import React from "react";
 import {
   View,
@@ -5,16 +8,19 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  Image,
+  ImageBackground,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { Colors, Spacing, BorderRadius, Fonts } from "@/constants/theme";
+import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
+import { LinearGradient } from "expo-linear-gradient";
 
-const logoImage = require("../../assets/images/novo_logo.png");
+const stageBg = require("../../attached_assets/signup_stage_bg.png");
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,92 +32,63 @@ type SocialButtonProps = {
 };
 
 function SocialButton({ icon, label, variant, onPress }: SocialButtonProps) {
-  const getButtonStyle = () => {
-    switch (variant) {
-      case "google":
-        return styles.googleButton;
-      case "facebook":
-        return styles.facebookButton;
-      case "apple":
-        return styles.appleButton;
-      case "email":
-        return styles.emailButton;
-      default:
-        return styles.googleButton;
-    }
-  };
+  const buttonStyle = {
+    google: styles.googleButton,
+    facebook: styles.facebookButton,
+    apple: styles.appleButton,
+    email: styles.emailButton,
+  }[variant];
 
-  const getTextStyle = () => {
-    switch (variant) {
-      case "google":
-        return styles.googleButtonText;
-      case "facebook":
-        return styles.facebookButtonText;
-      case "apple":
-        return styles.appleButtonText;
-      case "email":
-        return styles.emailButtonText;
-      default:
-        return styles.googleButtonText;
-    }
-  };
+  const textStyle = {
+    google: styles.googleButtonText,
+    facebook: styles.facebookButtonText,
+    apple: styles.appleButtonText,
+    email: styles.emailButtonText,
+  }[variant];
 
   return (
     <Pressable
-      style={[styles.socialButton, getButtonStyle()]}
+      style={({ pressed }) => [
+        styles.socialButton,
+        buttonStyle,
+        pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] },
+      ]}
       onPress={onPress}
     >
       {icon}
-      <Text style={[styles.socialButtonText, getTextStyle()]}>{label}</Text>
+      <Text style={[styles.socialButtonText, textStyle]}>{label}</Text>
     </Pressable>
   );
 }
 
 function GoogleIcon() {
   return (
-    <View style={styles.googleIconContainer}>
-      <Text style={styles.googleIconText}>G</Text>
+    <View style={styles.socialIconContainer}>
+      <Text style={{ fontSize: 16, fontWeight: "700", color: "#4285F4" }}>G</Text>
     </View>
   );
 }
 
 function FacebookIcon() {
   return (
-    <View style={styles.facebookIconContainer}>
-      <Feather name="facebook" size={18} color="#FFFFFF" />
+    <View style={styles.socialIconContainer}>
+      <Feather name="facebook" size={18} color="#1877F2" />
     </View>
   );
 }
 
 function AppleIcon() {
   return (
-    <View style={styles.appleIconContainer}>
-      <Feather name="smartphone" size={18} color="#FFFFFF" />
+    <View style={styles.socialIconContainer}>
+      <Feather name="smartphone" size={18} color="#000000" />
     </View>
   );
 }
 
 function EmailIcon() {
   return (
-    <View style={styles.emailIconContainer}>
-      <Feather name="mail" size={18} color={Colors.dark.textSecondary} />
-    </View>
-  );
-}
-
-function TicketIcon() {
-  return (
-    <View style={styles.ticketContainer}>
-      <View style={styles.ticketTop}>
-        <View style={styles.ticketTear} />
-      </View>
-      <View style={styles.ticketBody}>
-        <View style={styles.ticketStripes}>
-          <View style={styles.ticketStripe} />
-          <View style={styles.ticketStripe} />
-          <View style={styles.ticketStripe} />
-        </View>
-      </View>
+    <View style={styles.socialIconContainer}>
+      <Feather name="mail" size={18} color={Colors.dark.brand} />
     </View>
   );
 }
@@ -120,108 +97,101 @@ export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
 
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
-
-  const handleGoogleSignUp = () => {
-    navigation.navigate("RegisterStep1");
-  };
-
-  const handleFacebookSignUp = () => {
-    navigation.navigate("RegisterStep1");
-  };
-
-  const handleAppleSignUp = () => {
-    navigation.navigate("RegisterStep1");
-  };
-
-  const handleEmailSignUp = () => {
-    navigation.navigate("RegisterStep1");
-  };
-
-  const handleRegister = () => {
-    navigation.navigate("RegisterStep1");
-  };
+  const handleGoBack = () => navigation.goBack();
+  const handleGoogleSignUp = () => navigation.navigate("RegisterStep1");
+  const handleFacebookSignUp = () => navigation.navigate("RegisterStep1");
+  const handleAppleSignUp = () => navigation.navigate("RegisterStep1");
+  const handleEmailSignUp = () => navigation.navigate("RegisterStep1");
+  const handleLogin = () => navigation.navigate("Login");
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Pressable style={styles.backButton} onPress={handleGoBack}>
-          <Feather name="chevron-left" size={28} color={Colors.dark.text} />
-        </Pressable>
-        
-        <View style={styles.headerCenter}>
-          <Image source={logoImage} style={styles.headerLogo} resizeMode="contain" />
-          <Text style={styles.headerBrandName}>
-            <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>ORABAILAR</Text>
-          </Text>
-        </View>
-        
-        <Pressable style={styles.bellButton}>
-          <Feather name="bell" size={22} color={Colors.dark.textSecondary} />
-        </Pressable>
-      </View>
+    <View style={styles.container}>
+      <ImageBackground source={stageBg} style={styles.backgroundImage} resizeMode="cover">
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.4)", "rgba(0,0,0,0.85)"]}
+          locations={[0.15, 0.45, 0.75]}
+          style={styles.gradient}
+        >
+          {/* Header */}
+          <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+            <Pressable style={styles.backButton} onPress={handleGoBack}>
+              <Feather name="chevron-left" size={28} color="#FFFFFF" />
+            </Pressable>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + Spacing.xl },
-        ]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.ticketIconContainer}>
-          <TicketIcon />
-        </View>
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerBrandName}>
+                <Text style={styles.brandRed}>B</Text>
+                <Text style={styles.brandWhite}>ORABAILAR</Text>
+              </Text>
+            </View>
 
-        <Text style={styles.title}>Falta pouco!</Text>
-        <Text style={styles.subtitle}>
-          Para conseguir garantir seu ingresso,{"\n"}faça login ou se cadastre
-        </Text>
+            <View style={{ width: 36 }} />
+          </View>
 
-        <View style={styles.socialButtonsContainer}>
-          <SocialButton
-            icon={<GoogleIcon />}
-            label="Continuar com Google"
-            variant="google"
-            onPress={handleGoogleSignUp}
-          />
-          <SocialButton
-            icon={<FacebookIcon />}
-            label="Continuar com Facebook"
-            variant="facebook"
-            onPress={handleFacebookSignUp}
-          />
-          <SocialButton
-            icon={<AppleIcon />}
-            label="Continuar com Apple"
-            variant="apple"
-            onPress={handleAppleSignUp}
-          />
-        </View>
+          {/* Content */}
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: insets.bottom + Spacing.xl },
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.heroSpacer} />
 
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>ou</Text>
-          <View style={styles.dividerLine} />
-        </View>
+            {/* Title area */}
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>O palco é seu!</Text>
+              <Text style={styles.subtitle}>
+                Crie sua conta e entre no ritmo.{"\n"}Milhares de eventos esperando por você.
+              </Text>
+            </View>
 
-        <SocialButton
-          icon={<EmailIcon />}
-          label="Continuar com e-mail"
-          variant="email"
-          onPress={handleEmailSignUp}
-        />
+            {/* Social buttons */}
+            <View style={styles.socialButtonsContainer}>
+              <SocialButton
+                icon={<GoogleIcon />}
+                label="Continuar com Google"
+                variant="google"
+                onPress={handleGoogleSignUp}
+              />
+              <SocialButton
+                icon={<FacebookIcon />}
+                label="Continuar com Facebook"
+                variant="facebook"
+                onPress={handleFacebookSignUp}
+              />
+              <SocialButton
+                icon={<AppleIcon />}
+                label="Continuar com Apple"
+                variant="apple"
+                onPress={handleAppleSignUp}
+              />
+            </View>
 
-        <View style={styles.registerContainer}>
-          <Text style={styles.registerText}>Não possui uma conta? </Text>
-          <Pressable onPress={handleRegister}>
-            <Text style={styles.registerLink}>Cadastre-se</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <SocialButton
+              icon={<EmailIcon />}
+              label="Continuar com e-mail"
+              variant="email"
+              onPress={handleEmailSignUp}
+            />
+
+            {/* Login link */}
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Já tem uma conta? </Text>
+              <Pressable onPress={handleLogin}>
+                <Text style={styles.loginLink}>Entrar</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </LinearGradient>
+      </ImageBackground>
     </View>
   );
 }
@@ -229,7 +199,15 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#000000",
+  },
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  gradient: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -237,8 +215,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
   },
   backButton: {
     padding: Spacing.xs,
@@ -246,97 +222,53 @@ const styles = StyleSheet.create({
   headerCenter: {
     flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.sm,
-  },
-  headerLogo: {
-    width: 36,
-    height: 28,
   },
   headerBrandName: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: "Montserrat_700Bold",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
   brandRed: {
     color: Colors.dark.brand,
     fontWeight: "700",
   },
-  brandGray: {
-    color: Colors.dark.textSecondary,
+  brandWhite: {
+    color: "#FFFFFF",
     fontWeight: "400",
-  },
-  bellButton: {
-    padding: Spacing.xs,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xl,
+    flexGrow: 1,
   },
-  ticketIconContainer: {
-    alignItems: "center",
-    marginBottom: Spacing.lg,
+  heroSpacer: {
+    flex: 1,
+    minHeight: SCREEN_HEIGHT * 0.2,
   },
-  ticketContainer: {
-    width: 80,
-    height: 80,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ticketTop: {
-    width: 60,
-    height: 20,
-    backgroundColor: Colors.dark.brand,
-    borderTopLeftRadius: BorderRadius.md,
-    borderTopRightRadius: BorderRadius.md,
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  ticketTear: {
-    position: "absolute",
-    bottom: -8,
-    width: 70,
-    height: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 35,
-  },
-  ticketBody: {
-    width: 60,
-    height: 40,
-    backgroundColor: Colors.dark.brand,
-    borderBottomLeftRadius: BorderRadius.md,
-    borderBottomRightRadius: BorderRadius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: -2,
-  },
-  ticketStripes: {
-    gap: 4,
-  },
-  ticketStripe: {
-    width: 30,
-    height: 3,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 1,
+  titleContainer: {
+    marginBottom: Spacing.xl,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: Colors.dark.text,
-    textAlign: "center",
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#FFFFFF",
     marginBottom: Spacing.sm,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 15,
-    color: Colors.dark.textSecondary,
-    textAlign: "center",
+    color: "rgba(255,255,255,0.85)",
     lineHeight: 22,
-    marginBottom: Spacing.xl,
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   socialButtonsContainer: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   socialButton: {
     flexDirection: "row",
@@ -349,93 +281,68 @@ const styles = StyleSheet.create({
   },
   socialButtonText: {
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: "600",
+  },
+  socialIconContainer: {
+    width: 22,
+    height: 22,
+    alignItems: "center",
+    justifyContent: "center",
   },
   googleButton: {
     backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
   },
   googleButtonText: {
     color: Colors.dark.text,
   },
-  googleIconContainer: {
-    width: 20,
-    height: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  googleIconText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#4285F4",
-  },
   facebookButton: {
-    backgroundColor: "#1877F2",
+    backgroundColor: "#FFFFFF",
   },
   facebookButtonText: {
-    color: "#FFFFFF",
-  },
-  facebookIconContainer: {
-    width: 20,
-    height: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    color: Colors.dark.text,
   },
   appleButton: {
-    backgroundColor: "#000000",
+    backgroundColor: "#FFFFFF",
   },
   appleButtonText: {
-    color: "#FFFFFF",
-  },
-  appleIconContainer: {
-    width: 20,
-    height: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    color: Colors.dark.text,
   },
   emailButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,255,255,0.12)",
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "rgba(255,255,255,0.35)",
   },
   emailButtonText: {
-    color: Colors.dark.textSecondary,
-  },
-  emailIconContainer: {
-    width: 20,
-    height: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    color: "#FFFFFF",
   },
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: Spacing.lg,
+    marginVertical: Spacing.md,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "rgba(255,255,255,0.3)",
   },
   dividerText: {
     paddingHorizontal: Spacing.md,
     fontSize: 14,
-    color: Colors.dark.textSecondary,
+    color: "rgba(255,255,255,0.6)",
   },
-  registerContainer: {
+  loginContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     marginTop: Spacing.xl,
   },
-  registerText: {
+  loginText: {
     fontSize: 14,
-    color: Colors.dark.textSecondary,
+    color: "rgba(255,255,255,0.7)",
   },
-  registerLink: {
+  loginLink: {
     fontSize: 14,
     color: Colors.dark.brand,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });
