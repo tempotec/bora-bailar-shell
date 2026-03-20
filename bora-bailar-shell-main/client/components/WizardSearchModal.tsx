@@ -406,9 +406,11 @@ export function WizardSearchModal({
                     <Pressable
                         style={({ pressed }) => [
                             styles.searchButton,
+                            !(selectedCity && selectedDate && selectedCompanion) && { backgroundColor: Colors.dark.textSecondary },
                             pressed && { opacity: 0.9 },
                         ]}
                         onPress={handleSearch}
+                        disabled={!(selectedCity && selectedDate && selectedCompanion)}
                     >
                         <Feather name="search" size={18} color="#FFFFFF" />
                         <Text style={styles.searchButtonText}>Buscar</Text>

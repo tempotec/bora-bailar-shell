@@ -238,7 +238,13 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
           <Text style={styles.sharePromptText}>
             Quer compartilhar o seu momento dança, mensagem ou depoimento?
           </Text>
-          <Pressable style={styles.shareButton}>
+          <Pressable 
+             style={styles.shareButton}
+             onPress={() => {
+                // @ts-ignore
+                useNavigation().navigate("UploadPost");
+             }}
+          >
             <Text style={styles.shareButtonText}>É AQUI!</Text>
           </Pressable>
         </View>
@@ -343,8 +349,16 @@ export default function ReelsScreen() {
   };
 
   const handleLike = useCallback(() => { }, []);
-  const handleComment = useCallback(() => { }, []);
-  const handleShare = useCallback(() => { }, []);
+  const handleComment = useCallback(() => { 
+    import("react-native").then(({ Alert }) => {
+      Alert.alert("Comentários", "Em breve você poderá comentar nos vídeos!");
+    });
+  }, []);
+  const handleShare = useCallback(() => { 
+    import("react-native").then(({ Alert }) => {
+      Alert.alert("Compartilhar", "Em breve você poderá compartilhar este vídeo com seus amigos!");
+    });
+  }, []);
 
   const renderItem = useCallback(({ item, index }: { item: ReelItem; index: number }) => {
     return (

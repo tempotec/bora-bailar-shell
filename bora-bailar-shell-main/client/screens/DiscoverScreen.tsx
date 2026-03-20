@@ -375,10 +375,11 @@ function DicaDaSemanaRow({
         <Text style={styles.dicaDayName}>{day}</Text>
         {date ? <Text style={styles.dicaDate}>({date})</Text> : null}
       </View>
-      <Animated.ScrollView
+      <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.dicasEventScrollContainer}
+        nestedScrollEnabled={true}
       >
         {dicas.map((dica, index) => {
           // Priority: thumbnail > imageUrl > local fallback
@@ -413,7 +414,7 @@ function DicaDaSemanaRow({
             </Pressable>
           );
         })}
-      </Animated.ScrollView>
+      </ScrollView>
     </View>
   );
 }
@@ -1252,17 +1253,17 @@ export default function DiscoverScreen() {
             <Pressable
               style={({ pressed }) => [
                 styles.wizardSearchButton,
-                (selectedCity || selectedDate || selectedCompanion)
+                (selectedCity && selectedDate && selectedCompanion)
                   ? styles.wizardSearchButtonActive
                   : styles.wizardSearchButtonInactive,
                 pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] },
               ]}
               onPress={() => {
-                if (selectedCity || selectedDate || selectedCompanion) {
+                if (selectedCity && selectedDate && selectedCompanion) {
                   (navigation as any).navigate("Explorar", {
-                    city: selectedCity?.id,
-                    date: selectedDate?.id,
-                    companion: selectedCompanion?.id
+                    city: selectedCity.id,
+                    date: selectedDate.id,
+                    companion: selectedCompanion.id
                   });
                 } else {
                   if (!selectedCity) setOndeModalVisible(true);
@@ -1348,6 +1349,7 @@ export default function DiscoverScreen() {
               data={videoStories}
               keyExtractor={(item) => item.id}
               showsHorizontalScrollIndicator={false}
+              nestedScrollEnabled={true}
               contentContainerStyle={styles.videoStoriesContainer}
               viewabilityConfig={videoViewabilityConfig}
               onViewableItemsChanged={onVideoViewableItemsChanged}
@@ -1415,18 +1417,14 @@ export default function DiscoverScreen() {
             <QueroParticiparButton onPress={handleDanceAwardsPress} />
           </View>
 
-          {/* Destaques do Mês — carrossel horizontal igual Momento dança */}
+          {/* Destaques do Mês — só 3, sem lateral */}
           <View style={styles.destaquesMesSection}>
             <Text style={styles.destaquesMesTitle}>Destaques do Mês</Text>
             <Text style={styles.destaquesMesSubtitle}>para quem curte ver gente feliz em momentos felizes</Text>
-            <FlatList
-              horizontal
-              data={videoStories}
-              keyExtractor={(item) => `destaque-${item.id}`}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.videoStoriesContainer}
-              renderItem={({ item, index }) => (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              {videoStories.slice(0, 3).map((item: any, index: number) => (
                 <VideoStoryCard
+                  key={`destaque-${item.id}`}
                   title={item.title}
                   username={item.username}
                   thumbnail={item.thumbnail}
@@ -1434,8 +1432,8 @@ export default function DiscoverScreen() {
                   isVisible={false}
                   onPress={() => handleVideoStoryPress(index)}
                 />
-              )}
-            />
+              ))}
+            </View>
           </View>
 
           {/* Parceiros / Marcas */}
