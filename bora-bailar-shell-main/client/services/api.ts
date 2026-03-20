@@ -135,19 +135,22 @@ export const api = USE_MOCK ? {
                         
                         if (title.includes("BALADAS") || title.includes("MELHORES")) {
                             title = "BALADAS\nBADALADAS";
-                            description = "Quero conhecer lugares animados e bem recomendados para dança e diversão aqui por perto.";
-                        } else if (title.includes("PROFISSA") || title.includes("GENTE")) {
+                            description = description || "Quero conhecer lugares animados e bem recomendados para dança e diversão aqui por perto.";
+                        } else if (title.includes("PROFISSA") || title.includes("GENTE") || title.includes("PROFISSIONAIS")) {
                             title = "GENTE\nPROFISSA";
-                            description = "conhecer profissionais de dança que sejam boa companhia e me levem para dançar.";
+                            description = description || "conhecer profissionais de dança que sejam boa companhia e me levem para dançar.";
                         } else if (title.includes("ESCOLAS") || title.includes("ESCOLA")) {
                             title = "ESCOLAS\nDE DANÇA";
-                            description = "Quero me inscrever em escolas recomendadas para desenvolver os meus estilos de dança favoritos.";
+                            description = description || "Quero me inscrever em escolas recomendadas para desenvolver os meus estilos de dança favoritos.";
                         } else if (title.includes("TRIBO") || title.includes("JANTAR")) {
                             title = "JANTAR\nMUSICAL";
-                            description = "Quero sair pra jantar com alguém legal e curtir uma boa música ao vivo.";
+                            description = description || "Quero sair pra jantar com alguém legal e curtir uma boa música ao vivo.";
                         } else if (title.includes("EXPERIENCE") || title.includes("ESPETÁCULO") || title.includes("ESPETACUL")) {
                             title = "ESPETÁCULOS\nESPETACULARES";
-                            description = "Quero conhecer novos shows e artistas que tenham a ver comigo.";
+                            description = description || "Quero conhecer novos shows e artistas que tenham a ver comigo.";
+                        } else if (title.includes("SAIR") && title.includes("DANÇAR")) {
+                            title = "SAIR PARA\nDANÇAR";
+                            description = description || "encontrar eventos incríveis para dançar a noite toda.";
                         }
 
                         return {
