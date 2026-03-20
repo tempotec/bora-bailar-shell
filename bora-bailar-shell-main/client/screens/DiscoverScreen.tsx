@@ -1276,6 +1276,23 @@ export default function DiscoverScreen() {
               <Feather name="search" size={18} color="#FFFFFF" />
               <Text style={styles.wizardSearchButtonText}>Buscar</Text>
             </Pressable>
+
+            {/* Botão Limpar Filtros (#8) — aparece quando algum filtro está selecionado */}
+            {(selectedCity || selectedDate || selectedCompanion) && (
+              <Pressable
+                style={({ pressed }) => [
+                  { alignSelf: 'center', paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md },
+                  pressed && { opacity: 0.6 },
+                ]}
+                onPress={() => {
+                  setSelectedCity(null);
+                  setSelectedDate(null);
+                  setSelectedCompanion(null);
+                }}
+              >
+                <Text style={{ fontSize: 13, color: Colors.dark.textSecondary, textDecorationLine: 'underline' }}>Limpar filtros</Text>
+              </Pressable>
+            )}
           </View>
         </Animated.View>
 

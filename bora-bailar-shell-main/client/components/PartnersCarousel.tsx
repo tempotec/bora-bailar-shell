@@ -281,7 +281,7 @@ export function PartnersCarousel({ partnerCards, homeTexts }: PartnersCarouselPr
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>
-          {homeTexts?.partner_cta_title ?? 'Quer se tornar parceiro do BORABAILAR?'}
+          {homeTexts?.partner_cta_title ?? 'Seja Parceiro do BoraBailar'}
         </Text>
 
         <View style={styles.subHeaderAndImage}>
@@ -291,7 +291,7 @@ export function PartnersCarousel({ partnerCards, homeTexts }: PartnersCarouselPr
             </Text>
 
             <Text style={styles.listTitle}>
-              {homeTexts?.partner_categories_title ?? 'Escolha qual parceria combina com você:'}
+              {homeTexts?.partner_categories_title ?? 'Escolha o Seu Tipo de Parceria:'}
             </Text>
 
             <View style={styles.listContainer}>
