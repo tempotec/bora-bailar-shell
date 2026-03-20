@@ -136,11 +136,11 @@ const getInitialAIMessage = (mode: AIChatMode, cardTitle: string, cardDescriptio
     return `Olá! Sou seu concierge digital do BoraBailar \u{1F483}\n\nMe conta o que você procura — um lugar pra dançar, um evento especial, ou só quer sair e se divertir?\n\nEstou aqui pra te ajudar!`;
   }
   if (mode === "dance_awards") {
-    return `Olá, sou a IA do BORABAILAR. Você gostaria de participar do BORABAILAR TOP DANCE AWARDS?`;
+    return `Olá, sou a IA do BoraBailar. Você gostaria de participar do BoraBailar TOP DANCE AWARDS?`;
   }
   if (mode === "dicas_semana") {
     const dicaName = cardTitle.replace("DICA_SEMANA:", "");
-    return `Olá, sou a IA do BORABAILAR.\nVocê gostou de nossa dica da semana:\n${dicaName}?\n\nVocê prefere falar por áudio? Clique no botão e fale livremente.`;
+    return `Olá, sou a IA do BoraBailar.\nVocê gostou de nossa dica da semana:\n${dicaName}?\n\nVocê prefere falar por áudio? Clique no botão e fale livremente.`;
   }
   return "Maravilha! Estou reservando pra você, me diga qual é seu nome?";
 };
@@ -315,6 +315,14 @@ export default function AIChatScreen() {
             setMessages(prev => [...prev, aiResponse, buttonMessage]);
             setChatStep("complete");
           }
+        } else {
+          // Fallback for unrecognized input — keep the conversation flowing (#30)
+          const fallbackResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            text: "Entendi! Me conta mais sobre o que você procura. Posso te ajudar a encontrar eventos, lugares pra dançar, ou qualquer outra coisa. \u{1F483}",
+            isUser: false,
+          };
+          setMessages(prev => [...prev, fallbackResponse]);
         }
       } else if (chatStep === "asked_name") {
         setUserName(currentInput);
@@ -479,9 +487,7 @@ export default function AIChatScreen() {
           <Image source={logoImage} style={styles.headerLogo} resizeMode="contain" />
           <Text style={styles.headerBrandName}>
             <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>ORA</Text>
-            <Text style={styles.brandRed}>B</Text>
-            <Text style={styles.brandGray}>AILAR</Text>
+            <Text style={styles.brandGray}>ORABAILAR</Text>
           </Text>
         </View>
 

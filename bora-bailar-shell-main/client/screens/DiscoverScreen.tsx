@@ -187,8 +187,8 @@ function UploadButton({ onPress }: { onPress?: () => void }) {
       ]}
       onPress={onPress}
     >
-      <Feather name="upload" size={18} color={Colors.dark.textSecondary} style={{ marginRight: 8 }} />
       <Text style={styles.uploadButtonText}>Faça aqui o upload do seu momento dança</Text>
+      <Feather name="upload" size={22} color={Colors.dark.text} style={{ marginLeft: 8 }} />
     </Pressable>
   );
 }
@@ -1313,7 +1313,7 @@ export default function DiscoverScreen() {
             ]}>
               <Feather
                 name={isTranscribing ? "loader" : "mic"}
-                size={20}
+                size={26}
                 color="#FFFFFF"
               />
             </View>
@@ -1323,6 +1323,9 @@ export default function DiscoverScreen() {
           <View style={styles.quererSection} onLayout={handleQuererLayout}>
             <Text style={styles.sectionTitle}>
               {homeTexts?.quero_section_title ?? 'O seu querer faz acontecer'}
+            </Text>
+            <Text style={{ fontSize: 14, color: Colors.dark.textSecondary, marginBottom: Spacing.lg }}>
+              Marque aqui o que você deseja
             </Text>
             <View style={styles.quererGrid}>
               {querer.map((item: any) => (
@@ -1337,7 +1340,7 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
-          <View style={styles.momentoSection} onLayout={handleMomentoLayout}>
+          <View style={[styles.momentoSection, { backgroundColor: '#F8F8F8', borderRadius: BorderRadius.xl, padding: Spacing.xl, marginHorizontal: -Spacing.lg }]} onLayout={handleMomentoLayout}>
             <Text style={styles.momentoTitle}>
               {homeTexts?.momento_title ?? 'Momento dança é Momento feliz'}
             </Text>
@@ -1441,12 +1444,12 @@ export default function DiscoverScreen() {
           </View>
           <PartnerBrands partnerBrands={partnerBrands} homeTexts={homeTexts} />
 
-          {/* Beneficência — última seção */}
+          {/* Dançando por Uma Causa — última seção (#38, #39) */}
           <View style={styles.beneficenciaSection}>
             <Text style={{ fontSize: 16, color: Colors.dark.primary, marginBottom: 4 }}>♥</Text>
-            <Text style={styles.beneficenciaTitle}>Apoiamos a Casa da Criança com Câncer</Text>
+            <Text style={styles.beneficenciaTitle}>Dançando por Uma Causa</Text>
             <Text style={styles.beneficenciaSubtitle}>
-              Parte da nossa receita é destinada à Casa da Criança com Câncer.{"\n"}Ao usar o BoraBailar, você também faz a diferença.
+              {'• Projeto Emanuel\n• Casa da Criança com Câncer\n\nParte da nossa receita é destinada a causas sociais.\nAo usar o BoraBailar, você também faz a diferença.'}
             </Text>
           </View>
 
@@ -1659,9 +1662,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   aiMicButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: Colors.dark.brand,
     alignItems: "center",
     justifyContent: "center",
@@ -1711,8 +1714,8 @@ const styles = StyleSheet.create({
   videoStoryPlayIcon: { position: "absolute", bottom: Spacing.sm, left: Spacing.sm, width: 28, height: 28, borderRadius: 14, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
   videoStoryTitle: { fontSize: 12, color: Colors.dark.text, fontWeight: "500", marginTop: Spacing.xs, lineHeight: 16 },
   videoStoryUsername: { fontSize: 11, color: Colors.dark.textSecondary, marginTop: 2 },
-  uploadButton: { flexDirection: "row", backgroundColor: Colors.dark.wizardBackground, borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, marginTop: Spacing.xl, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" },
-  uploadButtonText: { fontSize: 14, color: Colors.dark.textSecondary, fontWeight: "500" },
+  uploadButton: { flexDirection: "row", backgroundColor: "#FFFFFF", borderRadius: BorderRadius.xl, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg, marginTop: Spacing.xl, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#1F2937" },
+  uploadButtonText: { fontSize: 14, color: Colors.dark.text, fontWeight: "500" },
   destaqueMesTitle: { fontSize: 18, color: Colors.dark.text, marginTop: Spacing.xl + Spacing.lg, marginBottom: Spacing.lg },
   destaqueMesDescription: { fontSize: 14, color: Colors.dark.textSecondary, marginTop: Spacing.sm, marginBottom: Spacing.md, lineHeight: 20, paddingHorizontal: Spacing.xs },
   destaqueMesUsername: { color: Colors.dark.brand, fontWeight: '600' },
