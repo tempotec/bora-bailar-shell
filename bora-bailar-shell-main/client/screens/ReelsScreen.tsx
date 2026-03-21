@@ -117,7 +117,7 @@ type ReelCardProps = {
   onShare: () => void;
 };
 
-function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps) {
+function ReelCard({ item, isVisible, onLike, onComment, onShare, navigation }: ReelCardProps & { navigation: any }) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(item.likes);
   const [commentCount] = useState(item.comments);
@@ -240,10 +240,7 @@ function ReelCard({ item, isVisible, onLike, onComment, onShare }: ReelCardProps
           </Text>
           <Pressable 
              style={styles.shareButton}
-             onPress={() => {
-                // @ts-ignore
-                useNavigation().navigate("UploadPost");
-             }}
+             onPress={() => navigation.navigate("UploadPost")}
           >
             <Text style={styles.shareButtonText}>É AQUI!</Text>
           </Pressable>
@@ -369,10 +366,11 @@ export default function ReelsScreen() {
           onLike={handleLike}
           onComment={handleComment}
           onShare={handleShare}
+          navigation={navigation}
         />
       </View>
     );
-  }, [visibleIndex, handleLike, handleComment, handleShare, SCREEN_WIDTH, SCREEN_HEIGHT]);
+  }, [visibleIndex, handleLike, handleComment, handleShare, SCREEN_WIDTH, SCREEN_HEIGHT, navigation]);
 
   return (
     <View style={styles.container}>

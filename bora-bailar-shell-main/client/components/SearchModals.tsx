@@ -154,62 +154,94 @@ export function QuandoModal({ visible, onClose, onSelect, selectedOption }: Quan
           <View style={styles.closeButton} />
         </View>
 
-        <ScrollView
-          style={styles.modalContent}
-          contentContainerStyle={styles.optionsContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          {DATE_OPTIONS.map((opt) => {
-            const isSelected = selectedOption?.id === opt.id;
-            return (
-              <Pressable
-                key={opt.id}
-                style={({ pressed }) => [
-                  styles.optionItem,
-                  isSelected && styles.optionItemSelected,
-                  pressed && styles.optionItemPressed,
-                ]}
-                onPress={() => {
-                  if (opt.id === "specific") {
-                    setShowPicker(true);
-                  } else {
-                    onSelect(opt);
+        {!showPicker ? (
+          <ScrollView
+            style={styles.modalContent}
+            contentContainerStyle={styles.optionsContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {DATE_OPTIONS.map((opt) => {
+              const isSelected = selectedOption?.id === opt.id;
+              return (
+                <Pressable
+                  key={opt.id}
+                  style={({ pressed }) => [
+                    styles.optionItem,
+                    isSelected && styles.optionItemSelected,
+                    pressed && styles.optionItemPressed,
+                  ]}
+                  onPress={() => {
+                    if (opt.id === "specific") {
+                      setShowPicker(true);
+                    } else {
+                      onSelect(opt);
+                      onClose();
+                    }
+                  }}
+                >
+                  <View style={styles.optionIcon}>
+                    <Feather name={opt.icon} size={20} color={Colors.dark.primary} />
+                  </View>
+                  <View style={styles.optionTextContainer}>
+                    <Text style={styles.optionTitle}>{opt.label}</Text>
+                  </View>
+                  {isSelected && <Feather name="check" size={20} color={SELECTED_BORDER} />}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl }}>
+            <Text style={{ fontSize: 16, fontWeight: "600", color: Colors.dark.text, marginBottom: Spacing.lg }}>
+              Escolha a data:
+            </Text>
+            <DateTimePicker
+              value={dateValue}
+              mode="date"
+              display={Platform.OS === "ios" ? "inline" : "default"}
+              minimumDate={new Date()}
+              onChange={(event, date) => {
+                if (Platform.OS !== "ios") {
+                  setShowPicker(false);
+                  if (event.type === "set" && date) {
+                    setDateValue(date);
+                    const formatted = date.toLocaleDateString("pt-BR");
+                    onSelect({ id: "specific", label: formatted, icon: "clock" });
                     onClose();
                   }
-                }}
-              >
-                <View style={styles.optionIcon}>
-                  <Feather name={opt.icon} size={20} color={Colors.dark.primary} />
-                </View>
-                <View style={styles.optionTextContainer}>
-                  <Text style={styles.optionTitle}>{opt.label}</Text>
-                </View>
-                {isSelected && <Feather name="check" size={20} color={SELECTED_BORDER} />}
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-        {showPicker && (
-          <DateTimePicker
-            value={dateValue}
-            mode="date"
-            display="default"
-            onChange={(event, date) => {
-              if (Platform.OS !== "ios") {
-                setShowPicker(false);
-              }
-              if (event.type === "set" && date) {
-                setDateValue(date);
-                const formatted = date.toLocaleDateString("pt-BR");
-                onSelect({ id: "specific", label: formatted, icon: "clock" });
-                if (Platform.OS !== "ios") {
-                  onClose();
+                } else if (date) {
+                  setDateValue(date);
                 }
-              } else if (event.type === "dismissed") {
-                setShowPicker(false);
-              }
-            }}
-          />
+              }}
+            />
+            {Platform.OS === "ios" && (
+              <View style={{ flexDirection: "row", gap: Spacing.md, marginTop: Spacing.lg }}>
+                <Pressable
+                  style={({ pressed }) => [
+                    { paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, borderRadius: 12, backgroundColor: "#F0F0F0" },
+                    pressed && { opacity: 0.8 },
+                  ]}
+                  onPress={() => setShowPicker(false)}
+                >
+                  <Text style={{ fontSize: 15, color: Colors.dark.textSecondary, fontWeight: "500" }}>Voltar</Text>
+                </Pressable>
+                <Pressable
+                  style={({ pressed }) => [
+                    { paddingVertical: Spacing.md, paddingHorizontal: Spacing.xl, borderRadius: 12, backgroundColor: Colors.dark.brand },
+                    pressed && { opacity: 0.9 },
+                  ]}
+                  onPress={() => {
+                    const formatted = dateValue.toLocaleDateString("pt-BR");
+                    onSelect({ id: "specific", label: formatted, icon: "clock" });
+                    setShowPicker(false);
+                    onClose();
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: "#FFFFFF", fontWeight: "600" }}>Confirmar</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
         )}
       </View>
     </Modal>

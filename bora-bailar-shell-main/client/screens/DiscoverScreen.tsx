@@ -1140,7 +1140,16 @@ export default function DiscoverScreen() {
         ]
       );
     } catch (err: any) {
-      Alert.alert("Erro", err.message);
+      // #21 — Tratar permissão negada com Alert informativo
+      if (err.message?.includes("Permissão") || err.message?.includes("permissão")) {
+        Alert.alert(
+          "Permissão Necessária",
+          "Para enviar vídeos, o BoraBailar precisa acessar sua galeria. Vá em Configurações > BoraBailar > Fotos e habilite o acesso.",
+          [{ text: "Entendi" }]
+        );
+      } else {
+        Alert.alert("Erro", err.message);
+      }
     }
   }, []);
 
