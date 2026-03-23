@@ -107,8 +107,15 @@ function mapKeys(obj: any): any {
 
 export function buildImageUrl(path: string | null | undefined): string | null {
     if (!path) return null;
-    if (path.startsWith("http")) return path;
     const baseUrl = API_CONFIG.BASE_URL.replace("/api", "");
+    // Flask may return absolute URLs with localhost:5000 which won't work on mobile
+    // Rewrite them to use the actual API host (e.g. 192.168.0.101:5000)
+    if (path.startsWith("http://localhost:5000") || path.startsWith("http://127.0.0.1:5000")) {
+        const relativePath = path.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, "");
+        return `${baseUrl}${relativePath}`;
+    }
+    if (path.startsWith("http")) return path;
+    // Relative path — prepend base URL
     return `${baseUrl}${path}`;
 }
 

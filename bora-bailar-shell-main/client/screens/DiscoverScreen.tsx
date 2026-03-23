@@ -1105,53 +1105,9 @@ export default function DiscoverScreen() {
     });
   }, [rootNavigation]);
 
-  const handleUploadPress = useCallback(async () => {
-    try {
-      // 1. Selecionar vídeo
-      const video = await videoService.pickVideo();
-      if (!video) return;
-
-      // 2. Validar tamanho
-      await videoService.validateVideoSize(video.uri);
-
-      // 3. Selecionar thumbnail
-      Alert.alert(
-        "Thumbnail",
-        "Agora selecione uma imagem de capa para o vídeo",
-        [
-          {
-            text: "Selecionar",
-            onPress: async () => {
-              try {
-                const thumbnail = await videoService.pickThumbnail();
-                if (!thumbnail) return;
-
-                // Navigate to the post creation screen
-                rootNavigation.navigate("UploadPost", {
-                  videoUri: video.uri,
-                  thumbnailUri: thumbnail.uri
-                });
-              } catch (err: any) {
-                Alert.alert("Erro", err.message);
-              }
-            },
-          },
-          { text: "Cancelar", style: "cancel" },
-        ]
-      );
-    } catch (err: any) {
-      // #21 — Tratar permissão negada com Alert informativo
-      if (err.message?.includes("Permissão") || err.message?.includes("permissão")) {
-        Alert.alert(
-          "Permissão Necessária",
-          "Para enviar vídeos, o BoraBailar precisa acessar sua galeria. Vá em Configurações > BoraBailar > Fotos e habilite o acesso.",
-          [{ text: "Entendi" }]
-        );
-      } else {
-        Alert.alert("Erro", err.message);
-      }
-    }
-  }, []);
+  const handleUploadPress = useCallback(() => {
+    rootNavigation.navigate("GalleryPicker");
+  }, [rootNavigation]);
 
   const handleWizardSearch = useCallback((filters: {
     city: typeof ALL_NEIGHBORHOODS[0] | null;

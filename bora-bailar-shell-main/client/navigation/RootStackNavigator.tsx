@@ -12,6 +12,7 @@ import QueroDetailScreen from "@/screens/QueroDetailScreen";
 import ReelsScreen, { ReelsScreenParams } from "@/screens/ReelsScreen";
 import EventDetailsScreen from "@/screens/EventDetailsScreen";
 import UploadPostScreen from "@/screens/UploadPostScreen";
+import GalleryPickerScreen from "@/screens/GalleryPickerScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type RootStackParamList = {
@@ -36,7 +37,14 @@ export type RootStackParamList = {
   };
   Reels: ReelsScreenParams;
   EventDetails: { eventId: string };
-  UploadPost: { videoUri: string; thumbnailUri: string };
+  GalleryPicker: undefined;
+  UploadPost: {
+    assetId?: string;
+    mediaUri: string;
+    mediaType: "photo" | "video";
+    filename?: string;
+    duration?: number;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -127,10 +135,17 @@ export default function RootStackNavigator() {
         }}
       />
       <Stack.Screen
+        name="GalleryPicker"
+        component={GalleryPickerScreen}
+        options={{
+          headerShown: false,
+          animation: "slide_from_bottom",
+        }}
+      />
+      <Stack.Screen
         name="UploadPost"
         component={UploadPostScreen}
         options={{
-          presentation: "modal",
           headerShown: false,
         }}
       />

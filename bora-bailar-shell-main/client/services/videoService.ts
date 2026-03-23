@@ -3,6 +3,7 @@
  */
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from "expo-media-library";
 import { API_CONFIG } from "../config";
 import { tokenStore } from "./tokenStore";
 
@@ -128,6 +129,33 @@ function getExtension(uri: string): string {
 }
 
 /**
+ * Resolve ph:// (iOS Photos) or content:// (Android) URIs to uploadable file:// paths.
+ * React Native's fetch cannot upload ph:// URIs directly.
+ */
+async function resolveLocalUri(uri: string): Promise<string> {
+    // Already a file:// URI — usable directly
+    if (uri.startsWith("file://") || uri.startsWith("http")) {
+        return uri;
+    }
+    // iOS ph:// or Android content:// — need to copy to local cache
+    try {
+        const assetInfo = await MediaLibrary.getAssetInfoAsync(uri);
+        const localUri = assetInfo?.localUri;
+        if (localUri && localUri.startsWith("file://")) {
+            return localUri;
+        }
+    } catch {
+        // getAssetInfoAsync might fail — fall back to copyAsync
+    }
+    // Fallback: copy to temp file
+    const ext = uri.split(".").pop()?.split("?")[0] || "mp4";
+    const cacheDir = (FileSystem as any).cacheDirectory ?? (FileSystem as any).Paths?.cache ?? "";
+    const destUri = `${cacheDir}upload_${Date.now()}.${ext}`;
+    await FileSystem.copyAsync({ from: uri, to: destUri });
+    return destUri;
+}
+
+/**
  * Upload video to server
  */
 export async function uploadVideo(
@@ -145,19 +173,28 @@ export async function uploadVideo(
         throw new Error("Usuário não autenticado");
     }
 
+    // Resolve ph:// (iOS) and content:// (Android) URIs to uploadable file:// paths
+    const resolvedVideoUri = await resolveLocalUri(videoUri);
+    const resolvedThumbnailUri = await resolveLocalUri(thumbnailUri);
+
+    if (__DEV__) {
+        console.log("[VideoService] Resolved videoUri:", resolvedVideoUri);
+        console.log("[VideoService] Resolved thumbnailUri:", resolvedThumbnailUri);
+    }
+
     // Build FormData (formato correto para Expo)
     const formData = new FormData();
 
     formData.append("video", {
-        uri: videoUri,
-        name: `video.${getExtension(videoUri)}`,
-        type: `video/${getExtension(videoUri)}`,
+        uri: resolvedVideoUri,
+        name: `video.${getExtension(resolvedVideoUri)}`,
+        type: `video/${getExtension(resolvedVideoUri)}`,
     } as any);
 
     formData.append("thumbnail", {
-        uri: thumbnailUri,
-        name: `thumb.${getExtension(thumbnailUri)}`,
-        type: `image/${getExtension(thumbnailUri) === "png" ? "png" : "jpeg"}`,
+        uri: resolvedThumbnailUri,
+        name: `thumb.${getExtension(resolvedThumbnailUri)}`,
+        type: `image/${getExtension(resolvedThumbnailUri) === "png" ? "png" : "jpeg"}`,
     } as any);
 
     if (caption) {

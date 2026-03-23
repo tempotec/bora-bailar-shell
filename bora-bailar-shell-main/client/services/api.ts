@@ -11,10 +11,15 @@ const USE_MOCK = false;
 // Helper to build full URL for images
 function buildImageUrl(path: string | null | undefined): string | null {
     if (!path) return null;
+    const baseUrl = API_CONFIG.BASE_URL.replace("/api", "");
+    // Flask may return absolute URLs with localhost:5000 which won't work on mobile
+    if (path.startsWith("http://localhost:5000") || path.startsWith("http://127.0.0.1:5000")) {
+        const relativePath = path.replace(/^https?:\/\/(localhost|127\.0\.0\.1):5000/, "");
+        return `${baseUrl}${relativePath}`;
+    }
     // If already absolute URL, return as-is
     if (path.startsWith("http")) return path;
     // Build absolute URL from relative path
-    const baseUrl = API_CONFIG.BASE_URL.replace("/api", "");
     return `${baseUrl}${path}`;
 }
 

@@ -2,6 +2,34 @@ import type { Express, Request, Response } from "express";
 import { db } from "./db";
 import { events, videos, awardCategories, queroCards, venues, previewCodes, homeSections, homeSectionItems, pushTokens, notificationLogs } from "@shared/schema";
 import { eq, and, gte, lte, or, sql, desc, asc, isNull, inArray } from "drizzle-orm";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import crypto from "crypto";
+
+// ─── Multer Config ────────────────────────────────────────────────────────────
+const uploadsDir = path.resolve(process.cwd(), "uploads");
+const videosDir = path.join(uploadsDir, "videos");
+const thumbsDir = path.join(uploadsDir, "thumbs");
+[uploadsDir, videosDir, thumbsDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
+const storage = multer.diskStorage({
+  destination: (_req, file, cb) => {
+    cb(null, file.fieldname === "thumbnail" ? thumbsDir : videosDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || (file.fieldname === "thumbnail" ? ".jpg" : ".mp4");
+    const safeName = `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${ext}`;
+    cb(null, safeName);
+  },
+});
+
+const uploadMiddleware = multer({
+  storage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
+});
 
 // ─── Auth Proxy Helper ────────────────────────────────────────────────────────
 // Forwards auth requests to the Flask admin, which owns user accounts + JWT.
@@ -738,4 +766,53 @@ export function registerPublicRoutes(app: Express) {
             res.status(500).json({ error: "Erro ao contar tokens" });
         }
     });
+
+    // ─── Video Upload ──────────────────────────────────────────────────────────
+    app.post(
+        "/api/videos/upload",
+        uploadMiddleware.fields([
+            { name: "video", maxCount: 1 },
+            { name: "thumbnail", maxCount: 1 },
+        ]),
+        async (req: Request, res: Response) => {
+            try {
+                const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+                const videoFile = files?.["video"]?.[0];
+                const thumbFile = files?.["thumbnail"]?.[0];
+
+                if (!videoFile) {
+                    return res.status(400).json({ error: "Arquivo de vídeo é obrigatório" });
+                }
+
+                const videoUrl = `/uploads/videos/${videoFile.filename}`;
+                const thumbnailUrl = thumbFile ? `/uploads/thumbs/${thumbFile.filename}` : null;
+                const caption = (req.body.caption as string) || "";
+                const title = (req.body.title as string) || caption.slice(0, 60) || "Upload";
+
+                const [video] = await db.insert(videos).values({
+                    title,
+                    videoUrl,
+                    thumbnailUrl,
+                    description: caption,
+                    type: "ugc",
+                    status: "published",
+                }).returning();
+
+                console.log(`[Upload] Video saved: ${videoUrl} (id: ${video.id})`);
+
+                res.status(201).json({
+                    video: {
+                        id: video.id,
+                        status: video.status,
+                        video_url: videoUrl,
+                        thumbnail_url: thumbnailUrl,
+                        caption,
+                    },
+                });
+            } catch (error) {
+                console.error("[Upload] Error:", error);
+                res.status(500).json({ error: "Falha no upload" });
+            }
+        }
+    );
 }
