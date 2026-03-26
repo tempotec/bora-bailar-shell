@@ -45,7 +45,7 @@ export const API_CONFIG = {
     // Em prod: usa EXPO_PUBLIC_DOMAIN do .env.production
     BASE_URL: __DEV__
         ? getDevBaseUrl()
-        : `http://${process.env.EXPO_PUBLIC_DOMAIN || "34.162.38.179:5000"}/api`,
+        : `http://${process.env.EXPO_PUBLIC_DOMAIN || "34.162.38.179"}/api`,
     TIMEOUT: 10000,
 };
 

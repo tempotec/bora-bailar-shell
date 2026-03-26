@@ -30,8 +30,24 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# environment and secrets
+.env
 .env*.local
+
+# local state
+.local/
+
+# uploads (user-generated content)
+uploads/
+
+# build outputs
+server_dist/
+static-build/
+
+# logs and temp files
+*.log
+server_error.txt
+bundle.txt
 
 # typescript
 *.tsbuildinfo
@@ -41,3 +57,4 @@ app-example
 # generated native folders
 /ios
 /android
+

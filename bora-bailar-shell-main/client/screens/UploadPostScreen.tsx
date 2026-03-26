@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { API_CONFIG } from "@/config";
 import { tokenStore } from "@/services/tokenStore";
+import { compressImage } from "@/services/mediaCompressor";
 
 // ─── Types ──────────────────────────────────────────────
 type Step = "editor" | "publish";
@@ -45,11 +46,24 @@ async function uploadMedia({
 }) {
   const token = await tokenStore.get();
 
+  // Pre-compress images before upload
+  let finalUri = mediaUri;
+  let finalName = mediaType === "video" ? "upload.mp4" : "upload.jpg";
+  let finalType = mediaType === "video" ? "video/mp4" : "image/jpeg";
+
+  if (mediaType === "photo") {
+    const compressed = await compressImage(mediaUri, 1200, 0.7);
+    finalUri = compressed.uri;
+    if (__DEV__) {
+      console.log(`[UploadPost] Image compressed: ${compressed.sizeMB}MB`);
+    }
+  }
+
   const formData = new FormData();
   formData.append("video", {
-    uri: mediaUri,
-    name: mediaType === "video" ? "upload.mp4" : "upload.jpg",
-    type: mediaType === "video" ? "video/mp4" : "image/jpeg",
+    uri: finalUri,
+    name: finalName,
+    type: finalType,
   } as any);
   formData.append("caption", caption);
 

@@ -15,7 +15,7 @@ Notifications.setNotificationHandler({
     }),
 });
 
-const API_BASE = process.env.EXPO_PUBLIC_DOMAIN || "http://localhost:8081";
+import { API_CONFIG } from "../config";
 
 async function registerForPushNotificationsAsync(): Promise<string | null> {
     // Push notifications only work on physical devices
@@ -77,7 +77,7 @@ export function useNotifications() {
 
                 // Send token to backend
                 try {
-                    await fetch(`${API_BASE}/api/push-token`, {
+                    await fetch(`${API_CONFIG.BASE_URL}/push-tokens/register`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ token }),

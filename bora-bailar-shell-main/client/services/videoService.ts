@@ -6,8 +6,9 @@ import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 import { API_CONFIG } from "../config";
 import { tokenStore } from "./tokenStore";
+import { compressThumbnail } from "./mediaCompressor";
 
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_VIDEO_SIZE = 20 * 1024 * 1024; // 20MB (servidor comprime para 720p)
 
 export interface VideoUploadResult {
     id: number;
@@ -116,7 +117,10 @@ export async function validateVideoSize(uri: string): Promise<void> {
     const size = await getFileSize(uri);
     if (size > MAX_VIDEO_SIZE) {
         const sizeMB = Math.round(size / (1024 * 1024));
-        throw new Error(`Vídeo muito grande (${sizeMB}MB). Máximo: 50MB`);
+        throw new Error(
+            `Vídeo muito grande (${sizeMB}MB). Máximo: 20MB. ` +
+            `Tente gravar em resolução menor ou um vídeo mais curto.`
+        );
     }
 }
 
@@ -182,6 +186,14 @@ export async function uploadVideo(
         console.log("[VideoService] Resolved thumbnailUri:", resolvedThumbnailUri);
     }
 
+    // Compress thumbnail before upload
+    const compressedThumb = await compressThumbnail(resolvedThumbnailUri);
+    const finalThumbnailUri = compressedThumb.uri;
+
+    if (__DEV__) {
+        console.log(`[VideoService] Thumbnail compressed: ${compressedThumb.sizeMB}MB`);
+    }
+
     // Build FormData (formato correto para Expo)
     const formData = new FormData();
 
@@ -192,9 +204,9 @@ export async function uploadVideo(
     } as any);
 
     formData.append("thumbnail", {
-        uri: resolvedThumbnailUri,
-        name: `thumb.${getExtension(resolvedThumbnailUri)}`,
-        type: `image/${getExtension(resolvedThumbnailUri) === "png" ? "png" : "jpeg"}`,
+        uri: finalThumbnailUri,
+        name: `thumb.jpg`,
+        type: `image/jpeg`,
     } as any);
 
     if (caption) {
