@@ -555,7 +555,7 @@ function QuererCard({
   );
 }
 
-const SECTIONS_KEYS = ["querer", "momento", "partners", "awards", "dicas", "recomendacoes"] as const;
+const SECTIONS_KEYS = ["querer", "momento", "partners", "awards", "dicas", "recomendacoes", "destaque", "parceiro", "causa"] as const;
 type SectionKey = typeof SECTIONS_KEYS[number];
 
 export default function DiscoverScreen() {
@@ -652,6 +652,9 @@ export default function DiscoverScreen() {
     awards: 0,
     dicas: 0,
     recomendacoes: 0,
+    destaque: 0,
+    parceiro: 0,
+    causa: 0,
   });
 
   const [ondeModalVisible, setOndeModalVisible] = useState(false);
@@ -818,11 +821,14 @@ export default function DiscoverScreen() {
 
   const SECTIONS_DYNAMIC = useMemo(() => ({
     querer: { title: homeTexts?.quero_section_title ?? "O seu querer faz acontecer", highlightWords: ["querer", "acontecer", "dança", "feliz"] },
-    momento: { title: homeTexts?.momento_title ?? "Momento dança é momento feliz", highlightWords: ["dança", "feliz", "Momento"] },
-    partners: { title: homeTexts?.brands_section_title ?? "Quer ser parceiro do BORABAILAR?", highlightWords: ["parceiro", "BORABAILAR"] },
-    awards: { title: "BoraBailar TOP 10", highlightWords: ["BoraBailar"] },
-    dicas: { title: homeTexts?.dicas_title ?? "Dicas da semana", highlightWords: ["semana"] },
-    recomendacoes: { title: "Recomendações especiais", highlightWords: [] },
+    momento: { title: homeTexts?.momento_title ?? "Momento Dança, Momento Feliz", highlightWords: ["Dança,", "Feliz", "Momento"] },
+    partners: { title: homeTexts?.brands_section_title ?? "Seja um Parceiro BoraBailar", highlightWords: ["Parceiro", "BoraBailar"] },
+    awards: { title: "BoraBailar Top 10 Dance Awards", highlightWords: ["BoraBailar", "Awards"] },
+    dicas: { title: homeTexts?.dicas_title ?? "Dicas da Semana", highlightWords: ["Semana"] },
+    recomendacoes: { title: "Recomendações Especiais", highlightWords: ["Especiais"] },
+    destaque: { title: "Destaques do Mês", highlightWords: ["Mês"] },
+    parceiro: { title: "Seja um Parceiro BoraBailar", highlightWords: ["Parceiro", "BoraBailar"] },
+    causa: { title: "Dançando por Uma Causa", highlightWords: ["Causa"] },
   }), [homeTexts]);
 
   const currentSection = currentSectionKey ? SECTIONS_DYNAMIC[currentSectionKey] : null;
@@ -836,7 +842,7 @@ export default function DiscoverScreen() {
       newSection = null;
     } else {
       const offsets = sectionOffsetsRef.current;
-      const orderedSections: SectionKey[] = ["querer", "momento", "dicas", "awards", "recomendacoes", "partners"];
+      const orderedSections: SectionKey[] = ["querer", "momento", "dicas", "awards", "recomendacoes", "destaque", "parceiro", "causa", "partners"];
 
       for (let i = orderedSections.length - 1; i >= 0; i--) {
         const sectionKey = orderedSections[i];
@@ -885,6 +891,9 @@ export default function DiscoverScreen() {
   const handleAwardsLayout = useMemo(() => createSectionLayoutHandler("awards"), [createSectionLayoutHandler]);
   const handleDicasLayout = useMemo(() => createSectionLayoutHandler("dicas"), [createSectionLayoutHandler]);
   const handleRecomendacoesLayout = useMemo(() => createSectionLayoutHandler("recomendacoes"), [createSectionLayoutHandler]);
+  const handleDestaqueLayout = useMemo(() => createSectionLayoutHandler("destaque"), [createSectionLayoutHandler]);
+  const handleParceirosLayout = useMemo(() => createSectionLayoutHandler("parceiro"), [createSectionLayoutHandler]);
+  const handleCausaLayout = useMemo(() => createSectionLayoutHandler("causa"), [createSectionLayoutHandler]);
 
   // currentSection computation moved above updateCurrentSection
 
@@ -1118,10 +1127,13 @@ export default function DiscoverScreen() {
     setSelectedCity(filters.city);
     setSelectedDate(filters.date);
     setSelectedCompanion(filters.companion);
-    (navigation as any).navigate("Explorar", {
-      city: filters.city?.id,
-      date: filters.date?.id,
-      companion: filters.companion?.id
+    (navigation as any).getParent()?.navigate("MyEventsTab", {
+      screen: "MyEvents",
+      params: {
+        city: filters.city?.id,
+        date: filters.date?.id,
+        companion: filters.companion?.id
+      }
     });
   }, [navigation]);
 
@@ -1133,7 +1145,7 @@ export default function DiscoverScreen() {
             <Text style={styles.authButtonText}>SIGN UP</Text>
           </Pressable>
           <View style={styles.topHeaderSpacer} />
-          <Pressable style={styles.authButton}>
+          <Pressable style={styles.authButton} onPress={() => rootNavigation.navigate("Login")}>
             <Text style={styles.authButtonText}>LOG IN</Text>
           </Pressable>
         </Animated.View>
@@ -1225,17 +1237,14 @@ export default function DiscoverScreen() {
                 pressed && { opacity: 0.85, transform: [{ scale: 0.96 }] },
               ]}
               onPress={() => {
-                if (selectedCity && selectedDate && selectedCompanion) {
-                  (navigation as any).navigate("Explorar", {
-                    city: selectedCity.id,
-                    date: selectedDate.id,
-                    companion: selectedCompanion.id
-                  });
-                } else {
-                  if (!selectedCity) setOndeModalVisible(true);
-                  else if (!selectedDate) setQuandoModalVisible(true);
-                  else if (!selectedCompanion) setComQuemModalVisible(true);
-                }
+                (navigation as any).getParent()?.navigate("MyEventsTab", {
+                  screen: "MyEvents",
+                  params: {
+                    city: selectedCity?.id,
+                    date: selectedDate?.id,
+                    companion: selectedCompanion?.id
+                  }
+                });
               }}
             >
               <Feather name="search" size={18} color="#FFFFFF" />
@@ -1323,9 +1332,9 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
-          <View style={[styles.momentoSection, { backgroundColor: '#F8F8F8', borderRadius: BorderRadius.xl, padding: Spacing.xl, marginHorizontal: -Spacing.lg }]} onLayout={handleMomentoLayout}>
+          <View style={[styles.momentoSection, { backgroundColor: '#F8F8F8', borderRadius: BorderRadius.xl, padding: Spacing.xl }]} onLayout={handleMomentoLayout}>
             <Text style={styles.momentoTitle}>
-              {homeTexts?.momento_title ?? 'Momento dança é Momento feliz'}
+              {homeTexts?.momento_title ?? 'Momento Dança, Momento Feliz'}
             </Text>
             <Text style={styles.momentoSubtitle}>
               Para quem curte ver gente feliz em momentos felizes. Compartilhe aqui os seus passos.
@@ -1378,8 +1387,8 @@ export default function DiscoverScreen() {
           <View style={[styles.topDanceAwardsSection, { backgroundColor: '#F8F8F8', borderRadius: BorderRadius.xl, padding: Spacing.xl }]} onLayout={handleAwardsLayout}>
             <View style={styles.topDanceAwardsHeader}>
               <View style={styles.topDanceAwardsTextContent}>
-                <Text style={[styles.topDanceAwardsBrandText, { fontSize: 20, fontWeight: '800', color: Colors.dark.text, textTransform: 'uppercase' }]}>
-                  <Text style={{ color: Colors.dark.brand }}>B</Text>oraBailar TOP 10 DANCE AWARDS
+                <Text style={[styles.topDanceAwardsBrandText, { fontSize: 20, fontWeight: '800', color: Colors.dark.text }]}>
+                  <Text style={{ color: Colors.dark.brand }}>B</Text>oraBailar Top 10 Dance <Text style={{ color: Colors.dark.brand }}>Awards</Text>
                 </Text>
                 <Text style={styles.topDanceAwardsSubtitle}>
                   Os melhores da dança, eleitos por você
@@ -1403,8 +1412,8 @@ export default function DiscoverScreen() {
           </View>
 
           {/* Destaques do Mês — só 3, sem lateral */}
-          <View style={styles.destaquesMesSection}>
-            <Text style={styles.destaquesMesTitle}>Destaques do Mês</Text>
+          <View style={styles.destaquesMesSection} onLayout={handleDestaqueLayout}>
+            <Text style={styles.destaquesMesTitle}>Destaques do <Text style={{ color: Colors.dark.brand }}>Mês</Text></Text>
             <Text style={styles.destaquesMesSubtitle}>para quem curte ver gente feliz em momentos felizes</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               {videoStories.slice(0, 3).map((item: any, index: number) => (
@@ -1421,25 +1430,63 @@ export default function DiscoverScreen() {
             </View>
           </View>
 
+          {/* Recomendações Especiais */}
+          {recommendations.length > 0 && (
+            <View style={styles.recomendacoesSection} onLayout={handleRecomendacoesLayout}>
+              <Text style={styles.recomendacoesTitle}>Recomendações <Text style={{ color: Colors.dark.brand }}>Especiais</Text></Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.recomendacoesContainer}
+                nestedScrollEnabled={true}
+              >
+                {recommendations.map((item: any) => (
+                  <OfertaEspecialCard
+                    key={item.id}
+                    title={item.title}
+                    price={item.price || 'Grátis'}
+                    discount={item.discount || ''}
+                    image={item.coverImage || item.image || ''}
+                    onPress={() => handleRecomendacaoPress(item.title, item.price || 'Grátis', item.discount || '', item.coverImage || item.image || '')}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
           {/* Parceiros / Marcas */}
-          <View onLayout={handlePartnersLayout}>
+          <View onLayout={handleParceirosLayout}>
             <PartnersCarousel partnerCards={partnerCards} homeTexts={homeTexts} />
           </View>
           <PartnerBrands partnerBrands={partnerBrands} homeTexts={homeTexts} />
 
           {/* Dançando por Uma Causa — última seção (#38, #39) */}
-          <View style={styles.beneficenciaSection}>
-            <Text style={{ fontSize: 16, color: Colors.dark.primary, marginBottom: 4 }}>♥</Text>
-            <Text style={styles.beneficenciaTitle}>Dançando por Uma Causa</Text>
-            <View style={{ gap: 8, marginBottom: 12 }}>
-              <Text style={styles.beneficenciaSubtitle}>• Projeto Emanuel</Text>
-              <Pressable onPress={() => Linking.openURL('https://casaapoiocancer.org.br/')}>
-                <Text style={[styles.beneficenciaSubtitle, { color: Colors.dark.brand, textDecorationLine: 'underline' }]}>• Casa da Criança com Câncer</Text>
-              </Pressable>
-            </View>
+          <View style={styles.beneficenciaSection} onLayout={handleCausaLayout}>
+            <Text style={{ fontSize: 16, color: Colors.dark.brand, marginBottom: 4 }}>♥</Text>
+            <Text style={styles.beneficenciaTitle}>Dançando por Uma <Text style={{ color: Colors.dark.brand }}>Causa</Text></Text>
             <Text style={styles.beneficenciaSubtitle}>
               Parte da nossa receita é destinada a causas sociais.{"\n"}Ao usar o BoraBailar, você também faz a diferença.
             </Text>
+            <View style={styles.beneficenciaButtonsRow}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.beneficenciaButton,
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={() => Linking.openURL('https://casaapoiocancer.org.br/')}
+              >
+                <Text style={styles.beneficenciaButtonText}>Criança com Câncer</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.beneficenciaButton,
+                  pressed && { opacity: 0.85 },
+                ]}
+                onPress={() => Linking.openURL('https://projetoemanuel.org.br/')}
+              >
+                <Text style={styles.beneficenciaButtonText}>Projeto Emanuel</Text>
+              </Pressable>
+            </View>
           </View>
 
         </Animated.View>{/* Close contentSlideUpStyle wrapper */}
@@ -1889,6 +1936,24 @@ const styles = StyleSheet.create({
     color: Colors.dark.textSecondary,
     textAlign: "center",
     lineHeight: 18,
+    marginBottom: Spacing.md,
+  },
+  beneficenciaButtonsRow: {
+    flexDirection: "row",
+    gap: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  beneficenciaButton: {
+    flex: 1,
+    backgroundColor: Colors.dark.brand,
+    borderRadius: BorderRadius.xl,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+  },
+  beneficenciaButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
 

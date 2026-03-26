@@ -34,8 +34,10 @@ function SignUpButton() {
 }
 
 function LogInButton() {
+  const navigation = useNavigation<NativeStackNavigationProp<DiscoverStackParamList>>();
+
   return (
-    <Pressable style={headerStyles.authButton} hitSlop={8}>
+    <Pressable style={headerStyles.authButton} hitSlop={8} onPress={() => (navigation as any).getParent()?.navigate("Login")}>
       <Text style={headerStyles.authButtonText}>Log In</Text>
     </Pressable>
   );

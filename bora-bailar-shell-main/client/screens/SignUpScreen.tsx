@@ -8,7 +8,6 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  ImageBackground,
   Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,9 +16,7 @@ import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/RootStackNavigator";
-import { LinearGradient } from "expo-linear-gradient";
 
-const stageBg = require("../../attached_assets/signup_stage_bg.png");
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -106,92 +103,84 @@ export default function SignUpScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground source={stageBg} style={styles.backgroundImage} resizeMode="cover">
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.4)", "rgba(0,0,0,0.85)"]}
-          locations={[0.15, 0.45, 0.75]}
-          style={styles.gradient}
-        >
-          {/* Header */}
-          <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
-            <Pressable style={styles.backButton} onPress={handleGoBack}>
-              <Feather name="chevron-left" size={28} color="#FFFFFF" />
-            </Pressable>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.sm }]}>
+        <Pressable style={styles.backButton} onPress={handleGoBack}>
+          <Feather name="chevron-left" size={28} color="#FFFFFF" />
+        </Pressable>
 
-            <View style={styles.headerCenter}>
-              <Text style={styles.headerBrandName}>
-                <Text style={styles.brandRed}>B</Text>
-                <Text style={styles.brandWhite}>ORABAILAR</Text>
-              </Text>
-            </View>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerBrandName}>
+            <Text style={styles.brandRed}>B</Text>
+            <Text style={styles.brandWhite}>ORABAILAR</Text>
+          </Text>
+        </View>
 
-            <View style={{ width: 36 }} />
-          </View>
+        <View style={{ width: 36 }} />
+      </View>
 
-          {/* Content */}
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={[
-              styles.scrollContent,
-              { paddingBottom: insets.bottom + Spacing.xl },
-            ]}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.heroSpacer} />
+      {/* Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + Spacing.xl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.heroSpacer} />
 
-            {/* Title area */}
-            <View style={styles.titleContainer}>
-              <Text style={styles.title}>O palco é seu!</Text>
-              <Text style={styles.subtitle}>
-                Crie sua conta e entre no ritmo.{"\n"}Milhares de eventos esperando por você.
-              </Text>
-            </View>
+        {/* Title area */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>O palco é seu!</Text>
+          <Text style={styles.subtitle}>
+            Crie sua conta e entre no ritmo.{"\n"}Milhares de eventos esperando por você.
+          </Text>
+        </View>
 
-            {/* Social buttons */}
-            <View style={styles.socialButtonsContainer}>
-              <SocialButton
-                icon={<GoogleIcon />}
-                label="Continuar com Google"
-                variant="google"
-                onPress={handleGoogleSignUp}
-              />
-              <SocialButton
-                icon={<FacebookIcon />}
-                label="Continuar com Facebook"
-                variant="facebook"
-                onPress={handleFacebookSignUp}
-              />
-              <SocialButton
-                icon={<AppleIcon />}
-                label="Continuar com Apple"
-                variant="apple"
-                onPress={handleAppleSignUp}
-              />
-            </View>
+        {/* Social buttons */}
+        <View style={styles.socialButtonsContainer}>
+          <SocialButton
+            icon={<GoogleIcon />}
+            label="Continuar com Google"
+            variant="google"
+            onPress={handleGoogleSignUp}
+          />
+          <SocialButton
+            icon={<FacebookIcon />}
+            label="Continuar com Facebook"
+            variant="facebook"
+            onPress={handleFacebookSignUp}
+          />
+          <SocialButton
+            icon={<AppleIcon />}
+            label="Continuar com Apple"
+            variant="apple"
+            onPress={handleAppleSignUp}
+          />
+        </View>
 
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>ou</Text>
-              <View style={styles.dividerLine} />
-            </View>
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>ou</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
-            <SocialButton
-              icon={<EmailIcon />}
-              label="Continuar com e-mail"
-              variant="email"
-              onPress={handleEmailSignUp}
-            />
+        <SocialButton
+          icon={<EmailIcon />}
+          label="Continuar com e-mail"
+          variant="email"
+          onPress={handleEmailSignUp}
+        />
 
-            {/* Login link */}
-            <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Já tem uma conta? </Text>
-              <Pressable onPress={handleLogin}>
-                <Text style={styles.loginLink}>Entrar</Text>
-              </Pressable>
-            </View>
-          </ScrollView>
-        </LinearGradient>
-      </ImageBackground>
+        {/* Login link */}
+        <View style={styles.loginContainer}>
+          <Text style={styles.loginText}>Já tem uma conta? </Text>
+          <Pressable onPress={handleLogin}>
+            <Text style={styles.loginLink}>Entrar</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -199,15 +188,12 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000000",
+    backgroundColor: Colors.dark.brand,
   },
   backgroundImage: {
     flex: 1,
     width: "100%",
     height: "100%",
-  },
-  gradient: {
-    flex: 1,
   },
   header: {
     flexDirection: "row",

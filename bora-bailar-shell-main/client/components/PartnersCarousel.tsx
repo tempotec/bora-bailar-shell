@@ -281,7 +281,7 @@ export function PartnersCarousel({ partnerCards, homeTexts }: PartnersCarouselPr
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>
-          {homeTexts?.partner_cta_title ?? 'Seja Parceiro do BoraBailar'}
+          {homeTexts?.partner_cta_title ?? 'Seja um Parceiro BoraBailar'}
         </Text>
 
         <View style={styles.subHeaderAndImage}>
